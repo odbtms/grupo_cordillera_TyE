@@ -23,11 +23,11 @@ public class Venta {
     private Long id;
 
     private LocalDateTime fechaVenta;
-    
+
     private Double montoTotal;
-    
+
     // Ej: "Punto de Venta 1", "Ecommerce"
     private String sistemaOrigen;
-    
+
     private String sucursal;
 }
