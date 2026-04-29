@@ -5,6 +5,7 @@ import com.grupocordillera.reportes.repository.PlantillaReporteRepository;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/reportes/plantillas")
 public class ReporteController {
 
