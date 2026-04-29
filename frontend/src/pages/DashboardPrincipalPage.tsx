@@ -536,52 +536,7 @@ function DashboardPrincipalPage() {
         </div>
       </section>}
 
-      <section className="tarjeta-panel" style={{ marginTop: 24 }}>
-        <h3>
-          Stock de productos {sucursalActiva ? `(${sucursalActiva})` : '(Todas las sucursales)'}
-        </h3>
-        
-        <div className="formulario-simple" style={{ marginBottom: 12 }}>
-          <label>
-            Periodo de análisis
-            <select
-              value={periodoAnalisis}
-              onChange={(evento) => setPeriodoAnalisis(evento.target.value)}
-            >
-              <option value="GENERAL">General (6 meses)</option>
-              {periodosAnalisisDisponibles.map((periodo) => (
-                <option key={periodo} value={periodo}>
-                  {periodo}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
 
-        <div className="panel-graficos" style={{ marginTop: 12 }}>
-          <article className="tarjeta-panel">
-            <h3>Stock de productos (Electrónica)</h3>
-            <div className="lista-sucursales-resumen">
-              {detalleElectronica.map((item) => (
-                <p key={item.producto}>
-                  <strong>{item.stockInicial} {item.producto.toLowerCase()}</strong> ({item.vendidos} vendidos) total = {item.stockRestante} {item.producto.toLowerCase()}
-                </p>
-              ))}
-            </div>
-          </article>
-
-          <article className="tarjeta-panel">
-            <h3>Stock de productos (Hogar)</h3>
-            <div className="lista-sucursales-resumen">
-              {detalleHogar.map((item) => (
-                <p key={item.producto}>
-                  <strong>{item.stockInicial} {item.producto.toLowerCase()}</strong> ({item.vendidos} vendidos) total = {item.stockRestante} {item.producto.toLowerCase()}
-                </p>
-              ))}
-            </div>
-          </article>
-        </div>
-      </section>
     </section>
   )
 }

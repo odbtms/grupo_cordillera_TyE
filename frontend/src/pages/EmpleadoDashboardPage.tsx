@@ -243,45 +243,10 @@ function EmpleadoDashboardPage({
             <p>{FORMATO_MONEDA.format(ventasAnalisis)}</p>
           </article>
 
-          <article className="tarjeta-kpi">
-            <h3>Stock vendido</h3>
-            <p>{stockVendidoAnalisis}</p>
-          </article>
 
-          <article className="tarjeta-kpi">
-            <h3>Producto más vendido</h3>
-            <p>{productoMasVendido?.producto ?? '-'}</p>
-          </article>
-
-          <article className="tarjeta-kpi">
-            <h3>Stock actual (ref.)</h3>
-            <p>{stockPorCategoria.electronica + stockPorCategoria.hogar}</p>
-          </article>
         </div>
 
-        <div className="panel-graficos" style={{ marginTop: 12 }}>
-          <article className="tarjeta-panel">
-            <h3>Stock de productos (Electrónica)</h3>
-            <div className="lista-sucursales-resumen">
-              {detalleElectronica.map((item) => (
-                <p key={item.producto}>
-                  <strong>{item.stockInicial} {item.producto.toLowerCase()}</strong> ({item.vendidos} vendidos) total = {item.stockRestante} {item.producto.toLowerCase()}
-                </p>
-              ))}
-            </div>
-          </article>
 
-          <article className="tarjeta-panel">
-            <h3>Stock de productos (Hogar)</h3>
-            <div className="lista-sucursales-resumen">
-              {detalleHogar.map((item) => (
-                <p key={item.producto}>
-                  <strong>{item.stockInicial} {item.producto.toLowerCase()}</strong> ({item.vendidos} vendidos) total = {item.stockRestante} {item.producto.toLowerCase()}
-                </p>
-              ))}
-            </div>
-          </article>
-        </div>
       </section>
     </section>
   )
