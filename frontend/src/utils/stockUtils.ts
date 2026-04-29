@@ -70,7 +70,7 @@ export function obtenerDetalleStock(
     : SUCURSALES_DEMO.map((s) => s.sucursal)
 
   // Determine which months are included in the analysis
-  const mesesAProcesar =
+  if (periodosDisponibles.length === 0) return []; const mesesAProcesar =
     periodoAnalisis === 'GENERAL' ? periodosDisponibles : [periodoAnalisis]
 
   const mapaProductos = new Map<string, RegistroStock>()
