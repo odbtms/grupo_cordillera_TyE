@@ -39,7 +39,7 @@ const COLORES_GRAFICO = [
 
 const TARJETAS_POR_PAGINA = 4
 
-import { DASHBOARD_DEMO } from '../demoData'
+// import { DASHBOARD_DEMO } from '../demoData'
 
 function normalizarTexto(texto: string) {
   return texto
@@ -50,9 +50,9 @@ function normalizarTexto(texto: string) {
 }
 
 function DashboardPrincipalPage() {
-  const [ventas, setVentas] = useState<Venta[]>(DASHBOARD_DEMO.ventas)
-  const [kpis, setKpis] = useState<Kpi[]>(DASHBOARD_DEMO.kpis)
-  const [alertas, setAlertas] = useState<string[]>(DASHBOARD_DEMO.alertas)
+  const [ventas, setVentas] = useState<Venta[]>([])
+  const [kpis, setKpis] = useState<Kpi[]>([])
+  const [alertas, setAlertas] = useState<string[]>([])
   const [cargando, setCargando] = useState(false)
   const [mensajeError, setMensajeError] = useState('')
   const [paginaSucursales, setPaginaSucursales] = useState(0)
@@ -66,16 +66,16 @@ function DashboardPrincipalPage() {
 
       try {
         const respuesta = await fetchDashboard()
-        const mergedVentas = [...DASHBOARD_DEMO.ventas, ...(respuesta.ventas || [])]
-        const mergedKpis = [...DASHBOARD_DEMO.kpis, ...(respuesta.kpis || [])]
+        const mergedVentas = respuesta.ventas || []
+        const mergedKpis = respuesta.kpis || []
 
         setVentas(mergedVentas)
         setKpis(mergedKpis)
         setAlertas(respuesta.alertas)
       } catch {
-        setVentas(DASHBOARD_DEMO.ventas)
-        setKpis(DASHBOARD_DEMO.kpis)
-        setAlertas(DASHBOARD_DEMO.alertas)
+        setVentas([])
+        setKpis([])
+        setAlertas([])
         setMensajeError('No se pudo conectar con backend. Mostrando datos demo.')
       } finally {
         setCargando(false)

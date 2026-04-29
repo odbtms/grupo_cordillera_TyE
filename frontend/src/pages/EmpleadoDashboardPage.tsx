@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { DASHBOARD_DEMO } from '../demoData'
+// import { DASHBOARD_DEMO } from '../demoData'
 import { obtenerDetalleStock } from '../utils/stockUtils'
 
 const FORMATO_MONEDA = new Intl.NumberFormat('es-CL', {
@@ -52,13 +52,13 @@ function EmpleadoDashboardPage({
 
       try {
         const respuesta = await fetchDashboard()
-        const mergedVentas = [...DASHBOARD_DEMO.ventas, ...(respuesta.ventas || [])]
+        const mergedVentas = respuesta.ventas || []
 
         setVentas(mergedVentas)
         setAlertas(respuesta.alertas)
       } catch {
-        setVentas(DASHBOARD_DEMO.ventas)
-        setAlertas(DASHBOARD_DEMO.alertas)
+        setVentas([])
+        setAlertas([])
         setMensajeError('No se pudo conectar con backend o cargar los datos. Mostrando demo.')
       } finally {
         setCargando(false)
