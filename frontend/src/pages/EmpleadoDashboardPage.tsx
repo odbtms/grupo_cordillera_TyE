@@ -124,39 +124,7 @@ function EmpleadoDashboardPage({
     return datoMes?.total ?? 0
   }, [periodoAnalisis, resumenSucursalActiva, serieSucursalActiva])
 
-  const stockVendidoAnalisis = useMemo(
-    () => detalleFiltrado.reduce((acum, item) => acum + item.vendidos, 0),
-    [detalleFiltrado],
-  )
 
-  const productoMasVendido = useMemo(() => {
-    if (!detalleFiltrado.length) return null
-
-    return detalleFiltrado.reduce((maximo, actual) =>
-      actual.vendidos > maximo.vendidos ? actual : maximo,
-    )
-  }, [detalleFiltrado])
-
-  const stockPorCategoria = useMemo(() => {
-    return {
-      electronica: detalleFiltrado
-        .filter((item) => item.categoria === 'Electrónica')
-        .reduce((acum, item) => acum + item.stockRestante, 0),
-      hogar: detalleFiltrado
-        .filter((item) => item.categoria === 'Hogar')
-        .reduce((acum, item) => acum + item.stockRestante, 0),
-    }
-  }, [detalleFiltrado])
-
-  const detalleElectronica = useMemo(
-    () => detalleFiltrado.filter((item) => item.categoria === 'Electrónica'),
-    [detalleFiltrado],
-  )
-
-  const detalleHogar = useMemo(
-    () => detalleFiltrado.filter((item) => item.categoria === 'Hogar'),
-    [detalleFiltrado],
-  )
 
   return (
     <section className="pagina-contenido">

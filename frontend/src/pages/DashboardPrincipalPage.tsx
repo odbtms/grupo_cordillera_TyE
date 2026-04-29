@@ -262,15 +262,7 @@ function DashboardPrincipalPage() {
     )
   }, [sucursalActiva, periodoAnalisis, periodosAnalisisDisponibles])
 
-  const detalleElectronica = useMemo(
-    () => detalleFiltrado.filter((item) => item.categoria === 'Electrónica'),
-    [detalleFiltrado],
-  )
 
-  const detalleHogar = useMemo(
-    () => detalleFiltrado.filter((item) => item.categoria === 'Hogar'),
-    [detalleFiltrado],
-  )
 
   return (
     <section className="pagina-contenido">
