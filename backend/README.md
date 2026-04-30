@@ -61,4 +61,4 @@ Además, la base de datos `db_postgres` cuenta con un **Healthcheck**, garantiza
 Para apagar todo el ecosistema de forma segura y liberar la red, simplemente ejecuta:
 ```bash
 docker-compose down
-```
+```.
