@@ -19,6 +19,7 @@ export async function iniciarSesion(
   return data
 }
 
+<<<<<<< HEAD
 export type RegistroInput = {
   username: string
   email: string
@@ -37,6 +38,12 @@ export async function validateToken(token: string): Promise<string> {
   const { data } = await authHttp.get<string>('/validar', {
     headers: {
       Authorization: bearerToken,
+=======
+export async function validateToken(token: string): Promise<string> {
+  const { data } = await authHttp.get<string>('/validar', {
+    headers: {
+      Authorization: token,
+>>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
     },
   })
   return data

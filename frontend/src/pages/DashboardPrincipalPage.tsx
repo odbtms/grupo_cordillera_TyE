@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchDashboard } from '../api'
+<<<<<<< HEAD
+=======
+import { obtenerDetalleStock } from '../utils/stockUtils'
+>>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 import type { Kpi, Venta } from '../types'
 import {
   Area,
@@ -38,6 +42,11 @@ const COLORES_GRAFICO = [
 
 const TARJETAS_POR_PAGINA = 4
 
+<<<<<<< HEAD
+=======
+// import { DASHBOARD_DEMO } from '../demoData'
+
+>>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 function normalizarTexto(texto: string) {
   return texto
     .normalize('NFD')
@@ -73,7 +82,11 @@ function DashboardPrincipalPage() {
         setVentas([])
         setKpis([])
         setAlertas([])
+<<<<<<< HEAD
         setMensajeError('No se pudo conectar con backend.')
+=======
+        setMensajeError('No se pudo conectar con backend. Mostrando datos demo.')
+>>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
       } finally {
         setCargando(false)
       }
@@ -246,6 +259,22 @@ function DashboardPrincipalPage() {
     return datoMes?.total ?? 0
   }, [periodoAnalisis, resumenSucursalActiva, serieSucursalActiva, sucursalActiva])
 
+<<<<<<< HEAD
+=======
+  const periodosAnalisisDisponibles = useMemo(
+    () => (sucursalActiva ? serieSucursalActiva : graficoConsolidado).map((item) => item.periodo),
+    [sucursalActiva, serieSucursalActiva, graficoConsolidado],
+  )
+
+  const detalleFiltrado = useMemo(() => {
+    return obtenerDetalleStock(
+      sucursalActiva,
+      periodoAnalisis,
+      periodosAnalisisDisponibles,
+    )
+  }, [sucursalActiva, periodoAnalisis, periodosAnalisisDisponibles])
+
+>>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 
 
   return (
