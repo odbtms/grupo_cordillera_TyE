@@ -17,7 +17,13 @@ FROM nginx:alpine
 # Copiar los estáticos compilados desde la etapa anterior
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+<<<<<<< HEAD
+# Copiar configuración de nginx para que React funcione al recargar la página
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+=======
 # Copiar configuración opcional de nginx si fuera necesario (por defecto sirve bien)
+>>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 # Exponer puerto 80
 EXPOSE 80
 

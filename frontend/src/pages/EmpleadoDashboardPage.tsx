@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchDashboard } from '../api'
-import type { Venta } from '../types'
+import { fetchStock, fetchVentasPorSucursal } from '../api'
+import type { StockItem, Venta } from '../types'
 import {
   Area,
   AreaChart,
@@ -10,8 +10,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-// import { DASHBOARD_DEMO } from '../demoData'
-import { obtenerDetalleStock } from '../utils/stockUtils'
 
 const FORMATO_MONEDA = new Intl.NumberFormat('es-CL', {
   style: 'currency',
@@ -40,6 +38,7 @@ function EmpleadoDashboardPage({
   sucursalAsignada,
 }: EmpleadoDashboardPageProps) {
   const [ventas, setVentas] = useState<Venta[]>([])
+  const [stock, setStock] = useState<StockItem[]>([])
   const [alertas, setAlertas] = useState<string[]>([])
   const [cargando, setCargando] = useState(false)
   const [mensajeError, setMensajeError] = useState('')
@@ -51,15 +50,19 @@ function EmpleadoDashboardPage({
       setMensajeError('')
 
       try {
-        const respuesta = await fetchDashboard()
-        const mergedVentas = respuesta.ventas || []
+        const [ventasSucursal, stockSucursal] = await Promise.all([
+          fetchVentasPorSucursal(sucursalAsignada),
+          fetchStock(sucursalAsignada),
+        ])
 
-        setVentas(mergedVentas)
-        setAlertas(respuesta.alertas)
+        setVentas(ventasSucursal)
+        setStock(stockSucursal)
+        setAlertas(ventasSucursal.length ? ['Sin alertas críticas detectadas.'] : ['Sin ventas registradas.'])
       } catch {
         setVentas([])
+        setStock([])
         setAlertas([])
-        setMensajeError('No se pudo conectar con backend o cargar los datos. Mostrando demo.')
+        setMensajeError('No se pudo conectar con backend o cargar los datos.')
       } finally {
         setCargando(false)
       }
@@ -107,14 +110,6 @@ function EmpleadoDashboardPage({
     [serieSucursalActiva],
   )
 
-  const detalleFiltrado = useMemo(() => {
-    return obtenerDetalleStock(
-      sucursalAsignada,
-      periodoAnalisis,
-      periodosAnalisisDisponibles,
-    )
-  }, [sucursalAsignada, periodoAnalisis, periodosAnalisisDisponibles])
-
   const ventasAnalisis = useMemo(() => {
     if (periodoAnalisis === 'GENERAL') {
       return resumenSucursalActiva.total
@@ -123,6 +118,14 @@ function EmpleadoDashboardPage({
     const datoMes = serieSucursalActiva.find((item) => item.periodo === periodoAnalisis)
     return datoMes?.total ?? 0
   }, [periodoAnalisis, resumenSucursalActiva, serieSucursalActiva])
+
+  const stockPorCategoria = useMemo(() => {
+    const mapa = new Map<string, number>()
+    for (const item of stock) {
+      mapa.set(item.categoria, (mapa.get(item.categoria) ?? 0) + item.cantidad)
+    }
+    return Array.from(mapa.entries()).map(([categoria, total]) => ({ categoria, total }))
+  }, [stock])
 
 
 
@@ -215,6 +218,26 @@ function EmpleadoDashboardPage({
         </div>
 
 
+      </section>
+
+      <section className="tarjeta-panel">
+        <h3>Stock disponible por categoría</h3>
+        {stock.length === 0 ? (
+          <p className="mensaje-demo">No hay stock registrado para esta sucursal.</p>
+        ) : (
+          <div className="tabla-simple">
+            <div className="fila fila-encabezado">
+              <span>Categoría</span>
+              <span>Total unidades</span>
+            </div>
+            {stockPorCategoria.map((item) => (
+              <div key={item.categoria} className="fila">
+                <span>{item.categoria}</span>
+                <span>{item.total}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </section>
   )

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchDashboard } from '../api'
-import { obtenerDetalleStock } from '../utils/stockUtils'
 import type { Kpi, Venta } from '../types'
 import {
   Area,
@@ -39,8 +38,6 @@ const COLORES_GRAFICO = [
 
 const TARJETAS_POR_PAGINA = 4
 
-// import { DASHBOARD_DEMO } from '../demoData'
-
 function normalizarTexto(texto: string) {
   return texto
     .normalize('NFD')
@@ -76,7 +73,7 @@ function DashboardPrincipalPage() {
         setVentas([])
         setKpis([])
         setAlertas([])
-        setMensajeError('No se pudo conectar con backend. Mostrando datos demo.')
+        setMensajeError('No se pudo conectar con backend.')
       } finally {
         setCargando(false)
       }
@@ -248,19 +245,6 @@ function DashboardPrincipalPage() {
     const datoMes = serieSucursalActiva.find((item) => item.periodo === periodoAnalisis)
     return datoMes?.total ?? 0
   }, [periodoAnalisis, resumenSucursalActiva, serieSucursalActiva, sucursalActiva])
-
-  const periodosAnalisisDisponibles = useMemo(
-    () => (sucursalActiva ? serieSucursalActiva : graficoConsolidado).map((item) => item.periodo),
-    [sucursalActiva, serieSucursalActiva, graficoConsolidado],
-  )
-
-  const detalleFiltrado = useMemo(() => {
-    return obtenerDetalleStock(
-      sucursalActiva,
-      periodoAnalisis,
-      periodosAnalisisDisponibles,
-    )
-  }, [sucursalActiva, periodoAnalisis, periodosAnalisisDisponibles])
 
 
 

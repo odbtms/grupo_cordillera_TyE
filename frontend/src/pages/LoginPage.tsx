@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { iniciarSesion } from '../api'
+import { iniciarSesion, registrarUsuario } from '../api'
 import type { LoginResponse } from '../types'
 
 type LoginPageProps = {
@@ -19,46 +19,24 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
   const [usuarioRegistro, setUsuarioRegistro] = useState('')
   const [correoRegistro, setCorreoRegistro] = useState('')
   const [contrasenaRegistro, setContrasenaRegistro] = useState('')
+  const [sucursalRegistro, setSucursalRegistro] = useState('')
   const [cargando, setCargando] = useState(false)
   const [mensajeError, setMensajeError] = useState('')
   const [mensajeExito, setMensajeExito] = useState('')
-
-  function entrarComoInvitado() {
-    onLoginExitoso('demo-token', 'EJECUTIVO', 'Invitado', null)
-  }
 
   async function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     setMensajeError('')
     setMensajeExito('')
 
-    if (!usuario.trim() && !contrasena.trim()) {
-      entrarComoInvitado()
-      return
-    }
-
     if (!usuario.trim() || !contrasena.trim()) {
-      setMensajeError('Debe ingresar usuario y contraseña, o dejar ambos vacíos para modo demo.')
+      setMensajeError('Debe ingresar usuario y contraseña.')
       return
     }
 
     setCargando(true)
 
     try {
-      const dbStr = localStorage.getItem('cordillera_mock_users')
-      const db = dbStr ? JSON.parse(dbStr) : []
-      const usuarioLocal = db.find((u: any) => u.username === usuario.trim() && u.password === contrasena)
-
-      if (usuarioLocal) {
-        onLoginExitoso(
-          'local-mock-token',
-          usuarioLocal.rol,
-          usuarioLocal.username,
-          usuarioLocal.sucursalAsignada,
-        )
-        return
-      }
-
       const respuesta: LoginResponse = await iniciarSesion({
         username: usuario.trim(),
         password: contrasena,
@@ -84,7 +62,7 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
     }
   }
 
-  function manejarRegistro(evento: FormEvent<HTMLFormElement>) {
+  async function manejarRegistro(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     setMensajeError('')
     setMensajeExito('')
@@ -99,10 +77,34 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
       return
     }
 
-    setUsuario(usuarioRegistro.trim())
-    setContrasena('')
-    setMensajeExito('Cuenta creada en modo demo. Ahora inicia sesión con tu usuario.')
-    setModo('login')
+    setCargando(true)
+
+    try {
+      const respuesta = await registrarUsuario({
+        username: usuarioRegistro.trim(),
+        email: correoRegistro.trim(),
+        password: contrasenaRegistro,
+        rol: sucursalRegistro.trim() ? 'EMPLEADO_TIENDA' : 'ADMIN',
+        sucursal: sucursalRegistro.trim() || undefined
+      })
+
+      onLoginExitoso(
+        respuesta.token,
+        respuesta.rol,
+        respuesta.usuario,
+        respuesta.sucursal,
+      )
+    } catch (error) {
+      const mensajeGenerico = 'No se pudo registrar. Verifica los datos o intenta luego.'
+
+      if (typeof error === 'object' && error !== null && 'message' in error) {
+        setMensajeError(String(error.message) || mensajeGenerico)
+      } else {
+        setMensajeError(mensajeGenerico)
+      }
+    } finally {
+      setCargando(false)
+    }
   }
 
   return (
@@ -138,9 +140,6 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
                 {cargando ? 'Ingresando...' : 'Iniciar sesión'}
               </button>
 
-              <button className="btn-secundario" type="button" onClick={entrarComoInvitado}>
-                Entrar sin credenciales
-              </button>
             </form>
           </article>
 
@@ -179,6 +178,16 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
                 />
               </label>
 
+              <label>
+                Sucursal (Opcional - solo empleado)
+                <input
+                  type="text"
+                  value={sucursalRegistro}
+                  onChange={(evento) => setSucursalRegistro(evento.target.value)}
+                  placeholder="Ej: Costanera Center"
+                />
+              </label>
+
               <button className="btn-principal" type="submit">
                 Registrarme
               </button>
@@ -191,7 +200,7 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
                 <h2>¡Bienvenido!</h2>
                 <p>¿Ya tienes cuenta? Ingresa con tu usuario.</p>
                 <button className="btn-overlay" type="button" onClick={() => setModo('login')}>
-                  Login
+                  inicia sesion
                 </button>
               </section>
 
@@ -203,7 +212,7 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
                   type="button"
                   onClick={() => setModo('register')}
                 >
-                  Register
+                  Registrate
                 </button>
               </section>
             </div>

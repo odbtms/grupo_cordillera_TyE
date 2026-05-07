@@ -1,5 +1,3 @@
-import { SUCURSALES_DEMO } from '../demoData'
-
 export const PRODUCTOS_BASE = [
   { nombre: 'Celulares', categoria: 'Electrónica', base: 120 },
   { nombre: 'Mouse', categoria: 'Electrónica', base: 60 },
@@ -67,10 +65,11 @@ export function obtenerDetalleStock(
   // Determine which branches to calculate for
   const sucursalesAProcesar = sucursalActiva
     ? [sucursalActiva]
-    : SUCURSALES_DEMO.map((s) => s.sucursal)
+    : ['Santiago', 'Concepción', 'Valparaíso', 'Temuco', 'Antofagasta']
 
   // Determine which months are included in the analysis
-  if (periodosDisponibles.length === 0) return []; const mesesAProcesar =
+  if (periodosDisponibles.length === 0) return []
+  const mesesAProcesar =
     periodoAnalisis === 'GENERAL' ? periodosDisponibles : [periodoAnalisis]
 
   const mapaProductos = new Map<string, RegistroStock>()

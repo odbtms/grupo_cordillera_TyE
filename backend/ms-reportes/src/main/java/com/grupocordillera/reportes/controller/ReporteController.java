@@ -3,6 +3,7 @@ package com.grupocordillera.reportes.controller;
 import com.grupocordillera.reportes.model.PlantillaReporte;
 import com.grupocordillera.reportes.repository.PlantillaReporteRepository;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -15,6 +16,10 @@ public class ReporteController {
         this.repository = repository;
     }
 
+    @GetMapping
+    public List<PlantillaReporte> listarPlantillas() {
+        return repository.findAll();
+    }
     @PostMapping
     public PlantillaReporte crearPlantilla(@RequestBody PlantillaReporte plantilla) {
         return repository.save(plantilla);

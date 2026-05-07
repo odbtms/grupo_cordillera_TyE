@@ -1,0 +1,9 @@
+C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-auth\src\main\java\com\grupocordillera\auth\Application.java
+C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-auth\src\main\java\com\grupocordillera\auth\config\SecurityConfig.java
+C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-auth\src\main\java\com\grupocordillera\auth\controller\AuthController.java
+C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-auth\src\main\java\com\grupocordillera\auth\dto\LoginRequest.java
+C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-auth\src\main\java\com\grupocordillera\auth\dto\LoginResponse.java
+C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-auth\src\main\java\com\grupocordillera\auth\dto\RegisterRequest.java
+C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-auth\src\main\java\com\grupocordillera\auth\model\Usuario.java
+C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-auth\src\main\java\com\grupocordillera\auth\repository\UsuarioRepository.java
+C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-auth\src\main\java\com\grupocordillera\auth\service\JwtService.java

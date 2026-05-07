@@ -6,6 +6,11 @@ export async function fetchVentas(): Promise<Venta[]> {
   return Array.isArray(data) ? data : []
 }
 
+export async function fetchVentasPorSucursal(sucursal: string): Promise<Venta[]> {
+  const { data } = await ventasHttp.get<Venta[]>(`/sucursal/${encodeURIComponent(sucursal)}`)
+  return Array.isArray(data) ? data : []
+}
+
 export async function registrarVenta(payload: Omit<Venta, 'id'>): Promise<Venta> {
   const { data } = await ventasHttp.post<Venta>('/registrar', payload)
   return data

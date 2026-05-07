@@ -19,10 +19,24 @@ export async function iniciarSesion(
   return data
 }
 
+export type RegistroInput = {
+  username: string
+  email: string
+  password: string
+  rol?: string
+  sucursal?: string
+}
+
+export async function registrarUsuario(payload: RegistroInput): Promise<LoginResponse> {
+  const { data } = await authHttp.post<LoginResponse>('/register', payload)
+  return data
+}
+
 export async function validateToken(token: string): Promise<string> {
+  const bearerToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`
   const { data } = await authHttp.get<string>('/validar', {
     headers: {
-      Authorization: token,
+      Authorization: bearerToken,
     },
   })
   return data

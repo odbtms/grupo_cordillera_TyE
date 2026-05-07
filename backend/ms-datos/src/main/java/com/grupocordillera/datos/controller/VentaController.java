@@ -30,4 +30,9 @@ public class VentaController {
     public List<Venta> listarVentas() {
         return repository.findAll();
     }
+
+    @GetMapping("/sucursal/{sucursal}")
+    public List<Venta> listarVentasPorSucursal(@PathVariable String sucursal) {
+        return repository.findBySucursalIgnoreCase(sucursal);
+    }
 }
