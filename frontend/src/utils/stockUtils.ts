@@ -68,7 +68,8 @@ export function obtenerDetalleStock(
     : ['Santiago', 'Concepción', 'Valparaíso', 'Temuco', 'Antofagasta']
 
   // Determine which months are included in the analysis
-  if (periodosDisponibles.length === 0) return []; const mesesAProcesar =
+  if (periodosDisponibles.length === 0) return []
+  const mesesAProcesar =
     periodoAnalisis === 'GENERAL' ? periodosDisponibles : [periodoAnalisis]
 
   const mapaProductos = new Map<string, RegistroStock>()
