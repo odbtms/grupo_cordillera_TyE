@@ -1,0 +1,46 @@
+:root {
+  --text: #1f3343;
+  --bg: #eef4f8;
+  --sans: 'Segoe UI', Arial, sans-serif;
+  --heading: 'Segoe UI', Arial, sans-serif;
+
+  font: 16px/1.45 var(--sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 12% 10%, #fff2dc 0%, transparent 32%),
+    radial-gradient(circle at 88% 14%, #dceff7 0%, transparent 35%),
+    var(--bg);
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--heading);
+  margin: 0;
+}

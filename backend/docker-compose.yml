@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  ms-datos:
+    build:
+      context: ./ms-datos
+      dockerfile: Dockerfile
+    container_name: ms-datos
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com:5432/ms_datos
+      - SPRING_DATASOURCE_USERNAME=admin3
+      - SPRING_DATASOURCE_PASSWORD=cordillera
+
+  ms-kpis:
+    build:
+      context: ./ms-kpis
+      dockerfile: Dockerfile
+    container_name: ms-kpis
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com:5432/ms_datos
+      - SPRING_DATASOURCE_USERNAME=admin3
+      - SPRING_DATASOURCE_PASSWORD=cordillera
+
+  ms-reportes:
+    build:
+      context: ./ms-reportes
+      dockerfile: Dockerfile
+    container_name: ms-reportes
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com:5432/ms_reportes
+      - SPRING_DATASOURCE_USERNAME=admin3
+      - SPRING_DATASOURCE_PASSWORD=cordillera
+
+  ms-auth:
+    build:
+      context: ./ms-auth
+      dockerfile: Dockerfile
+    container_name: ms-auth
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com:5432/ms_auth
+      - SPRING_DATASOURCE_USERNAME=admin3
+      - SPRING_DATASOURCE_PASSWORD=cordillera
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: frontend-cordillera
+    ports:
+      - "80:80"
