@@ -1,10 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-<<<<<<< HEAD
 import { iniciarSesion, registrarUsuario } from '../api'
-=======
-import { iniciarSesion } from '../api'
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 import type { LoginResponse } from '../types'
 
 type LoginPageProps = {
@@ -23,61 +19,24 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
   const [usuarioRegistro, setUsuarioRegistro] = useState('')
   const [correoRegistro, setCorreoRegistro] = useState('')
   const [contrasenaRegistro, setContrasenaRegistro] = useState('')
-<<<<<<< HEAD
   const [sucursalRegistro, setSucursalRegistro] = useState('')
-=======
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
   const [cargando, setCargando] = useState(false)
   const [mensajeError, setMensajeError] = useState('')
   const [mensajeExito, setMensajeExito] = useState('')
 
-<<<<<<< HEAD
-=======
-  function entrarComoInvitado() {
-    onLoginExitoso('demo-token', 'EJECUTIVO', 'Invitado', null)
-  }
-
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
   async function manejarSubmit(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault()
     setMensajeError('')
     setMensajeExito('')
 
-<<<<<<< HEAD
     if (!usuario.trim() || !contrasena.trim()) {
       setMensajeError('Debe ingresar usuario y contraseña.')
-=======
-    if (!usuario.trim() && !contrasena.trim()) {
-      entrarComoInvitado()
-      return
-    }
-
-    if (!usuario.trim() || !contrasena.trim()) {
-      setMensajeError('Debe ingresar usuario y contraseña, o dejar ambos vacíos para modo demo.')
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
       return
     }
 
     setCargando(true)
 
     try {
-<<<<<<< HEAD
-=======
-      const dbStr = localStorage.getItem('cordillera_mock_users')
-      const db = dbStr ? JSON.parse(dbStr) : []
-      const usuarioLocal = db.find((u: any) => u.username === usuario.trim() && u.password === contrasena)
-
-      if (usuarioLocal) {
-        onLoginExitoso(
-          'local-mock-token',
-          usuarioLocal.rol,
-          usuarioLocal.username,
-          usuarioLocal.sucursalAsignada,
-        )
-        return
-      }
-
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
       const respuesta: LoginResponse = await iniciarSesion({
         username: usuario.trim(),
         password: contrasena,
@@ -103,11 +62,7 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
     }
   }
 
-<<<<<<< HEAD
   async function manejarRegistro(evento: FormEvent<HTMLFormElement>) {
-=======
-  function manejarRegistro(evento: FormEvent<HTMLFormElement>) {
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
     evento.preventDefault()
     setMensajeError('')
     setMensajeExito('')
@@ -122,7 +77,6 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
       return
     }
 
-<<<<<<< HEAD
     setCargando(true)
 
     try {
@@ -151,12 +105,6 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
     } finally {
       setCargando(false)
     }
-=======
-    setUsuario(usuarioRegistro.trim())
-    setContrasena('')
-    setMensajeExito('Cuenta creada en modo demo. Ahora inicia sesión con tu usuario.')
-    setModo('login')
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
   }
 
   return (
@@ -192,12 +140,6 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
                 {cargando ? 'Ingresando...' : 'Iniciar sesión'}
               </button>
 
-<<<<<<< HEAD
-=======
-              <button className="btn-secundario" type="button" onClick={entrarComoInvitado}>
-                Entrar sin credenciales
-              </button>
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
             </form>
           </article>
 
@@ -236,7 +178,6 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
                 />
               </label>
 
-<<<<<<< HEAD
               <label>
                 Sucursal (Opcional - solo empleado)
                 <input
@@ -247,8 +188,6 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
                 />
               </label>
 
-=======
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
               <button className="btn-principal" type="submit">
                 Registrarme
               </button>
@@ -261,11 +200,7 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
                 <h2>¡Bienvenido!</h2>
                 <p>¿Ya tienes cuenta? Ingresa con tu usuario.</p>
                 <button className="btn-overlay" type="button" onClick={() => setModo('login')}>
-<<<<<<< HEAD
                   inicia sesion
-=======
-                  Login
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
                 </button>
               </section>
 
@@ -277,11 +212,7 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
                   type="button"
                   onClick={() => setModo('register')}
                 >
-<<<<<<< HEAD
                   Registrate
-=======
-                  Register
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
                 </button>
               </section>
             </div>

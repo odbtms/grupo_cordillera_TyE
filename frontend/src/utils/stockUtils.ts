@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-=======
-import { SUCURSALES_DEMO } from '../demoData'
-
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 export const PRODUCTOS_BASE = [
   { nombre: 'Celulares', categoria: 'Electrónica', base: 120 },
   { nombre: 'Mouse', categoria: 'Electrónica', base: 60 },
@@ -70,11 +65,7 @@ export function obtenerDetalleStock(
   // Determine which branches to calculate for
   const sucursalesAProcesar = sucursalActiva
     ? [sucursalActiva]
-<<<<<<< HEAD
     : ['Santiago', 'Concepción', 'Valparaíso', 'Temuco', 'Antofagasta']
-=======
-    : SUCURSALES_DEMO.map((s) => s.sucursal)
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 
   // Determine which months are included in the analysis
   if (periodosDisponibles.length === 0) return []; const mesesAProcesar =

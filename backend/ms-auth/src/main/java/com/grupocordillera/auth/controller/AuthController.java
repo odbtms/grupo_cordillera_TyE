@@ -1,6 +1,5 @@
 package com.grupocordillera.auth.controller;
 
-<<<<<<< HEAD
 import com.grupocordillera.auth.dto.LoginRequest;
 import com.grupocordillera.auth.dto.LoginResponse;
 import com.grupocordillera.auth.dto.RegisterRequest;
@@ -11,12 +10,7 @@ import io.jsonwebtoken.JwtException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
-=======
-import com.grupocordillera.auth.model.Usuario;
-import com.grupocordillera.auth.repository.UsuarioRepository;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
+
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -24,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UsuarioRepository repository;
-<<<<<<< HEAD
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
@@ -92,25 +85,10 @@ public class AuthController {
                 saved.getRol(),
                 saved.getSucursal());
         return ResponseEntity.ok(response);
-=======
-
-    public AuthController(UsuarioRepository repository) {
-        this.repository = repository;
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<String> iniciarSesion(@RequestBody Usuario credentials) {
-        // Simulación de generacion JWT según requerimiento
-        return repository.findByUsername(credentials.getUsername())
-                .filter(u -> u.getPassword().equals(credentials.getPassword()))
-                .map(u -> ResponseEntity.ok("fake-jwt-token-para-" + u.getUsername()))
-                .orElse(ResponseEntity.status(401).body("Credenciales invalidas"));
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
     }
 
     @GetMapping("/validar")
     public ResponseEntity<String> validarSesion(@RequestHeader("Authorization") String token) {
-<<<<<<< HEAD
         String rawToken = token != null && token.startsWith("Bearer ")
                 ? token.substring(7)
                 : token;
@@ -120,9 +98,6 @@ public class AuthController {
         } catch (JwtException | IllegalArgumentException ex) {
             return ResponseEntity.status(401).body("Token invalido");
         }
-=======
-        return ResponseEntity.ok("Token valido: " + token);
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
     }
 
     @PutMapping("/usuarios/{id}/rol")
@@ -132,7 +107,6 @@ public class AuthController {
             return repository.save(u);
         }).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
-<<<<<<< HEAD
 
     @PutMapping("/usuarios/username/{username}/rol")
     public Usuario actualizarRolPorUsername(
@@ -143,6 +117,5 @@ public class AuthController {
             return repository.save(u);
         }).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
-=======
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
+
 }

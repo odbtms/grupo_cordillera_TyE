@@ -33,7 +33,6 @@ export type DashboardAlert = {
   level: AlertLevel
 }
 
-<<<<<<< HEAD
 export type StockItem = {
   id: number
   sucursal: string
@@ -42,8 +41,6 @@ export type StockItem = {
   cantidad: number
 }
 
-=======
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 export type LoginResponse = {
   token: string
   usuario: string

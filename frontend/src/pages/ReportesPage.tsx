@@ -14,17 +14,12 @@ import {
   createPlantillaReporte,
   eliminarPlantillaReporte,
   fetchPlantillasReporte,
-<<<<<<< HEAD
   fetchStock,
   fetchVentas,
   fetchVentasPorSucursal,
   type PlantillaReporte,
 } from '../api'
 import type { StockItem, Venta } from '../types'
-=======
-  type PlantillaReporte,
-} from '../api'
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 
 const TAMANO_PAGINA = 5
 
@@ -49,26 +44,7 @@ type RegistroAnalitico = {
   margen: number
 }
 
-<<<<<<< HEAD
 const STOCK_CRITICO_UMBRAL = 10
-=======
-const SUCURSALES_ANALITICA = [
-  'Santiago Centro',
-  'Providencia',
-  'Las Condes',
-  'Puente Alto',
-  'Maipú',
-  'Concepción',
-  'Viña del Mar',
-  'Temuco',
-  'Antofagasta',
-  'La Serena',
-  'Puerto Montt',
-  'Rancagua',
-]
-
-const CATEGORIAS_ANALITICA = ['Electrónica', 'Hogar', 'Logística', 'Ventas']
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 
 function fechaTexto(fecha: Date) {
   return fecha.toISOString().slice(0, 10)
@@ -82,59 +58,6 @@ function normalizarTexto(texto: string) {
     .trim()
 }
 
-<<<<<<< HEAD
-=======
-function generarDatosAnaliticosDemo(): RegistroAnalitico[] {
-  const hoy = new Date()
-  const dias = 45
-  const datos: RegistroAnalitico[] = []
-
-  for (let d = 0; d < dias; d += 1) {
-    const fecha = new Date(hoy)
-    fecha.setDate(hoy.getDate() - (dias - 1 - d))
-
-    const factorDia = 0.86 + ((d % 10) - 4) * 0.025
-
-    SUCURSALES_ANALITICA.forEach((sucursal, idxSucursal) => {
-      CATEGORIAS_ANALITICA.forEach((categoria, idxCategoria) => {
-        const factorSucursal = 1 + (idxSucursal % 5) * 0.065
-        const factorCategoria = 0.88 + idxCategoria * 0.1
-        const onda = 1 + Math.sin((d + 1) * (idxSucursal + 2) * 0.17) * 0.08
-
-        const ventas = Math.round(
-          390000 * factorDia * factorSucursal * factorCategoria * onda,
-        )
-
-        const inventarioBase =
-          2200 - d * 8 + idxSucursal * 35 - idxCategoria * 70 + ((d + idxSucursal) % 6) * 42
-        const inventario = Math.max(220, Math.round(inventarioBase))
-
-        const stockCritico = inventario < 520 ? Math.max(1, Math.round((520 - inventario) / 55)) : 0
-
-        const margenRaw =
-          18 +
-          (idxSucursal % 6) * 1.4 +
-          idxCategoria * 2.1 +
-          Math.sin((d + 2) * (idxSucursal + 1) * 0.11) * 1.8
-
-        datos.push({
-          fecha: fechaTexto(fecha),
-          sucursal,
-          categoria,
-          ventas,
-          inventario,
-          stockCritico,
-          margen: Number(Math.max(9, Math.min(42, margenRaw)).toFixed(1)),
-        })
-      })
-    })
-  }
-
-  return datos
-}
-
-const DATOS_ANALITICA_DEMO = generarDatosAnaliticosDemo()
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 
 function descargarComoTexto(nombreArchivo: string, contenido: string) {
   const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' })
@@ -157,13 +80,10 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   const [paginaActual, setPaginaActual] = useState(1)
   const [mensajePlantilla, setMensajePlantilla] = useState('')
 
-<<<<<<< HEAD
   const [ventas, setVentas] = useState<Venta[]>([])
   const [stock, setStock] = useState<StockItem[]>([])
   const [mensajeDatos, setMensajeDatos] = useState('')
 
-=======
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
   const [sucursalFiltro, setSucursalFiltro] = useState('Todas')
   const [fechaDesde, setFechaDesde] = useState(() => {
     const inicio = new Date()
@@ -186,7 +106,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     cargarPlantillas()
   }, [])
 
-<<<<<<< HEAD
   useEffect(() => {
     async function cargarDatos() {
       setMensajeDatos('')
@@ -294,30 +213,12 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
 
     return Array.from(mapa.values())
   }, [ventas, stock])
-=======
-  const esEmpleadoTienda = (rol ?? '').toUpperCase() === 'EMPLEADO_TIENDA'
-  const sucursalBloqueada = esEmpleadoTienda && Boolean(sucursalAsignada)
-
-  const sucursalesOpciones = useMemo(
-    () => ['Todas', ...SUCURSALES_ANALITICA],
-    [],
-  )
-
-  const categoriasOpciones = useMemo(
-    () => ['Todas', ...CATEGORIAS_ANALITICA],
-    [],
-  )
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 
   const registrosFiltrados = useMemo(() => {
     const asignadaNorm = sucursalAsignada ? normalizarTexto(sucursalAsignada) : null
     const filtroNorm = normalizarTexto(sucursalFiltro)
 
-<<<<<<< HEAD
     return registrosAnaliticos.filter((item) => {
-=======
-    return DATOS_ANALITICA_DEMO.filter((item) => {
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
       const sucursalItemNorm = normalizarTexto(item.sucursal)
 
       if (sucursalBloqueada && asignadaNorm && sucursalItemNorm !== asignadaNorm) return false
@@ -327,7 +228,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       if (fechaHasta && item.fecha > fechaHasta) return false
       return true
     })
-<<<<<<< HEAD
   }, [categoriaFiltro, fechaDesde, fechaHasta, sucursalFiltro, sucursalBloqueada, sucursalAsignada, registrosAnaliticos])
 
   const stockFiltrado = useMemo(() => {
@@ -343,9 +243,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       return true
     })
   }, [categoriaFiltro, sucursalFiltro, sucursalBloqueada, sucursalAsignada, stock])
-=======
-  }, [categoriaFiltro, fechaDesde, fechaHasta, sucursalFiltro, sucursalBloqueada, sucursalAsignada])
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 
   const ventaTotalConsolidada = useMemo(
     () => registrosFiltrados.reduce((acum, item) => acum + item.ventas, 0),
@@ -372,13 +269,8 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   }, [registrosFiltrados])
 
   const alertasStock = useMemo(
-<<<<<<< HEAD
     () => stockFiltrado.reduce((acum, item) => acum + (item.cantidad < STOCK_CRITICO_UMBRAL ? 1 : 0), 0),
     [stockFiltrado],
-=======
-    () => registrosFiltrados.reduce((acum, item) => acum + item.stockCritico, 0),
-    [registrosFiltrados],
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
   )
 
   const margenGananciaPromedio = useMemo(() => {
@@ -405,24 +297,15 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   const barrasInventarioSucursal = useMemo(() => {
     const mapa = new Map<string, number>()
 
-<<<<<<< HEAD
     stockFiltrado.forEach((item) => {
       mapa.set(item.sucursal, (mapa.get(item.sucursal) ?? 0) + item.cantidad)
-=======
-    registrosFiltrados.forEach((item) => {
-      mapa.set(item.sucursal, (mapa.get(item.sucursal) ?? 0) + item.inventario)
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
     })
 
     return Array.from(mapa.entries())
       .map(([sucursal, inventario]) => ({ sucursal, inventario }))
       .sort((a, b) => b.inventario - a.inventario)
       .slice(0, 8)
-<<<<<<< HEAD
   }, [stockFiltrado])
-=======
-  }, [registrosFiltrados])
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 
   const heatmapChile = useMemo(() => {
     const mapa = new Map<string, Map<string, number>>()
@@ -436,11 +319,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     const filas = Array.from(mapa.entries())
       .map(([sucursal, categorias]) => ({
         sucursal,
-<<<<<<< HEAD
         valores: categoriasAnalitica.map((categoria) => ({
-=======
-        valores: CATEGORIAS_ANALITICA.map((categoria) => ({
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
           categoria,
           valor: categorias.get(categoria) ?? 0,
         })),
@@ -453,11 +332,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     }, 0)
 
     return { filas, maximo }
-<<<<<<< HEAD
   }, [registrosFiltrados, categoriasAnalitica])
-=======
-  }, [registrosFiltrados])
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
 
   const plantillasVisibles = useMemo(() => {
     if (!sucursalBloqueada || !sucursalAsignada) return plantillas
@@ -483,16 +358,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       ? `[${sucursalAsignada}] ${titulo.trim()}`
       : titulo.trim()
 
-<<<<<<< HEAD
-=======
-    const plantillaLocal: PlantillaReporte = {
-      id: Date.now(),
-      titulo: tituloFinal,
-      configuracionVisual: configuracionVisual.trim(),
-      estado: 'Activo',
-    }
-
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
     try {
       const creada = await createPlantillaReporte({
         titulo: tituloFinal,
@@ -506,15 +371,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       setPaginaActual(1)
       setMensajePlantilla('Plantilla creada correctamente.')
     } catch {
-<<<<<<< HEAD
       setMensajePlantilla('No fue posible crear la plantilla en ms-reportes.')
-=======
-      setPlantillas((actual) => [plantillaLocal, ...actual])
-      setTitulo('')
-      setConfiguracionVisual('')
-      setPaginaActual(1)
-      setMensajePlantilla('ms-reportes no responde. Plantilla guardada en modo local.')
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
     }
   }
 
@@ -522,10 +379,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     try {
       await eliminarPlantillaReporte(id)
     } catch {
-<<<<<<< HEAD
-=======
-      // Si backend no encuentra el id local, mantenemos borrado local para demo académica
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
     }
 
     setPlantillas((actual) => actual.filter((item) => item.id !== id))
@@ -556,10 +409,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       </div>
 
       <section className="reportes-kpi-grid">
-<<<<<<< HEAD
         {mensajeDatos && <p className="mensaje-error">{mensajeDatos}</p>}
-=======
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
         <article className="reportes-kpi-card">
           <h3>Venta Total Consolidada</h3>
           <p>{FORMATO_MONEDA.format(ventaTotalConsolidada)}</p>
@@ -672,20 +522,12 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
         </article>
       </section>
 
-<<<<<<< HEAD
       {!sucursalBloqueada && categoriasAnalitica.length > 0 && (
-=======
-      {!sucursalBloqueada && (
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
         <section className="tarjeta-panel">
           <h3>Mapa de Calor: concentración de ventas en Chile</h3>
           <div className="reportes-heatmap-cabecera">
             <span>Sucursal</span>
-<<<<<<< HEAD
             {categoriasAnalitica.map((categoria) => (
-=======
-            {CATEGORIAS_ANALITICA.map((categoria) => (
->>>>>>> 93e87e3276ccc1ff701331e8189e228a166448db
               <span key={categoria}>{categoria}</span>
             ))}
           </div>
