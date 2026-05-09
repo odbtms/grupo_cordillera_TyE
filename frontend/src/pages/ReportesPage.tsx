@@ -20,19 +20,8 @@ import {
   type PlantillaReporte,
 } from '../api'
 import type { StockItem, Venta } from '../types'
-
-const TAMANO_PAGINA = 5
-
-const FORMATO_MONEDA = new Intl.NumberFormat('es-CL', {
-  style: 'currency',
-  currency: 'CLP',
-  maximumFractionDigits: 0,
-})
-
-const FORMATO_COMPACTO = new Intl.NumberFormat('es-CL', {
-  notation: 'compact',
-  maximumFractionDigits: 1,
-})
+import { FORMATO_MONEDA, FORMATO_COMPACTO, normalizarTexto } from '../utils/formatters'
+import { STOCK_CRITICO_UMBRAL, TAMANO_PAGINA } from '../constants/dashboardConfig'
 
 type RegistroAnalitico = {
   fecha: string
@@ -44,20 +33,9 @@ type RegistroAnalitico = {
   margen: number
 }
 
-const STOCK_CRITICO_UMBRAL = 10
-
 function fechaTexto(fecha: Date) {
   return fecha.toISOString().slice(0, 10)
 }
-
-function normalizarTexto(texto: string) {
-  return texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-}
-
 
 function descargarComoTexto(nombreArchivo: string, contenido: string) {
   const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' })

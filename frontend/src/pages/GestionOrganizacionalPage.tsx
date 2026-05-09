@@ -63,7 +63,7 @@ function GestionOrganizacionalPage() {
     setSucursales(
       unicas.map((nombre) => ({
         nombre,
-        metaVenta: 1000000,
+        metaVenta: 0,
       })),
     )
   }, [ventas])
@@ -102,7 +102,7 @@ function GestionOrganizacionalPage() {
       return
     }
 
-    setMensaje('Cambios validados. (Demo académica sin endpoint PUT de sucursal)')
+    setMensaje('Cambios locales validados.')
   }
 
   async function crearVenta() {

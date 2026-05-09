@@ -13,38 +13,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-
-const FORMATO_MONEDA = new Intl.NumberFormat('es-CL', {
-  style: 'currency',
-  currency: 'CLP',
-  maximumFractionDigits: 0,
-})
-
-const FORMATO_COMPACTO = new Intl.NumberFormat('es-CL', {
-  notation: 'compact',
-  maximumFractionDigits: 1,
-})
-
-const COLORES_GRAFICO = [
-  '#0f766e',
-  '#1d4ed8',
-  '#0891b2',
-  '#4f46e5',
-  '#65a30d',
-  '#b45309',
-  '#9333ea',
-  '#dc2626',
-]
-
-const TARJETAS_POR_PAGINA = 4
-
-function normalizarTexto(texto: string) {
-  return texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-}
+import { FORMATO_MONEDA, FORMATO_COMPACTO, normalizarTexto } from '../utils/formatters'
+import { COLORES_GRAFICO, TARJETAS_POR_PAGINA } from '../constants/dashboardConfig'
 
 function DashboardPrincipalPage() {
   const [ventas, setVentas] = useState<Venta[]>([])

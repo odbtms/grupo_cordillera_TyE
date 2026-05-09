@@ -1,100 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getDashboardPayload } from '../features/kpis'
 import type { BranchCatalogItem, Kpi, Venta } from '../types'
-
-const FALLBACK_VENTAS: Venta[] = [
-  {
-    id: 1,
-    fechaVenta: '2026-04-18T10:30:00',
-    montoTotal: 1480000,
-    sistemaOrigen: 'POS',
-    sucursal: 'Santiago Centro',
-  },
-  {
-    id: 2,
-    fechaVenta: '2026-04-18T16:10:00',
-    montoTotal: 1220000,
-    sistemaOrigen: 'Ecommerce',
-    sucursal: 'Providencia',
-  },
-  {
-    id: 3,
-    fechaVenta: '2026-04-10T09:15:00',
-    montoTotal: 860000,
-    sistemaOrigen: 'POS',
-    sucursal: 'Viña del Mar',
-  },
-  {
-    id: 4,
-    fechaVenta: '2026-03-18T14:40:00',
-    montoTotal: 1110000,
-    sistemaOrigen: 'POS',
-    sucursal: 'Santiago Centro',
-  },
-  {
-    id: 5,
-    fechaVenta: '2026-03-11T11:25:00',
-    montoTotal: 970000,
-    sistemaOrigen: 'Ecommerce',
-    sucursal: 'Providencia',
-  },
-  {
-    id: 6,
-    fechaVenta: '2026-03-04T12:50:00',
-    montoTotal: 790000,
-    sistemaOrigen: 'POS',
-    sucursal: 'Viña del Mar',
-  },
-  {
-    id: 7,
-    fechaVenta: '2026-04-19T13:30:00',
-    montoTotal: 640000,
-    sistemaOrigen: 'POS',
-    sucursal: 'Concepción',
-  },
-  {
-    id: 8,
-    fechaVenta: '2026-03-20T09:40:00',
-    montoTotal: 420000,
-    sistemaOrigen: 'Ecommerce',
-    sucursal: 'Concepción',
-  },
-]
-
-const FALLBACK_KPIS: Kpi[] = [
-  {
-    id: 1,
-    nombre: 'Margen Operacional',
-    formula: '(Ingresos-Costos)/Ingresos',
-    valorCalculado: 31.5,
-    fechaActualizacion: '2026-04-20T10:15:00',
-  },
-  {
-    id: 2,
-    nombre: 'Crecimiento Mensual',
-    formula: '(Mes actual-Mes previo)/Mes previo',
-    valorCalculado: 14.2,
-    fechaActualizacion: '2026-04-20T10:15:00',
-  },
-]
-
-const moneyFormatter = new Intl.NumberFormat('es-CL', {
-  style: 'currency',
-  currency: 'CLP',
-  maximumFractionDigits: 0,
-})
-
-const monthLabelFormatter = new Intl.DateTimeFormat('es-CL', {
-  month: 'long',
-  year: 'numeric',
-})
-
-const BRANCH_ZONE_MAP: Record<string, string> = {
-  'Santiago Centro': 'Metropolitana',
-  Providencia: 'Metropolitana',
-  'Viña del Mar': 'Costa',
-  Concepción: 'Sur',
-}
+import { FORMATO_MONEDA, monthLabelFormatter } from '../utils/formatters'
+import { BRANCH_ZONE_MAP } from '../constants/dashboardConfig'
 
 function monthKey(dateText: string): string {
   const date = new Date(dateText)
@@ -120,7 +28,6 @@ function AdminDashboardPage() {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [kpis, setKpis] = useState<Kpi[]>([])
   const [loading, setLoading] = useState(true)
-  const [dataSource, setDataSource] = useState<'api' | 'local'>('local')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [zoneFilter, setZoneFilter] = useState('Todas')
@@ -134,11 +41,9 @@ function AdminDashboardPage() {
         const payload = await getDashboardPayload()
         setVentas(payload.ventas)
         setKpis(payload.kpis)
-        setDataSource('api')
       } catch {
-        setVentas(FALLBACK_VENTAS)
-        setKpis(FALLBACK_KPIS)
-        setDataSource('local')
+        setVentas([])
+        setKpis([])
       } finally {
         setLoading(false)
       }
@@ -311,8 +216,7 @@ function AdminDashboardPage() {
         <h1>Panel de Administracion</h1>
         <p>Grupo Cordillera - Vista para gerencia</p>
         <p>
-          Estado: {loading ? 'Cargando datos...' : 'Datos cargados'} | Fuente:{' '}
-          {dataSource === 'api' ? 'API' : 'respaldo local'}
+          Estado: {loading ? 'Cargando datos...' : 'Datos actualizados'}
         </p>
       </header>
 
@@ -321,7 +225,7 @@ function AdminDashboardPage() {
         <div className="resumen-grid">
           <div className="tarjeta-resumen">
             <h3>Resumen de ventas totales</h3>
-            <p className="valor-principal">{moneyFormatter.format(totalSales)}</p>
+            <p className="valor-principal">{FORMATO_MONEDA.format(totalSales)}</p>
             <p>
               Registros: {ventas.length} | Sucursales con ventas:{' '}
               {branchData.length}
@@ -333,7 +237,7 @@ function AdminDashboardPage() {
               {branchData.map((branch) => (
                 <li key={branch.sucursal}>
                   <span>{branch.sucursal}</span>
-                  <strong>{moneyFormatter.format(branch.total)}</strong>
+                  <strong>{FORMATO_MONEDA.format(branch.total)}</strong>
                 </li>
               ))}
             </ul>
@@ -343,7 +247,7 @@ function AdminDashboardPage() {
             <ul className="lista-simple">
               <li>
                 <span>Ticket promedio</span>
-                <strong>{moneyFormatter.format(averageTicket)}</strong>
+                <strong>{FORMATO_MONEDA.format(averageTicket)}</strong>
               </li>
               <li>
                 <span>Sucursal lider</span>
@@ -425,7 +329,7 @@ function AdminDashboardPage() {
 
           <div className="filters-summary">
             <span>{filteredVentas.length} ventas filtradas</span>
-            <strong>{moneyFormatter.format(filteredTotal)}</strong>
+            <strong>{FORMATO_MONEDA.format(filteredTotal)}</strong>
             <button
               type="button"
               onClick={() => {
@@ -457,7 +361,7 @@ function AdminDashboardPage() {
                 <div key={item.sucursal} className="branch-table-row">
                   <span>{item.sucursal}</span>
                   <span>{item.zona}</span>
-                  <strong>{moneyFormatter.format(item.total)}</strong>
+                  <strong>{FORMATO_MONEDA.format(item.total)}</strong>
                 </div>
               ))}
               {!filteredCatalog.length && (
@@ -482,7 +386,7 @@ function AdminDashboardPage() {
                   <div key={branch.sucursal} className="branch-item">
                     <div className="branch-top">
                       <span>{branch.sucursal}</span>
-                      <strong>{moneyFormatter.format(branch.total)}</strong>
+                      <strong>{FORMATO_MONEDA.format(branch.total)}</strong>
                     </div>
                     <div className="branch-bar-bg">
                       <div
@@ -518,7 +422,7 @@ function AdminDashboardPage() {
                 <div key={period.periodo} className="period-table-row">
                   <span>{period.label}</span>
                   <span>{period.operaciones}</span>
-                  <strong>{moneyFormatter.format(period.total)}</strong>
+                  <strong>{FORMATO_MONEDA.format(period.total)}</strong>
                 </div>
               ))}
               {!periodDetails.length && (

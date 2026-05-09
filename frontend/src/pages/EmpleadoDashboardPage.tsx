@@ -10,25 +10,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-
-const FORMATO_MONEDA = new Intl.NumberFormat('es-CL', {
-  style: 'currency',
-  currency: 'CLP',
-  maximumFractionDigits: 0,
-})
-
-const FORMATO_COMPACTO = new Intl.NumberFormat('es-CL', {
-  notation: 'compact',
-  maximumFractionDigits: 1,
-})
-
-function normalizarTexto(texto: string) {
-  return texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-}
+import { FORMATO_MONEDA, FORMATO_COMPACTO, normalizarTexto } from '../utils/formatters'
 
 type EmpleadoDashboardPageProps = {
   sucursalAsignada: string
@@ -57,7 +39,7 @@ function EmpleadoDashboardPage({
 
         setVentas(ventasSucursal)
         setStock(stockSucursal)
-        setAlertas(ventasSucursal.length ? ['Sin alertas críticas detectadas.'] : ['Sin ventas registradas.'])
+        setAlertas([])
       } catch {
         setVentas([])
         setStock([])
