@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { actualizarFormulaKpi, fetchKpis, fetchVentas, registrarVenta, registrarUsuario, upsertStock } from '../api'
+import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock } from '../api'
 import type { Kpi, Venta } from '../types'
 
 type Sucursal = {
@@ -45,7 +45,7 @@ function GestionOrganizacionalPage() {
     async function cargarSucursales() {
       setMensaje('')
       try {
-        const [listaVentas, listaKpis] = await Promise.all([fetchVentas(), fetchKpis()])
+        const [listaVentas, listaKpis] = await Promise.all([obtenerVentas(), obtenerKpis()])
         setVentas(listaVentas)
         setKpis(listaKpis)
       } catch {
@@ -121,7 +121,7 @@ function GestionOrganizacionalPage() {
         sucursal: nuevaVenta.sucursal.trim(),
       })
 
-      const listaActualizada = await fetchVentas()
+      const listaActualizada = await obtenerVentas()
       setVentas(listaActualizada)
       setNuevaVenta({ montoTotal: 0, sistemaOrigen: 'POS', sucursal: '' })
       setMensajeVenta('Venta registrada correctamente en ms-datos.')
@@ -140,7 +140,7 @@ function GestionOrganizacionalPage() {
 
     try {
       await actualizarFormulaKpi(kpiSeleccionadoId, nuevaFormula.trim())
-      const lista = await fetchKpis()
+      const lista = await obtenerKpis()
       setKpis(lista)
       setNuevaFormula('')
       setMensajeKpi('Fórmula de KPI actualizada correctamente.')

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import {
   actualizarRolUsuarioPorUsername,
-  createPlantillaReporte,
+  crearPlantillaReporte,
   eliminarPlantillaReporte,
-  fetchKpis,
-  fetchVentas,
-  validateToken,
+  obtenerKpis,
+  obtenerVentas,
+  validarToken,
 } from '../api'
 
 type EstadoServicio = {
@@ -41,11 +41,11 @@ function ConfiguracionAuditoriaPage({
   useEffect(() => {
     async function validarServicios() {
       const resultados = await Promise.allSettled([
-        validateToken(token),
-        fetchVentas(),
-        fetchKpis(),
+        validarToken(token),
+        obtenerVentas(),
+        obtenerKpis(),
         (async () => {
-          const temporal = await createPlantillaReporte({
+          const temporal = await crearPlantillaReporte({
             titulo: 'healthcheck-temp',
             configuracionVisual: 'healthcheck-temp',
             estado: 'Activo',

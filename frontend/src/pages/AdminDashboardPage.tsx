@@ -1,80 +1,80 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchKpis, fetchVentas } from '../api'
-import type { BranchCatalogItem, Kpi, Venta } from '../types'
+import { obtenerKpis, obtenerVentas } from '../api'
+import type { ItemCatalogoSucursal, Kpi, Venta } from '../types'
 import { FORMATO_MONEDA, monthLabelFormatter } from '../utils/formatters'
 import { BRANCH_ZONE_MAP } from '../constants/dashboardConfig'
 
-function monthKey(dateText: string): string {
-  const date = new Date(dateText)
-  if (Number.isNaN(date.getTime())) return 'invalido'
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  return `${date.getFullYear()}-${month}`
+function claveMes(textoFecha: string): string {
+  const fecha = new Date(textoFecha)
+  if (Number.isNaN(fecha.getTime())) return 'invalido'
+  const mes = `${fecha.getMonth() + 1}`.padStart(2, '0')
+  return `${fecha.getFullYear()}-${mes}`
 }
 
-function zoneByBranch(branch: string): string {
-  return BRANCH_ZONE_MAP[branch] ?? 'Sin zona'
+function zonaPorSucursal(sucursal: string): string {
+  return BRANCH_ZONE_MAP[sucursal] ?? 'Sin zona'
 }
 
-function formatMonthLabel(key: string): string {
-  const [yearText, monthText] = key.split('-')
-  const year = Number(yearText)
-  const month = Number(monthText)
-  if (Number.isNaN(year) || Number.isNaN(month)) return key
-  const date = new Date(year, month - 1, 1)
-  return monthLabelFormatter.format(date)
+function formatearEtiquetaMes(clave: string): string {
+  const [textoAnio, textoMes] = clave.split('-')
+  const anio = Number(textoAnio)
+  const mes = Number(textoMes)
+  if (Number.isNaN(anio) || Number.isNaN(mes)) return clave
+  const fecha = new Date(anio, mes - 1, 1)
+  return monthLabelFormatter.format(fecha)
 }
 
 function AdminDashboardPage() {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [kpis, setKpis] = useState<Kpi[]>([])
-  const [loading, setLoading] = useState(true)
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
-  const [zoneFilter, setZoneFilter] = useState('Todas')
-  const [originFilter, setOriginFilter] = useState('Todos')
+  const [cargando, setCargando] = useState(true)
+  const [fechaDesde, setFechaDesde] = useState('')
+  const [fechaHasta, setFechaHasta] = useState('')
+  const [filtroZona, setFiltroZona] = useState('Todas')
+  const [filtroOrigen, setFiltroOrigen] = useState('Todos')
 
   useEffect(() => {
-    async function loadDashboardData() {
-      setLoading(true)
+    async function cargarDatosDashboard() {
+      setCargando(true)
 
       try {
-        const [ventasData, kpisData] = await Promise.all([fetchVentas(), fetchKpis()])
+        const [ventasData, kpisData] = await Promise.all([obtenerVentas(), obtenerKpis()])
         setVentas(ventasData)
         setKpis(kpisData)
       } catch {
         setVentas([])
         setKpis([])
       } finally {
-        setLoading(false)
+        setCargando(false)
       }
     }
 
-    loadDashboardData()
+    cargarDatosDashboard()
   }, [])
 
-  const totalSales = useMemo(
+  const ventasTotales = useMemo(
     () => ventas.reduce((total, venta) => total + (venta.montoTotal || 0), 0),
     [ventas],
   )
 
-  const averageTicket = useMemo(() => {
+  const ticketPromedio = useMemo(() => {
     if (!ventas.length) return 0
-    return totalSales / ventas.length
-  }, [totalSales, ventas.length])
+    return ventasTotales / ventas.length
+  }, [ventasTotales, ventas.length])
 
-  const branchData = useMemo(() => {
-    const map = new Map<string, number>()
+  const datosSucursales = useMemo(() => {
+    const mapa = new Map<string, number>()
     for (const venta of ventas) {
-      const key = venta.sucursal || 'Sucursal sin nombre'
-      map.set(key, (map.get(key) ?? 0) + (venta.montoTotal || 0))
+      const clave = venta.sucursal || 'Sucursal sin nombre'
+      mapa.set(clave, (mapa.get(clave) ?? 0) + (venta.montoTotal || 0))
     }
 
-    return Array.from(map.entries())
+    return Array.from(mapa.entries())
       .map(([sucursal, total]) => ({ sucursal, total }))
       .sort((a, b) => b.total - a.total)
   }, [ventas])
 
-  const sucursalLider = branchData[0]
+  const sucursalLider = datosSucursales[0]
 
   const alertas = useMemo(() => {
     const mensajes: string[] = []
@@ -84,8 +84,8 @@ function AdminDashboardPage() {
       return mensajes
     }
 
-    if (sucursalLider && totalSales > 0) {
-      const participacion = (sucursalLider.total / totalSales) * 100
+    if (sucursalLider && ventasTotales > 0) {
+      const participacion = (sucursalLider.total / ventasTotales) * 100
       if (participacion >= 50) {
         mensajes.push(
           `${sucursalLider.sucursal} concentra gran parte de los ingresos (${participacion.toFixed(1)}%).`,
@@ -93,7 +93,7 @@ function AdminDashboardPage() {
       }
     }
 
-    const sucursalDebil = branchData.find((item) => item.total < averageTicket)
+    const sucursalDebil = datosSucursales.find((item) => item.total < ticketPromedio)
     if (sucursalDebil) {
       mensajes.push(
         `${sucursalDebil.sucursal} esta por debajo del promedio general de ingresos.`,
@@ -105,110 +105,110 @@ function AdminDashboardPage() {
     }
 
     return mensajes
-  }, [averageTicket, branchData, sucursalLider, totalSales, ventas.length])
+  }, [ticketPromedio, datosSucursales, sucursalLider, ventasTotales, ventas.length])
 
-  const branchCatalog = useMemo<BranchCatalogItem[]>(() => {
-    const map = new Map<string, number>()
+  const catalogoSucursales = useMemo<ItemCatalogoSucursal[]>(() => {
+    const mapa = new Map<string, number>()
 
     for (const venta of ventas) {
-      const branch = venta.sucursal || 'Sucursal sin nombre'
-      map.set(branch, (map.get(branch) ?? 0) + (venta.montoTotal || 0))
+      const sucursal = venta.sucursal || 'Sucursal sin nombre'
+      mapa.set(sucursal, (mapa.get(sucursal) ?? 0) + (venta.montoTotal || 0))
     }
 
-    return Array.from(map.entries())
+    return Array.from(mapa.entries())
       .map(([sucursal, total]) => ({
         sucursal,
-        zona: zoneByBranch(sucursal),
+        zona: zonaPorSucursal(sucursal),
         total,
       }))
       .sort((a, b) => a.sucursal.localeCompare(b.sucursal, 'es'))
   }, [ventas])
 
-  const zoneOptions = useMemo(
-    () => ['Todas', ...new Set(branchCatalog.map((item) => item.zona))],
-    [branchCatalog],
+  const opcionesZona = useMemo(
+    () => ['Todas', ...new Set(catalogoSucursales.map((item) => item.zona))],
+    [catalogoSucursales],
   )
 
-  const originOptions = useMemo(
+  const opcionesOrigen = useMemo(
     () => ['Todos', ...new Set(ventas.map((venta) => venta.sistemaOrigen))],
     [ventas],
   )
 
-  const filteredVentas = useMemo(() => {
+  const ventasFiltradas = useMemo(() => {
     return ventas.filter((venta) => {
-      const ventaDate = new Date(venta.fechaVenta)
-      const branchZone = zoneByBranch(venta.sucursal || 'Sucursal sin nombre')
+      const fechaVentaDate = new Date(venta.fechaVenta)
+      const zonaSucursal = zonaPorSucursal(venta.sucursal || 'Sucursal sin nombre')
 
-      if (fromDate) {
-        const startDate = new Date(`${fromDate}T00:00:00`)
-        if (ventaDate < startDate) return false
+      if (fechaDesde) {
+        const fechaInicio = new Date(`${fechaDesde}T00:00:00`)
+        if (fechaVentaDate < fechaInicio) return false
       }
 
-      if (toDate) {
-        const endDate = new Date(`${toDate}T23:59:59`)
-        if (ventaDate > endDate) return false
+      if (fechaHasta) {
+        const fechaFin = new Date(`${fechaHasta}T23:59:59`)
+        if (fechaVentaDate > fechaFin) return false
       }
 
-      if (zoneFilter !== 'Todas' && branchZone !== zoneFilter) {
+      if (filtroZona !== 'Todas' && zonaSucursal !== filtroZona) {
         return false
       }
 
-      if (originFilter !== 'Todos' && venta.sistemaOrigen !== originFilter) {
+      if (filtroOrigen !== 'Todos' && venta.sistemaOrigen !== filtroOrigen) {
         return false
       }
 
       return true
     })
-  }, [fromDate, originFilter, toDate, ventas, zoneFilter])
+  }, [fechaDesde, filtroOrigen, fechaHasta, ventas, filtroZona])
 
-  const filteredBranchData = useMemo(() => {
-    const map = new Map<string, number>()
+  const datosSucursalesFiltrados = useMemo(() => {
+    const mapa = new Map<string, number>()
 
-    for (const venta of filteredVentas) {
-      const branch = venta.sucursal || 'Sucursal sin nombre'
-      map.set(branch, (map.get(branch) ?? 0) + venta.montoTotal)
+    for (const venta of ventasFiltradas) {
+      const sucursal = venta.sucursal || 'Sucursal sin nombre'
+      mapa.set(sucursal, (mapa.get(sucursal) ?? 0) + venta.montoTotal)
     }
 
-    return Array.from(map.entries())
+    return Array.from(mapa.entries())
       .map(([sucursal, total]) => ({ sucursal, total }))
       .sort((a, b) => b.total - a.total)
-  }, [filteredVentas])
+  }, [ventasFiltradas])
 
-  const filteredBranchMax = filteredBranchData[0]?.total ?? 1
+  const maxVentaSucursalFiltrada = datosSucursalesFiltrados[0]?.total ?? 1
 
-  const periodDetails = useMemo(() => {
-    const map = new Map<string, { total: number; operaciones: number }>()
+  const detallesPeriodo = useMemo(() => {
+    const mapa = new Map<string, { total: number; operaciones: number }>()
 
-    for (const venta of filteredVentas) {
-      const key = monthKey(venta.fechaVenta)
-      const current = map.get(key) ?? { total: 0, operaciones: 0 }
-      map.set(key, {
-        total: current.total + venta.montoTotal,
-        operaciones: current.operaciones + 1,
+    for (const venta of ventasFiltradas) {
+      const clave = claveMes(venta.fechaVenta)
+      const actual = mapa.get(clave) ?? { total: 0, operaciones: 0 }
+      mapa.set(clave, {
+        total: actual.total + venta.montoTotal,
+        operaciones: actual.operaciones + 1,
       })
     }
 
-    return Array.from(map.entries())
-      .map(([periodo, values]) => ({
+    return Array.from(mapa.entries())
+      .map(([periodo, valores]) => ({
         periodo,
-        label: formatMonthLabel(periodo),
-        total: values.total,
-        operaciones: values.operaciones,
+        etiqueta: formatearEtiquetaMes(periodo),
+        total: valores.total,
+        operaciones: valores.operaciones,
       }))
       .sort((a, b) => (a.periodo > b.periodo ? 1 : -1))
-  }, [filteredVentas])
+  }, [ventasFiltradas])
 
-  const filteredTotal = useMemo(
-    () => filteredVentas.reduce((sum, venta) => sum + venta.montoTotal, 0),
-    [filteredVentas],
+  const totalFiltrado = useMemo(
+    () => ventasFiltradas.reduce((suma, venta) => suma + venta.montoTotal, 0),
+    [ventasFiltradas],
   )
 
-  const filteredCatalog = useMemo(() => {
-    const active = new Set(filteredBranchData.map((branch) => branch.sucursal))
-    return branchCatalog
-      .filter((item) => active.has(item.sucursal))
+  const catalogoFiltrado = useMemo(() => {
+    const activas = new Set(datosSucursalesFiltrados.map((sucursal) => sucursal.sucursal))
+    return catalogoSucursales
+      .filter((item) => activas.has(item.sucursal))
       .sort((a, b) => b.total - a.total)
-  }, [branchCatalog, filteredBranchData])
+  }, [catalogoSucursales, datosSucursalesFiltrados])
 
   return (
     <main className="dashboard-page">
@@ -216,7 +216,7 @@ function AdminDashboardPage() {
         <h1>Panel de Administracion</h1>
         <p>Grupo Cordillera - Vista para gerencia</p>
         <p>
-          Estado: {loading ? 'Cargando datos...' : 'Datos actualizados'}
+          Estado: {cargando ? 'Cargando datos...' : 'Datos actualizados'}
         </p>
       </header>
 
@@ -225,19 +225,19 @@ function AdminDashboardPage() {
         <div className="resumen-grid">
           <div className="tarjeta-resumen">
             <h3>Resumen de ventas totales</h3>
-            <p className="valor-principal">{FORMATO_MONEDA.format(totalSales)}</p>
+            <p className="valor-principal">{FORMATO_MONEDA.format(ventasTotales)}</p>
             <p>
               Registros: {ventas.length} | Sucursales con ventas:{' '}
-              {branchData.length}
+              {datosSucursales.length}
             </p>
           </div>
           <div className="tarjeta-resumen">
             <h3>Comparacion entre sucursales</h3>
             <ul className="lista-simple">
-              {branchData.map((branch) => (
-                <li key={branch.sucursal}>
-                  <span>{branch.sucursal}</span>
-                  <strong>{FORMATO_MONEDA.format(branch.total)}</strong>
+              {datosSucursales.map((dato) => (
+                <li key={dato.sucursal}>
+                  <span>{dato.sucursal}</span>
+                  <strong>{FORMATO_MONEDA.format(dato.total)}</strong>
                 </li>
               ))}
             </ul>
@@ -247,7 +247,7 @@ function AdminDashboardPage() {
             <ul className="lista-simple">
               <li>
                 <span>Ticket promedio</span>
-                <strong>{FORMATO_MONEDA.format(averageTicket)}</strong>
+                <strong>{FORMATO_MONEDA.format(ticketPromedio)}</strong>
               </li>
               <li>
                 <span>Sucursal lider</span>
@@ -284,8 +284,8 @@ function AdminDashboardPage() {
               Fecha desde
               <input
                 type="date"
-                value={fromDate}
-                onChange={(event) => setFromDate(event.target.value)}
+                value={fechaDesde}
+                onChange={(evento) => setFechaDesde(evento.target.value)}
               />
             </label>
 
@@ -293,20 +293,20 @@ function AdminDashboardPage() {
               Fecha hasta
               <input
                 type="date"
-                value={toDate}
-                onChange={(event) => setToDate(event.target.value)}
+                value={fechaHasta}
+                onChange={(evento) => setFechaHasta(evento.target.value)}
               />
             </label>
 
             <label>
               Zona
               <select
-                value={zoneFilter}
-                onChange={(event) => setZoneFilter(event.target.value)}
+                value={filtroZona}
+                onChange={(evento) => setFiltroZona(evento.target.value)}
               >
-                {zoneOptions.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
+                {opcionesZona.map((zona) => (
+                  <option key={zona} value={zona}>
+                    {zona}
                   </option>
                 ))}
               </select>
@@ -315,12 +315,12 @@ function AdminDashboardPage() {
             <label>
               Sistema origen
               <select
-                value={originFilter}
-                onChange={(event) => setOriginFilter(event.target.value)}
+                value={filtroOrigen}
+                onChange={(evento) => setFiltroOrigen(evento.target.value)}
               >
-                {originOptions.map((origin) => (
-                  <option key={origin} value={origin}>
-                    {origin}
+                {opcionesOrigen.map((origen) => (
+                  <option key={origen} value={origen}>
+                    {origen}
                   </option>
                 ))}
               </select>
@@ -328,15 +328,15 @@ function AdminDashboardPage() {
           </div>
 
           <div className="filters-summary">
-            <span>{filteredVentas.length} ventas filtradas</span>
-            <strong>{FORMATO_MONEDA.format(filteredTotal)}</strong>
+            <span>{ventasFiltradas.length} ventas filtradas</span>
+            <strong>{FORMATO_MONEDA.format(totalFiltrado)}</strong>
             <button
               type="button"
               onClick={() => {
-                setFromDate('')
-                setToDate('')
-                setZoneFilter('Todas')
-                setOriginFilter('Todos')
+                setFechaDesde('')
+                setFechaHasta('')
+                setFiltroZona('Todas')
+                setFiltroOrigen('Todos')
               }}
             >
               Limpiar filtros
@@ -348,7 +348,7 @@ function AdminDashboardPage() {
           <article className="tarjeta-resumen" aria-label="Lista de sucursales">
             <div className="panel-head">
               <h2>Lista de Sucursales</h2>
-              <span>{filteredCatalog.length} activas</span>
+              <span>{catalogoFiltrado.length} activas</span>
             </div>
 
             <div className="branch-table">
@@ -357,14 +357,14 @@ function AdminDashboardPage() {
                 <span>Zona</span>
                 <span>Total</span>
               </div>
-              {filteredCatalog.map((item) => (
+              {catalogoFiltrado.map((item) => (
                 <div key={item.sucursal} className="branch-table-row">
                   <span>{item.sucursal}</span>
                   <span>{item.zona}</span>
                   <strong>{FORMATO_MONEDA.format(item.total)}</strong>
                 </div>
               ))}
-              {!filteredCatalog.length && (
+              {!catalogoFiltrado.length && (
                 <p className="empty-state">No hay sucursales para el filtro actual.</p>
               )}
             </div>
@@ -377,27 +377,27 @@ function AdminDashboardPage() {
             </div>
 
             <div className="branch-list">
-              {filteredBranchData.map((branch) => {
-                const width =
-                  filteredBranchMax > 0
-                    ? (branch.total / filteredBranchMax) * 100
+              {datosSucursalesFiltrados.map((dato) => {
+                const ancho =
+                  maxVentaSucursalFiltrada > 0
+                    ? (dato.total / maxVentaSucursalFiltrada) * 100
                     : 0
                 return (
-                  <div key={branch.sucursal} className="branch-item">
+                  <div key={dato.sucursal} className="branch-item">
                     <div className="branch-top">
-                      <span>{branch.sucursal}</span>
-                      <strong>{FORMATO_MONEDA.format(branch.total)}</strong>
+                      <span>{dato.sucursal}</span>
+                      <strong>{FORMATO_MONEDA.format(dato.total)}</strong>
                     </div>
                     <div className="branch-bar-bg">
                       <div
                         className="branch-bar-fill"
-                        style={{ width: `${width}%` }}
+                        style={{ width: `${ancho}%` }}
                       />
                     </div>
                   </div>
                 )
               })}
-              {!filteredBranchData.length && (
+              {!datosSucursalesFiltrados.length && (
                 <p className="empty-state">Sin ventas para los filtros seleccionados.</p>
               )}
             </div>
@@ -418,14 +418,14 @@ function AdminDashboardPage() {
                 <span>Operaciones</span>
                 <span>Ingresos</span>
               </div>
-              {periodDetails.map((period) => (
-                <div key={period.periodo} className="period-table-row">
-                  <span>{period.label}</span>
-                  <span>{period.operaciones}</span>
-                  <strong>{FORMATO_MONEDA.format(period.total)}</strong>
+              {detallesPeriodo.map((detalle) => (
+                <div key={detalle.periodo} className="period-table-row">
+                  <span>{detalle.etiqueta}</span>
+                  <span>{detalle.operaciones}</span>
+                  <strong>{FORMATO_MONEDA.format(detalle.total)}</strong>
                 </div>
               ))}
-              {!periodDetails.length && (
+              {!detallesPeriodo.length && (
                 <p className="empty-state">No existen ingresos en el periodo filtrado.</p>
               )}
             </div>

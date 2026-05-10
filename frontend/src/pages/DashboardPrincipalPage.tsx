@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchDashboard } from '../api'
+import { obtenerDashboard } from '../api'
 import type { Kpi, Venta } from '../types'
 import {
   Area,
@@ -32,7 +32,7 @@ function DashboardPrincipalPage() {
       setMensajeError('')
 
       try {
-        const respuesta = await fetchDashboard()
+        const respuesta = await obtenerDashboard()
         const mergedVentas = respuesta.ventas || []
         const mergedKpis = respuesta.kpis || []
 

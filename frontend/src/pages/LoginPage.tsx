@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { iniciarSesion, registrarUsuario } from '../api'
-import type { LoginResponse } from '../types'
+import type { RespuestaLogin } from '../types'
 
 type LoginPageProps = {
   onLoginExitoso: (
@@ -37,7 +37,7 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
     setCargando(true)
 
     try {
-      const respuesta: LoginResponse = await iniciarSesion({
+      const respuesta: RespuestaLogin = await iniciarSesion({
         username: usuario.trim(),
         password: contrasena,
       })

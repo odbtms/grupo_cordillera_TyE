@@ -1,9 +1,9 @@
-import { fetchKpis } from './kpisApi'
-import { fetchVentas } from './ventasApi'
-import type { DashboardResponse } from '../types'
+import { obtenerKpis } from './kpisApi'
+import { obtenerVentas } from './ventasApi'
+import type { RespuestaDashboard } from '../types'
 
-export async function fetchDashboard(): Promise<DashboardResponse> {
-  const [rawVentas, kpis] = await Promise.all([fetchVentas(), fetchKpis()])
+export async function obtenerDashboard(): Promise<RespuestaDashboard> {
+  const [rawVentas, kpis] = await Promise.all([obtenerVentas(), obtenerKpis()])
 
   const ventas = rawVentas.filter(
     (venta) => !venta.sucursal.toLowerCase().includes('prueba')

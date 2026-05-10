@@ -11,12 +11,12 @@ import {
   YAxis,
 } from 'recharts'
 import {
-  createPlantillaReporte,
+  crearPlantillaReporte,
   eliminarPlantillaReporte,
-  fetchPlantillasReporte,
-  fetchStock,
-  fetchVentas,
-  fetchVentasPorSucursal,
+  obtenerPlantillasReporte,
+  obtenerStock,
+  obtenerVentas,
+  obtenerVentasPorSucursal,
   type PlantillaReporte,
 } from '../api'
 import type { StockItem, Venta } from '../types'
@@ -74,7 +74,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   useEffect(() => {
     async function cargarPlantillas() {
       try {
-        const lista = await fetchPlantillasReporte()
+        const lista = await obtenerPlantillasReporte()
         setPlantillas(lista)
       } catch {
         setMensajePlantilla('No se pudo cargar el listado desde ms-reportes.')
@@ -93,15 +93,15 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       try {
         if (esEmpleadoTienda && sucursal) {
           const [ventasSucursal, stockSucursal] = await Promise.all([
-            fetchVentasPorSucursal(sucursal),
-            fetchStock(sucursal),
+            obtenerVentasPorSucursal(sucursal),
+            obtenerStock(sucursal),
           ])
           setVentas(ventasSucursal)
           setStock(stockSucursal)
         } else {
           const [ventasFull, stockFull] = await Promise.all([
-            fetchVentas(),
-            fetchStock(),
+            obtenerVentas(),
+            obtenerStock(),
           ])
           setVentas(ventasFull)
           setStock(stockFull)
@@ -337,7 +337,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       : titulo.trim()
 
     try {
-      const creada = await createPlantillaReporte({
+      const creada = await crearPlantillaReporte({
         titulo: tituloFinal,
         configuracionVisual: configuracionVisual.trim(),
         estado: 'Activo',

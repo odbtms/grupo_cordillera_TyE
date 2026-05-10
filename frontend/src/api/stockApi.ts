@@ -8,7 +8,7 @@ export type StockInput = {
   cantidad: number
 }
 
-export async function fetchStock(sucursal?: string): Promise<StockItem[]> {
+export async function obtenerStock(sucursal?: string): Promise<StockItem[]> {
   const { data } = await ventasHttp.get<StockItem[]>('/stock', {
     params: sucursal ? { sucursal } : undefined,
   })

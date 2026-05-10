@@ -14,23 +14,23 @@ export type Kpi = {
   fechaActualizacion: string
 }
 
-export type BranchSummary = {
+export type ResumenSucursal = {
   sucursal: string
   total: number
 }
 
-export type BranchCatalogItem = {
+export type ItemCatalogoSucursal = {
   sucursal: string
   zona: string
   total: number
 }
 
-export type AlertLevel = 'alta' | 'media' | 'info'
+export type NivelAlerta = 'alta' | 'media' | 'info'
 
-export type DashboardAlert = {
-  title: string
-  message: string
-  level: AlertLevel
+export type AlertaDashboard = {
+  titulo: string
+  mensaje: string
+  nivel: NivelAlerta
 }
 
 export type StockItem = {
@@ -41,7 +41,7 @@ export type StockItem = {
   cantidad: number
 }
 
-export type LoginResponse = {
+export type RespuestaLogin = {
   token: string
   usuario: string
   rol: string
@@ -59,7 +59,7 @@ export type ResumenDashboard = {
   cantidadSucursales: number
 }
 
-export type DashboardResponse = {
+export type RespuestaDashboard = {
   resumen: ResumenDashboard
   ventas: Venta[]
   ventasPorSucursal: VentaPorSucursal[]

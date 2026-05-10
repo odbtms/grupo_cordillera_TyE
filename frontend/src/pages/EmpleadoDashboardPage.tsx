@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchStock, fetchVentasPorSucursal } from '../api'
+import { obtenerStock, obtenerVentasPorSucursal } from '../api'
 import type { StockItem, Venta } from '../types'
 import {
   Area,
@@ -33,8 +33,8 @@ function EmpleadoDashboardPage({
 
       try {
         const [ventasSucursal, stockSucursal] = await Promise.all([
-          fetchVentasPorSucursal(sucursalAsignada),
-          fetchStock(sucursalAsignada),
+          obtenerVentasPorSucursal(sucursalAsignada),
+          obtenerStock(sucursalAsignada),
         ])
 
         setVentas(ventasSucursal)
