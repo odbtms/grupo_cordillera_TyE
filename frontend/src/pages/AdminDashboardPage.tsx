@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getDashboardPayload } from '../features/kpis'
+import { fetchKpis, fetchVentas } from '../api'
 import type { BranchCatalogItem, Kpi, Venta } from '../types'
 import { FORMATO_MONEDA, monthLabelFormatter } from '../utils/formatters'
 import { BRANCH_ZONE_MAP } from '../constants/dashboardConfig'
@@ -38,9 +38,9 @@ function AdminDashboardPage() {
       setLoading(true)
 
       try {
-        const payload = await getDashboardPayload()
-        setVentas(payload.ventas)
-        setKpis(payload.kpis)
+        const [ventasData, kpisData] = await Promise.all([fetchVentas(), fetchKpis()])
+        setVentas(ventasData)
+        setKpis(kpisData)
       } catch {
         setVentas([])
         setKpis([])

@@ -9,7 +9,7 @@ export const PRODUCTOS_BASE = [
   { nombre: 'Monitores', categoria: 'Electrónica', base: 40 },
   { nombre: 'Hervidores', categoria: 'Hogar', base: 80 },
   { nombre: 'Ollas', categoria: 'Hogar', base: 65 },
-  { ventiladores: 'Ventiladores', categoria: 'Hogar', base: 100 },
+  { nombre: 'Ventiladores', categoria: 'Hogar', base: 100 },
   { nombre: 'Licuadoras', categoria: 'Hogar', base: 75 },
   { nombre: 'Aspiradoras', categoria: 'Hogar', base: 50 },
   { nombre: 'Microondas', categoria: 'Hogar', base: 40 },
@@ -75,7 +75,7 @@ export function obtenerDetalleStock(
   const mapaProductos = new Map<string, RegistroStock>()
 
   for (const prod of PRODUCTOS_BASE) {
-    const nombreProd = prod.nombre || prod.ventiladores || 'Producto' // fallback for the typo in array
+    const nombreProd = prod.nombre || 'Producto' // fallback for the typo in array
 
     let totalStockInicial = 0
     let totalVendidos = 0
