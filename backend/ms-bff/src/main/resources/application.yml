@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ms-bff
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+      routes:
+        - id: ms-auth
+          uri: http://ms-auth:8084
+          predicates:
+            - Path=/api/auth/**
+        - id: ms-datos
+          uri: http://ms-datos:8081
+          predicates:
+            - Path=/api/ventas/**
+        - id: ms-kpis
+          uri: http://ms-kpis:8082
+          predicates:
+            - Path=/api/kpis/**
+        - id: ms-reportes
+          uri: http://ms-reportes:8083
+          predicates:
+            - Path=/api/reportes/**

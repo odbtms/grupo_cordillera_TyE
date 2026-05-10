@@ -76,7 +76,7 @@ export function obtenerDetalleStock(
 
   for (const prod of PRODUCTOS_BASE) {
     const nombreProd = prod.nombre || prod.ventiladores || 'Producto' // fallback for the typo in array
-    
+
     let totalStockInicial = 0
     let totalVendidos = 0
 
