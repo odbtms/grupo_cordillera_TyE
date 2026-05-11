@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
   actualizarRolUsuarioPorUsername,
-  crearPlantillaReporte,
-  eliminarPlantillaReporte,
   obtenerPlantillasReporte,
   obtenerKpis,
   obtenerVentas,

@@ -2,14 +2,12 @@ import { reportesHttp } from './http'
 
 export type PlantillaReporteInput = {
   titulo: string
-  configuracionVisual: string
   estado: string
 }
 
 export type PlantillaReporte = {
   id: number
   titulo: string
-  configuracionVisual: string
   estado: string
 }
 

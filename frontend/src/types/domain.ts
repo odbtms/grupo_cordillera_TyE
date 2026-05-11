@@ -13,6 +13,7 @@ export type Kpi = {
   id: number
   nombre: string
   formula: string
+  meta: number
   valorCalculado: number
   fechaActualizacion: string
 }

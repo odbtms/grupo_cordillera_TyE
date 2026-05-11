@@ -338,7 +338,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     try {
       const creada = await crearPlantillaReporte({
         titulo: tituloFinal,
-        configuracionVisual: 'tabla', // Forzado para esquema simplificado
         estado: 'Activo',
       })
 
@@ -366,11 +365,11 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   }
 
   function exportarExcel() {
-    const cabecera = 'id,titulo,configuracionVisual,estado\n'
+    const cabecera = 'id,titulo,estado\n'
     const filas = plantillas
       .map(
         (item) =>
-          `${item.id},"${item.titulo}","${item.configuracionVisual}",${item.estado}`,
+          `${item.id},"${item.titulo}",${item.estado}`,
       )
       .join('\n')
 
