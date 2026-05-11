@@ -27,10 +27,18 @@ public class SucursalController {
         if (sucursal.getNombre() == null || sucursal.getNombre().isBlank()) {
             return ResponseEntity.badRequest().build();
         }
-        if (repository.existsByNombreIgnoreCase(sucursal.getNombre())) {
-            return ResponseEntity.status(409).build();
-        }
-        return ResponseEntity.ok(repository.save(sucursal));
+        
+        return repository.findByNombreIgnoreCase(sucursal.getNombre())
+                .map(existente -> {
+                    if (sucursal.getMetaVenta() != null) {
+                        existente.setMetaVenta(sucursal.getMetaVenta());
+                    }
+                    if (sucursal.getUbicacion() != null) {
+                        existente.setUbicacion(sucursal.getUbicacion());
+                    }
+                    return ResponseEntity.ok(repository.save(existente));
+                })
+                .orElseGet(() -> ResponseEntity.ok(repository.save(sucursal)));
     }
     
     @PutMapping("/{id}/meta")

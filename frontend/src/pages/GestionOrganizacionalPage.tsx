@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster } from '../api'
-import type { Kpi, Venta } from '../types'
+import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster, obtenerStock } from '../api'
+import type { Kpi, Venta, StockItem } from '../types'
 
 type Sucursal = {
   nombre: string
@@ -11,6 +11,7 @@ function GestionOrganizacionalPage() {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [kpis, setKpis] = useState<Kpi[]>([])
   const [sucursales, setSucursales] = useState<Sucursal[]>([])
+  const [inventarioFull, setInventarioFull] = useState<StockItem[]>([])
   const [mensaje, setMensaje] = useState('')
   const [mensajeKpi, setMensajeKpi] = useState('')
   const [mensajeVenta, setMensajeVenta] = useState('')
@@ -56,13 +57,15 @@ function GestionOrganizacionalPage() {
     async function cargarSucursales() {
       setMensaje('')
       try {
-        const [listaVentas, listaKpis, listaSucursales] = await Promise.all([
+        const [listaVentas, listaKpis, listaSucursales, listaStock] = await Promise.all([
           obtenerVentas(), 
           obtenerKpis(), 
-          obtenerSucursalesMaster()
+          obtenerSucursalesMaster(),
+          obtenerStock()
         ])
         setVentas(listaVentas)
         setKpis(listaKpis)
+        setInventarioFull(listaStock)
         
         setSucursales(
           listaSucursales.map((s: any) => ({
@@ -163,8 +166,9 @@ function GestionOrganizacionalPage() {
         precioUnitario: nuevaVenta.precioUnitario,
       })
 
-      const listaActualizada = await obtenerVentas()
-      setVentas(listaActualizada)
+      const [listaVentas, listaStock] = await Promise.all([obtenerVentas(), obtenerStock()])
+      setVentas(listaVentas)
+      setInventarioFull(listaStock)
       setNuevaVenta({ montoTotal: 0, sistemaOrigen: 'POS', sucursal: '', producto: '', cantidad: 1, precioUnitario: 0 })
       setMensajeVenta('Venta registrada correctamente.')
     } catch {
@@ -239,6 +243,8 @@ function GestionOrganizacionalPage() {
         precioUnitario: nuevoStock.precioUnitario,
       })
 
+      const listaStock = await obtenerStock()
+      setInventarioFull(listaStock)
       setNuevoStock({
         sucursal: '',
         categoria: 'ELECTRONICA',
@@ -247,7 +253,7 @@ function GestionOrganizacionalPage() {
         precioUnitario: 0,
       })
 
-      setMensajeStock('Stock guardado correctamente en ms-datos.')
+      setMensajeStock('Stock guardado correctamente.')
     } catch {
       setMensajeStock('No fue posible guardar el stock en ms-datos.')
     }
@@ -270,15 +276,6 @@ function GestionOrganizacionalPage() {
               placeholder="Ej: Santiago Centro"
               value={nuevaSucursal.nombre}
               onChange={(e) => setNuevaSucursal({...nuevaSucursal, nombre: e.target.value})}
-            />
-          </label>
-          <label>
-            Ubicación
-            <input
-              type="text"
-              placeholder="Ej: Región Metropolitana"
-              value={nuevaSucursal.ubicacion}
-              onChange={(e) => setNuevaSucursal({...nuevaSucursal, ubicacion: e.target.value})}
             />
           </label>
           <button type="button" onClick={crearSucursal}>Registrar Sucursal</button>
@@ -323,36 +320,58 @@ function GestionOrganizacionalPage() {
         <div className="formulario-simple">
           <label>
             Sucursal
-            <input
-              type="text"
+            <select
               value={nuevaVenta.sucursal}
               onChange={(evento) =>
-                setNuevaVenta((actual) => ({ ...actual, sucursal: evento.target.value }))
+                setNuevaVenta((actual) => ({ ...actual, sucursal: evento.target.value, producto: '' }))
               }
-            />
+            >
+              <option value="">Seleccione Sucursal</option>
+              {sucursales.map(s => (
+                <option key={s.nombre} value={s.nombre}>{s.nombre}</option>
+              ))}
+            </select>
           </label>
 
           <label>
             Sistema origen
-            <input
-              type="text"
+            <select
               value={nuevaVenta.sistemaOrigen}
               onChange={(evento) =>
                 setNuevaVenta((actual) => ({ ...actual, sistemaOrigen: evento.target.value }))
               }
-            />
+            >
+              <option value="POS">POS</option>
+              <option value="WEB">WEB</option>
+              <option value="APP">APP</option>
+            </select>
           </label>
 
           <label>
-            Producto
-            <input
-              type="text"
-              placeholder="Ej: Televisor 50\"
+            Producto (con Stock)
+            <select
               value={nuevaVenta.producto}
-              onChange={(evento) =>
-                setNuevaVenta((actual) => ({ ...actual, producto: evento.target.value }))
+              onChange={(evento) => {
+                const prodNombre = evento.target.value;
+                const infoStock = inventarioFull.find(i => i.sucursal === nuevaVenta.sucursal && i.producto === prodNombre);
+                const precio = infoStock?.precioUnitario || 0;
+                setNuevaVenta((actual) => ({ 
+                  ...actual, 
+                  producto: prodNombre,
+                  precioUnitario: precio,
+                  montoTotal: actual.cantidad * precio
+                }))
+              }}
+              disabled={!nuevaVenta.sucursal}
+            >
+              <option value="">{nuevaVenta.sucursal ? 'Seleccione Producto' : 'Elija primero sucursal'}</option>
+              {inventarioFull
+                .filter(i => i.sucursal === nuevaVenta.sucursal && i.cantidad > 0)
+                .map(i => (
+                  <option key={i.id} value={i.producto}>{i.producto} (Stock: {i.cantidad})</option>
+                ))
               }
-            />
+            </select>
           </label>
 
           <label>
@@ -376,16 +395,8 @@ function GestionOrganizacionalPage() {
             Precio Unitario
             <input
               type="number"
-              min={0}
+              disabled
               value={nuevaVenta.precioUnitario}
-              onChange={(evento) => {
-                const precio = Number(evento.target.value);
-                setNuevaVenta((actual) => ({ 
-                  ...actual, 
-                  precioUnitario: precio,
-                  montoTotal: actual.cantidad * precio
-                }))
-              }}
             />
           </label>
 
@@ -437,6 +448,21 @@ function GestionOrganizacionalPage() {
           </button>
         </div>
 
+        <div className="tabla-simple" style={{ marginTop: 20 }}>
+          <div className="fila fila-encabezado">
+            <span>KPI</span>
+            <span>Fórmula</span>
+            <span>Meta</span>
+          </div>
+          {kpis.map(kpi => (
+            <div key={kpi.id} className="fila">
+              <span>{kpi.nombre}</span>
+              <span><code>{kpi.formula}</code></span>
+              <span>{kpi.meta}</span>
+            </div>
+          ))}
+        </div>
+
         {mensajeKpi && <p>{mensajeKpi}</p>}
       </section>
 
@@ -483,14 +509,17 @@ function GestionOrganizacionalPage() {
 
           <label>
             Sucursal asignada
-            <input
-              type="text"
-              placeholder="Ej: Santiago"
+            <select
               value={nuevoEmpleado.sucursalAsignada}
               onChange={(e) =>
                 setNuevoEmpleado((actual) => ({ ...actual, sucursalAsignada: e.target.value }))
               }
-            />
+            >
+              <option value="">Seleccione Sucursal</option>
+              {sucursales.map(s => (
+                <option key={s.nombre} value={s.nombre}>{s.nombre}</option>
+              ))}
+            </select>
           </label>
 
           <button type="button" onClick={crearEmpleado}>
@@ -508,14 +537,17 @@ function GestionOrganizacionalPage() {
         <div className="formulario-simple">
           <label>
             Sucursal
-            <input
-              type="text"
-              placeholder="Ej: Santiago"
+            <select
               value={nuevoStock.sucursal}
               onChange={(e) =>
                 setNuevoStock((actual) => ({ ...actual, sucursal: e.target.value }))
               }
-            />
+            >
+              <option value="">Seleccione Sucursal</option>
+              {sucursales.map(s => (
+                <option key={s.nombre} value={s.nombre}>{s.nombre}</option>
+              ))}
+            </select>
           </label>
 
           <label>
@@ -526,8 +558,8 @@ function GestionOrganizacionalPage() {
                 setNuevoStock((actual) => ({ ...actual, categoria: e.target.value }))
               }
             >
-              <option value="Electrónica">Electrónica</option>
-              <option value="Hogar">Hogar</option>
+              <option value="ELECTRONICA">ELECTRONICA</option>
+              <option value="HOGAR">HOGAR</option>
             </select>
           </label>
 
