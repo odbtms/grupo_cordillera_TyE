@@ -133,11 +133,6 @@ function AdminDashboardPage() {
     [catalogoSucursales],
   )
 
-  const opcionesOrigen = useMemo(
-    () => ['Todos', ...new Set(ventas.map((venta) => venta.sistemaOrigen))],
-    [ventas],
-  )
-
   const ventasFiltradas = useMemo(() => {
     return ventas.filter((venta) => {
       const fechaVentaDate = new Date(venta.fechaVenta)
