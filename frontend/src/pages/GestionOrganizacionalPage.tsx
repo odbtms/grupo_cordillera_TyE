@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster, obtenerStock, crearPlantillaReporte } from '../api'
+import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster, obtenerStock } from '../api'
 import type { Kpi, Venta, StockItem } from '../types'
 
 type Sucursal = {
@@ -241,18 +241,6 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
         precioUnitario: 0 
       })
       setMensajeVenta('Venta registrada con éxito. Stock actualizado.')
-
-      // Crear plantilla de auditoría automática
-      try {
-        const hoy = new Date();
-        const diaMes = `${String(hoy.getDate()).padStart(2, '0')}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
-        await crearPlantillaReporte({
-          titulo: `Auditoría ${diaMes}`,
-          estado: 'ACTIVO'
-        });
-      } catch {
-        console.warn('No se pudo crear la plantilla automática.');
-      }
 
       await cargarTodo()
     } catch {

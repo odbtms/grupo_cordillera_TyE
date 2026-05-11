@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -11,17 +11,13 @@ import {
   YAxis,
 } from 'recharts'
 import {
-  crearPlantillaReporte,
-  eliminarPlantillaReporte,
-  obtenerPlantillasReporte,
   obtenerStock,
   obtenerVentas,
   obtenerVentasPorSucursal,
-  type PlantillaReporte,
 } from '../api'
 import type { StockItem, Venta } from '../types'
 import { FORMATO_MONEDA, FORMATO_COMPACTO, normalizarTexto } from '../utils/formatters'
-import { STOCK_CRITICO_UMBRAL, TAMANO_PAGINA } from '../constants/dashboardConfig'
+import { STOCK_CRITICO_UMBRAL } from '../constants/dashboardConfig'
 
 type RegistroAnalitico = {
   fecha: string
@@ -37,30 +33,15 @@ function fechaTexto(fecha: Date) {
   return fecha.toISOString().slice(0, 10)
 }
 
-function descargarComoTexto(nombreArchivo: string, contenido: string) {
-  const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' })
-  const enlace = document.createElement('a')
-  enlace.href = URL.createObjectURL(blob)
-  enlace.download = nombreArchivo
-  enlace.click()
-  URL.revokeObjectURL(enlace.href)
-}
-
 type ReportesPageProps = {
   rol?: string
   sucursalAsignada?: string | null
 }
 
 function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
-  const [titulo, setTitulo] = useState('')
-  const [plantillas, setPlantillas] = useState<PlantillaReporte[]>([])
-  const [paginaActual, setPaginaActual] = useState(1)
-  const [mensajePlantilla, setMensajePlantilla] = useState('')
-
   const [ventas, setVentas] = useState<Venta[]>([])
   const [stock, setStock] = useState<StockItem[]>([])
   const [mensajeDatos, setMensajeDatos] = useState('')
-  const [idPlantillaExpandida, setIdPlantillaExpandida] = useState<number | null>(null)
 
   const [sucursalFiltro, setSucursalFiltro] = useState('Todas')
   const [fechaDesde, setFechaDesde] = useState(() => {
@@ -70,19 +51,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   })
   const [fechaHasta, setFechaHasta] = useState(() => fechaTexto(new Date()))
   const [categoriaFiltro, setCategoriaFiltro] = useState('Todas')
-
-  useEffect(() => {
-    async function cargarPlantillas() {
-      try {
-        const lista = await obtenerPlantillasReporte()
-        setPlantillas(lista)
-      } catch {
-        setMensajePlantilla('No se pudo cargar el listado desde ms-reportes.')
-      }
-    }
-
-    cargarPlantillas()
-  }, [])
 
   useEffect(() => {
     async function cargarDatos() {
@@ -312,71 +280,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     return { filas, maximo }
   }, [registrosFiltrados, categoriasAnalitica])
 
-  const plantillasVisibles = useMemo(() => {
-    if (!sucursalBloqueada || !sucursalAsignada) return plantillas
-    return plantillas.filter((p) => p.titulo?.includes(`[${sucursalAsignada}]`))
-  }, [plantillas, sucursalBloqueada, sucursalAsignada])
-
-  const totalPaginas = Math.max(1, Math.ceil(plantillasVisibles.length / TAMANO_PAGINA))
-
-  const plantillasPaginadas = useMemo(() => {
-    const inicio = (paginaActual - 1) * TAMANO_PAGINA
-    return plantillasVisibles.slice(inicio, inicio + TAMANO_PAGINA)
-  }, [paginaActual, plantillasVisibles])
-
-  async function crearPlantilla() {
-    setMensajePlantilla('')
-
-    if (!titulo.trim()) {
-      setMensajePlantilla('Debe completar el título.')
-      return
-    }
-
-    const tituloFinal = sucursalBloqueada && sucursalAsignada
-      ? `[${sucursalAsignada}] ${titulo.trim()}`
-      : titulo.trim()
-
-    try {
-      const creada = await crearPlantillaReporte({
-        titulo: tituloFinal,
-        estado: 'Activo',
-      })
-
-      setPlantillas((actual) => [creada, ...actual])
-      setTitulo('')
-      setPaginaActual(1)
-      setMensajePlantilla('Plantilla creada correctamente.')
-    } catch {
-      setMensajePlantilla('No fue posible crear la plantilla en ms-reportes.')
-    }
-  }
-
-  async function eliminarPlantilla(id: number) {
-    try {
-      await eliminarPlantillaReporte(id)
-    } catch {
-    }
-
-    setPlantillas((actual) => actual.filter((item) => item.id !== id))
-  }
-
-  function exportarPDF() {
-    const contenido = JSON.stringify(plantillas, null, 2)
-    descargarComoTexto('reportes.pdf', contenido)
-  }
-
-  function exportarExcel() {
-    const cabecera = 'id,titulo,estado\n'
-    const filas = plantillas
-      .map(
-        (item) =>
-          `${item.id},"${item.titulo}",${item.estado}`,
-      )
-      .join('\n')
-
-    descargarComoTexto('reportes.csv', cabecera + filas)
-  }
-
   return (
     <section className="pagina-contenido">
       <div className="encabezado-pagina">
@@ -536,122 +439,39 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
         </section>
       )}
 
-      <section className="tarjeta-panel">
-        <h3>Nueva plantilla</h3>
-        <div className="formulario-simple">
-          <label>
-            Título
-            <input
-              type="text"
-              value={titulo}
-              onChange={(evento) => setTitulo(evento.target.value)}
-            />
-          </label>
-
-          <button type="button" onClick={crearPlantilla}>
-            Crear plantilla
-          </button>
+      <section className="tarjeta-resumen tarjeta-ancha" style={{ marginTop: '30px' }}>
+        <div className="panel-head">
+          <h2>Auditoría de Ventas Detallada (En Tiempo Real)</h2>
+          <span>{ventas.length} movimientos registrados</span>
         </div>
+        <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '15px' }}>
+          Este reporte muestra cada objeto de venta de forma individual, ordenada por fecha y vinculada al empleado responsable.
+        </p>
 
-        {mensajePlantilla && <p>{mensajePlantilla}</p>}
-      </section>
-
-      <section className="tarjeta-panel">
-        <div className="fila-acciones">
-          <h3>Listado de reportes</h3>
-          <div>
-            <button type="button" onClick={exportarPDF}>
-              Descargar PDF
-            </button>
-            <button type="button" onClick={exportarExcel}>
-              Descargar Excel
-            </button>
+        <div className="tabla-simple" style={{ display: 'grid', gap: '5px' }}>
+          <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 0.8fr 1fr', alignItems: 'center', background: '#f1f5f9', fontWeight: 'bold' }}>
+            <span>Sucursal</span>
+            <span>Empleado</span>
+            <span>Categoría</span>
+            <span>Producto</span>
+            <span>Cant.</span>
+            <span>Precio</span>
           </div>
-        </div>
-
-        <div className="tabla-simple">
-          <div className="fila fila-encabezado">
-            <span>Título</span>
-            <span>Estado</span>
-            <span>Acciones</span>
-          </div>
-          {plantillasPaginadas.map((plantilla) => (
-            <React.Fragment key={plantilla.id}>
-              <div className="fila">
-                <span>{plantilla.titulo}</span>
-                <span>{plantilla.estado}</span>
-                <span style={{ display: 'flex', gap: '5px' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => setIdPlantillaExpandida(idPlantillaExpandida === plantilla.id ? null : plantilla.id)}
-                    style={{ background: '#2196F3' }}
-                  >
-                    {idPlantillaExpandida === plantilla.id ? 'Ocultar' : 'Ver detalle'}
-                  </button>
-                  <button type="button" onClick={() => eliminarPlantilla(plantilla.id)} style={{ background: '#f44336' }}>
-                    Eliminar
-                  </button>
-                </span>
+          {ventas
+            .sort((a, b) => new Date(b.fechaVenta).getTime() - new Date(a.fechaVenta).getTime())
+            .map((venta, idx) => (
+              <div key={venta.id || idx} className="fila" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 0.8fr 1fr', alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
+                <span>{venta.sucursal}</span>
+                <span style={{ color: '#2563eb', fontWeight: '500' }}>{venta.vendedor || 'Admin'}</span>
+                <span style={{ fontSize: '0.85rem' }}>{venta.categoria || 'VARIOS'}</span>
+                <span>{venta.producto}</span>
+                <strong>{venta.cantidad}</strong>
+                <span>${venta.precioUnitario?.toLocaleString() || 0}</span>
               </div>
-
-              {idPlantillaExpandida === plantilla.id && (
-                <div style={{ padding: '15px', background: '#f8fafc', border: '1px solid #e2e8f0', margin: '5px 0' }}>
-                  <h4 style={{ marginBottom: '10px' }}>Detalle de Auditoría: {plantilla.titulo}</h4>
-                  <div className="tabla-simple" style={{ display: 'grid', gap: '5px' }}>
-                    <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.5fr 0.5fr 1fr', background: '#f1f5f9' }}>
-                      <span>Sucursal</span>
-                      <span>Empleado</span>
-                      <span>Categoría</span>
-                      <span>Producto</span>
-                      <span>Cant</span>
-                      <span>Precio</span>
-                    </div>
-                    {ventas
-                      .filter(v => {
-                        if (!plantilla.titulo.includes('Auditoría')) return true;
-                        const partes = plantilla.titulo.split(' ');
-                        const fechaStr = partes[partes.length - 1]; 
-                        const ventaFecha = new Date(v.fechaVenta);
-                        const ventaDiaMes = `${String(ventaFecha.getDate()).padStart(2, '0')}-${String(ventaFecha.getMonth() + 1).padStart(2, '0')}`;
-                        return ventaDiaMes === fechaStr;
-                      })
-                      .map((v, i) => (
-                        <div key={v.id || i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.5fr 0.5fr 1fr' }}>
-                          <span>{v.sucursal}</span>
-                          <span style={{ color: '#2563eb' }}>{v.vendedor || 'Admin'}</span>
-                          <span style={{ fontSize: '0.8rem' }}>{v.categoria}</span>
-                          <span>{v.producto}</span>
-                          <strong>{v.cantidad}</strong>
-                          <span>${v.precioUnitario?.toLocaleString()}</span>
-                        </div>
-                      ))}
-                    {ventas.length === 0 && <p>No hay datos vinculados a esta auditoría.</p>}
-                  </div>
-                </div>
-              )}
-            </React.Fragment>
-          ))}
-          {plantillasPaginadas.length === 0 && <p>No hay plantillas creadas aún.</p>}
-        </div>
-
-        <div className="paginacion">
-          <button
-            type="button"
-            disabled={paginaActual === 1}
-            onClick={() => setPaginaActual((valor) => Math.max(1, valor - 1))}
-          >
-            Anterior
-          </button>
-          <span>
-            Página {paginaActual} de {totalPaginas}
-          </span>
-          <button
-            type="button"
-            disabled={paginaActual === totalPaginas}
-            onClick={() => setPaginaActual((valor) => Math.min(totalPaginas, valor + 1))}
-          >
-            Siguiente
-          </button>
+            ))}
+          {ventas.length === 0 && (
+            <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No hay ventas registradas para auditar.</p>
+          )}
         </div>
       </section>
     </section>
