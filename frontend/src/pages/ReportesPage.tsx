@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -60,6 +60,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [stock, setStock] = useState<StockItem[]>([])
   const [mensajeDatos, setMensajeDatos] = useState('')
+  const [idPlantillaExpandida, setIdPlantillaExpandida] = useState<number | null>(null)
 
   const [sucursalFiltro, setSucursalFiltro] = useState('Todas')
   const [fechaDesde, setFechaDesde] = useState(() => {
@@ -575,15 +576,60 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
             <span>Acciones</span>
           </div>
           {plantillasPaginadas.map((plantilla) => (
-            <div className="fila" key={plantilla.id}>
-              <span>{plantilla.titulo}</span>
-              <span>{plantilla.estado}</span>
-              <span>
-                <button type="button" onClick={() => eliminarPlantilla(plantilla.id)}>
-                  Eliminar
-                </button>
-              </span>
-            </div>
+            <React.Fragment key={plantilla.id}>
+              <div className="fila">
+                <span>{plantilla.titulo}</span>
+                <span>{plantilla.estado}</span>
+                <span style={{ display: 'flex', gap: '5px' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setIdPlantillaExpandida(idPlantillaExpandida === plantilla.id ? null : plantilla.id)}
+                    style={{ background: '#2196F3' }}
+                  >
+                    {idPlantillaExpandida === plantilla.id ? 'Ocultar' : 'Ver detalle'}
+                  </button>
+                  <button type="button" onClick={() => eliminarPlantilla(plantilla.id)} style={{ background: '#f44336' }}>
+                    Eliminar
+                  </button>
+                </span>
+              </div>
+
+              {idPlantillaExpandida === plantilla.id && (
+                <div style={{ padding: '15px', background: '#f8fafc', border: '1px solid #e2e8f0', margin: '5px 0' }}>
+                  <h4 style={{ marginBottom: '10px' }}>Detalle de Auditoría: {plantilla.titulo}</h4>
+                  <div className="tabla-simple" style={{ display: 'grid', gap: '5px' }}>
+                    <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.5fr 0.5fr 1fr', background: '#f1f5f9' }}>
+                      <span>Sucursal</span>
+                      <span>Empleado</span>
+                      <span>Categoría</span>
+                      <span>Producto</span>
+                      <span>Cant</span>
+                      <span>Precio</span>
+                    </div>
+                    {ventas
+                      .filter(v => {
+                        if (!plantilla.titulo.includes('Auditoría')) return true;
+                        const partes = plantilla.titulo.split(' ');
+                        const fechaStr = partes[partes.length - 1]; 
+                        const ventaFecha = new Date(v.fechaVenta);
+                        const ventaDiaMes = `${String(ventaFecha.getDate()).padStart(2, '0')}-${String(ventaFecha.getMonth() + 1).padStart(2, '0')}`;
+                        return ventaDiaMes === fechaStr;
+                      })
+                      .map((v, i) => (
+                        <div key={v.id || i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.5fr 0.5fr 1fr' }}>
+                          <span>{v.sucursal}</span>
+                          <span style={{ color: '#2563eb' }}>{v.vendedor || 'Admin'}</span>
+                          <span style={{ fontSize: '0.8rem' }}>{v.categoria}</span>
+                          <span>{v.producto}</span>
+                          <strong>{v.cantidad}</strong>
+                          <span>${v.precioUnitario?.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    {ventas.length === 0 && <p>No hay datos vinculados a esta auditoría.</p>}
+                  </div>
+                </div>
+              )}
+            </React.Fragment>
           ))}
           {plantillasPaginadas.length === 0 && <p>No hay plantillas creadas aún.</p>}
         </div>
@@ -607,41 +653,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
             Siguiente
           </button>
         </div>
-        <section className="tarjeta-resumen tarjeta-ancha" style={{ marginTop: '30px' }}>
-          <div className="panel-head">
-            <h2>Nueva Plantilla: Auditoría de Ventas Detallada</h2>
-            <span>{ventas.length} movimientos registrados</span>
-          </div>
-          <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '15px' }}>
-            Este reporte muestra cada objeto de venta de forma individual y ordenada por fecha.
-          </p>
-
-          <div className="tabla-simple" style={{ display: 'grid', gap: '5px' }}>
-            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 0.8fr 1fr', alignItems: 'center', background: '#f1f5f9', fontWeight: 'bold' }}>
-              <span>Sucursal</span>
-              <span>Empleado</span>
-              <span>Categoría</span>
-              <span>Producto</span>
-              <span>Cant.</span>
-              <span>Precio</span>
-            </div>
-            {ventas
-              .sort((a, b) => new Date(b.fechaVenta).getTime() - new Date(a.fechaVenta).getTime())
-              .map((venta, idx) => (
-                <div key={venta.id || idx} className="fila" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 0.8fr 1fr', alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
-                  <span>{venta.sucursal}</span>
-                  <span style={{ color: '#2563eb', fontWeight: '500' }}>{venta.vendedor || 'S/A'}</span>
-                  <span style={{ fontSize: '0.85rem' }}>{venta.categoria || 'VARIOS'}</span>
-                  <span>{venta.producto}</span>
-                  <strong>{venta.cantidad}</strong>
-                  <span>${venta.precioUnitario?.toLocaleString() || 0}</span>
-                </div>
-              ))}
-            {ventas.length === 0 && (
-              <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No hay ventas registradas para auditar.</p>
-            )}
-          </div>
-        </section>
       </section>
     </section>
   )

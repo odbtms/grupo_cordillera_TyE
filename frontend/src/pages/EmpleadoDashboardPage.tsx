@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { obtenerStock, obtenerVentasPorSucursal, registrarVenta } from '../api'
+import { obtenerStock, obtenerVentasPorSucursal, registrarVenta, crearPlantillaReporte } from '../api'
 import type { StockItem, Venta } from '../types'
 import {
   Area,
@@ -132,6 +132,20 @@ function EmpleadoDashboardPage({
 
       setCarrito([])
       setMensajeVenta('Venta registrada con éxito. Stock actualizado.')
+      
+      // Crear plantilla de auditoría automática
+      try {
+        const hoy = new Date();
+        const diaMes = `${String(hoy.getDate()).padStart(2, '0')}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+        await crearPlantillaReporte({
+          titulo: `Auditoría ${diaMes}`,
+          estado: 'ACTIVO'
+        });
+      } catch {
+        // Si falla la plantilla no bloqueamos la venta
+        console.warn('No se pudo crear la plantilla automática.');
+      }
+
       await cargarDatos(); // Recargar stock y ventas
     } catch {
       setMensajeVenta('Error al procesar la venta.')

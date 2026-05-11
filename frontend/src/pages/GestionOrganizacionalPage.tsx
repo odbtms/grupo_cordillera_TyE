@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster, obtenerStock } from '../api'
+import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster, obtenerStock, crearPlantillaReporte } from '../api'
 import type { Kpi, Venta, StockItem } from '../types'
 
 type Sucursal = {
@@ -67,32 +67,32 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
   })
   const [mensajeSucursal, setMensajeSucursal] = useState('')
 
-  useEffect(() => {
-    async function cargarSucursales() {
-      setMensaje('')
-      try {
-        const [listaVentas, listaKpis, listaSucursales, listaStock] = await Promise.all([
-          obtenerVentas(),
-          obtenerKpis(),
-          obtenerSucursalesMaster(),
-          obtenerStock()
-        ])
-        setVentas(listaVentas)
-        setKpis(listaKpis)
-        setInventarioFull(listaStock)
+  const cargarTodo = async () => {
+    setMensaje('')
+    try {
+      const [listaVentas, listaKpis, listaSucursales, listaStock] = await Promise.all([
+        obtenerVentas(),
+        obtenerKpis(),
+        obtenerSucursalesMaster(),
+        obtenerStock()
+      ])
+      setVentas(listaVentas)
+      setKpis(listaKpis)
+      setInventarioFull(listaStock)
 
-        setSucursales(
-          listaSucursales.map((s: any) => ({
-            nombre: s.nombre,
-            metaVenta: s.metaVenta || 0,
-          }))
-        )
-      } catch {
-        setMensaje('No se pudo obtener la informacion desde el servidor.')
-      }
+      setSucursales(
+        listaSucursales.map((s: any) => ({
+          nombre: s.nombre,
+          metaVenta: s.metaVenta || 0,
+        }))
+      )
+    } catch {
+      setMensaje('No se pudo obtener la informacion desde el servidor.')
     }
+  }
 
-    cargarSucursales()
+  useEffect(() => {
+    cargarTodo()
   }, [])
 
   const resumenVentas = useMemo(() => {
@@ -240,7 +240,21 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
         cantidad: 1, 
         precioUnitario: 0 
       })
-      setMensajeVenta('Venta completa registrada con éxito. Inventario actualizado.')
+      setMensajeVenta('Venta registrada con éxito. Stock actualizado.')
+
+      // Crear plantilla de auditoría automática
+      try {
+        const hoy = new Date();
+        const diaMes = `${String(hoy.getDate()).padStart(2, '0')}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+        await crearPlantillaReporte({
+          titulo: `Auditoría ${diaMes}`,
+          estado: 'ACTIVO'
+        });
+      } catch {
+        console.warn('No se pudo crear la plantilla automática.');
+      }
+
+      await cargarTodo()
     } catch {
       setMensajeVenta('Error al procesar uno o más productos de la venta.')
     }
