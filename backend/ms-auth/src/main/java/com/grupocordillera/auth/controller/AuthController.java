@@ -91,15 +91,24 @@ public class AuthController {
     }
 
     @GetMapping("/validar")
-    public ResponseEntity<String> validarSesion(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<LoginResponse> validarSesion(@RequestHeader("Authorization") String token) {
         String rawToken = token != null && token.startsWith("Bearer ")
                 ? token.substring(7)
                 : token;
         try {
-            String subject = jwtService.parseToken(rawToken).getBody().getSubject();
-            return ResponseEntity.ok("Token valido: " + subject);
+            String username = jwtService.parseToken(rawToken).getBody().getSubject();
+            return repository.findByUsername(username)
+                    .map(u -> {
+                        LoginResponse response = new LoginResponse(
+                                rawToken,
+                                u.getUsername(),
+                                u.getRol(),
+                                u.getSucursal());
+                        return ResponseEntity.ok(response);
+                    })
+                    .orElse(ResponseEntity.status(401).build());
         } catch (JwtException | IllegalArgumentException ex) {
-            return ResponseEntity.status(401).body("Token invalido");
+            return ResponseEntity.status(401).build();
         }
     }
 

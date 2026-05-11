@@ -32,9 +32,9 @@ export async function registrarUsuario(payload: RegistroInput): Promise<Respuest
   return data
 }
 
-export async function validarToken(token: string): Promise<string> {
+export async function validarToken(token: string): Promise<RespuestaLogin> {
   const bearerToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`
-  const { data } = await authHttp.get<string>('/validar', {
+  const { data } = await authHttp.get<RespuestaLogin>('/validar', {
     headers: {
       Authorization: bearerToken,
     },

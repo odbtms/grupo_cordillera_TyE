@@ -381,7 +381,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     <section className="pagina-contenido">
       <div className="encabezado-pagina">
         <h2>Módulo de Reportes</h2>
-        <p>Panel ejecutivo, filtros avanzados y visualización analítica</p>
+        <p>Panel de gestión, filtros avanzados y visualización analítica</p>
       </div>
 
       <section className="reportes-kpi-grid">

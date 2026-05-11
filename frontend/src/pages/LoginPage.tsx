@@ -113,7 +113,7 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
         <div className="auth-panel-base">
           <article className="auth-formulario auth-login-form">
             <h1>Login</h1>
-            <p>Acceso para ejecutivos y administradores</p>
+            <p>Acceso para empleados y administradores</p>
 
             <form onSubmit={manejarSubmit} className="formulario-login auth-form-grid">
               <label>
@@ -154,7 +154,7 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
                   type="text"
                   value={usuarioRegistro}
                   onChange={(evento) => setUsuarioRegistro(evento.target.value)}
-                  placeholder="Ej: ejecutivo.cordillera"
+                  placeholder="Ej: empleado.cordillera"
                 />
               </label>
 

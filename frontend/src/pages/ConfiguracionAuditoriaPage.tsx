@@ -27,8 +27,8 @@ function ConfiguracionAuditoriaPage({
   rol,
   onCerrarSesion,
 }: ConfiguracionAuditoriaPageProps) {
-  const [rolObjetivo, setRolObjetivo] = useState<'ADMIN' | 'EJECUTIVO'>(
-    rol.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'EJECUTIVO',
+  const [rolObjetivo, setRolObjetivo] = useState<'ADMIN' | 'EMPLEADO_TIENDA'>(
+    rol.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'EMPLEADO_TIENDA',
   )
   const [mensajeRol, setMensajeRol] = useState('')
 
@@ -100,11 +100,11 @@ function ConfiguracionAuditoriaPage({
             <select
               value={rolObjetivo}
               onChange={(evento) =>
-                setRolObjetivo(evento.target.value as 'ADMIN' | 'EJECUTIVO')
+                setRolObjetivo(evento.target.value as 'ADMIN' | 'EMPLEADO_TIENDA')
               }
             >
               <option value="ADMIN">ADMIN</option>
-              <option value="EJECUTIVO">EJECUTIVO</option>
+              <option value="EMPLEADO_TIENDA">EMPLEADO_TIENDA</option>
             </select>
           </label>
           <button type="button" onClick={guardarRol}>
