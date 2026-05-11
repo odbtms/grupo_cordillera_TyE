@@ -313,6 +313,7 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
         producto: nuevoStock.producto.trim(),
         cantidad: nuevoStock.cantidad,
         precioUnitario: nuevoStock.precioUnitario,
+        vendedor: 'ADMIN',
       })
 
       const listaStock = await obtenerStock()

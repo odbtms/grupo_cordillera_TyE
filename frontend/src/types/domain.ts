@@ -46,6 +46,7 @@ export type StockItem = {
   producto: string
   cantidad: number
   precioUnitario?: number
+  vendedor?: string
 }
 
 export type RespuestaLogin = {

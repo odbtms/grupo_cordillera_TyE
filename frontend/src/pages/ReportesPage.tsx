@@ -441,7 +441,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
 
       <section className="tarjeta-resumen tarjeta-ancha" style={{ marginTop: '30px' }}>
         <div className="panel-head">
-          <h2>Auditoría de Ventas Detallada (En Tiempo Real)</h2>
+          <h2>Auditoría de Ventas Detallada</h2>
           <span>{ventas.length} movimientos registrados</span>
         </div>
         <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '15px' }}>
@@ -471,6 +471,43 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
             ))}
           {ventas.length === 0 && (
             <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No hay ventas registradas para auditar.</p>
+          )}
+        </div>
+      </section>
+
+      <section className="tarjeta-resumen tarjeta-ancha" style={{ marginTop: '30px' }}>
+        <div className="panel-head">
+          <h2>Auditoría de Stock</h2>
+          <span>{stock.length} registros de inventario</span>
+        </div>
+        <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '15px' }}>
+          Seguimiento detallado de ingresos y existencias por sucursal y empleado responsable.
+        </p>
+
+        <div className="tabla-simple" style={{ display: 'grid', gap: '5px' }}>
+          <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 0.8fr 1fr', alignItems: 'center', background: '#f1f5f9', fontWeight: 'bold' }}>
+            <span>Sucursal</span>
+            <span>Empleado</span>
+            <span>Categoría</span>
+            <span>Producto</span>
+            <span>Stock</span>
+            <span>Precio Un.</span>
+          </div>
+          {stockFiltrado
+            .map((item, idx) => (
+              <div key={item.id || idx} className="fila" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 0.8fr 1fr', alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
+                <span>{item.sucursal}</span>
+                <span style={{ color: '#0f766e', fontWeight: '500' }}>{item.vendedor || 'Sistema'}</span>
+                <span style={{ fontSize: '0.85rem' }}>{item.categoria}</span>
+                <span>{item.producto}</span>
+                <strong style={{ color: item.cantidad < STOCK_CRITICO_UMBRAL ? '#ef4444' : 'inherit' }}>
+                  {item.cantidad}
+                </strong>
+                <span>${item.precioUnitario?.toLocaleString() || 0}</span>
+              </div>
+            ))}
+          {stockFiltrado.length === 0 && (
+            <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No hay registros de stock para mostrar.</p>
           )}
         </div>
       </section>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { obtenerStock, obtenerVentasPorSucursal, registrarVenta } from '../api'
+import { obtenerStock, obtenerVentasPorSucursal, registrarVenta, upsertStock } from '../api'
 import type { StockItem, Venta } from '../types'
 import {
   Area,
@@ -47,6 +47,14 @@ function EmpleadoDashboardPage({
   }>>([])
 
   const [mensajeVenta, setMensajeVenta] = useState('')
+
+  const [nuevoStock, setNuevoStock] = useState({
+    categoria: 'HOGAR',
+    producto: '',
+    cantidad: 0,
+    precioUnitario: 0,
+  })
+  const [mensajeStock, setMensajeStock] = useState('')
 
   async function cargarDatos() {
     setCargando(true)
@@ -136,6 +144,35 @@ function EmpleadoDashboardPage({
       await cargarDatos(); // Recargar stock y ventas
     } catch {
       setMensajeVenta('Error al procesar la venta.')
+    }
+  }
+
+  async function manejarRegistroStock() {
+    setMensajeStock('')
+    if (!nuevoStock.producto.trim() || nuevoStock.cantidad <= 0) {
+      setMensajeStock('Complete producto y cantidad correctamente.')
+      return
+    }
+
+    try {
+      await upsertStock({
+        sucursal: sucursalAsignada,
+        categoria: nuevoStock.categoria,
+        producto: nuevoStock.producto,
+        cantidad: nuevoStock.cantidad,
+        precioUnitario: nuevoStock.precioUnitario,
+        vendedor: nombreUsuario,
+      })
+      setMensajeStock('Stock registrado con éxito.')
+      setNuevoStock({
+        categoria: 'HOGAR',
+        producto: '',
+        cantidad: 0,
+        precioUnitario: 0,
+      })
+      await cargarDatos() // Actualiza el dashboard
+    } catch {
+      setMensajeStock('Error al registrar el stock.')
     }
   }
 
@@ -281,7 +318,57 @@ function EmpleadoDashboardPage({
 
       </section>
 
-      <section className="tarjeta-panel">
+      <section className="tarjeta-panel" style={{ marginTop: '30px' }}>
+        <h3>Registrar stock</h3>
+        <div className="formulario-simple" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+          <label>
+            Categoría
+            <select
+              value={nuevoStock.categoria}
+              onChange={(e) => setNuevoStock({ ...nuevoStock, categoria: e.target.value })}
+            >
+              <option value="HOGAR">HOGAR</option>
+              <option value="ELECTRONICA">ELECTRONICA</option>
+              <option value="VARIOS">VARIOS</option>
+            </select>
+          </label>
+          <label>
+            Producto
+            <input
+              type="text"
+              placeholder="Nombre del producto"
+              value={nuevoStock.producto}
+              onChange={(e) => setNuevoStock({ ...nuevoStock, producto: e.target.value })}
+            />
+          </label>
+          <label>
+            Cantidad a añadir
+            <input
+              type="number"
+              value={nuevoStock.cantidad}
+              onChange={(e) => setNuevoStock({ ...nuevoStock, cantidad: Number(e.target.value) })}
+            />
+          </label>
+          <label>
+            Precio Unitario
+            <input
+              type="number"
+              value={nuevoStock.precioUnitario}
+              onChange={(e) => setNuevoStock({ ...nuevoStock, precioUnitario: Number(e.target.value) })}
+            />
+          </label>
+        </div>
+        <button 
+          type="button" 
+          onClick={manejarRegistroStock} 
+          style={{ marginTop: '15px', width: '100%', background: '#0f766e' }}
+        >
+          Confirmar ingreso de stock
+        </button>
+        {mensajeStock && <p style={{ marginTop: '10px', color: mensajeStock.includes('éxito') ? 'green' : 'red' }}>{mensajeStock}</p>}
+      </section>
+
+      <section className="tarjeta-panel" style={{ marginTop: '30px' }}>
         <h3>Stock disponible detallado</h3>
         {stock.length === 0 ? (
           <p className="mensaje-demo">No hay stock registrado para esta sucursal.</p>
