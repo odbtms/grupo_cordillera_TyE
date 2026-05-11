@@ -363,7 +363,13 @@ function AdminDashboardPage() {
                 <span>Total</span>
               </div>
               {catalogoFiltrado.map((item) => (
-                <div key={item.sucursal} className="branch-table-row">
+                <div 
+                  key={item.sucursal} 
+                  className="branch-table-row" 
+                  onClick={() => setFiltroSucursal(item.sucursal)}
+                  style={{ cursor: 'pointer', transition: 'background 0.2s' }}
+                  title={`Ver stock de ${item.sucursal}`}
+                >
                   <span>{item.sucursal}</span>
                   <span>{item.zona}</span>
                   <strong>{FORMATO_MONEDA.format(item.total)}</strong>
@@ -388,7 +394,13 @@ function AdminDashboardPage() {
                     ? (dato.total / maxVentaSucursalFiltrada) * 100
                     : 0
                 return (
-                  <div key={dato.sucursal} className="branch-item">
+                  <div 
+                    key={dato.sucursal} 
+                    className="branch-item"
+                    onClick={() => setFiltroSucursal(dato.sucursal)}
+                    style={{ cursor: 'pointer' }}
+                    title={`Ver stock de ${dato.sucursal}`}
+                  >
                     <div className="branch-top">
                       <span>{dato.sucursal}</span>
                       <strong>{FORMATO_MONEDA.format(dato.total)}</strong>
@@ -445,9 +457,8 @@ function AdminDashboardPage() {
             <h2>Stock Detallado: {filtroSucursal === 'Todas' ? 'Todas las Sucursales' : filtroSucursal}</h2>
             <span>{stock.filter(s => filtroSucursal === 'Todas' || s.sucursal === filtroSucursal).length} ítems encontrados</span>
           </div>
-          <div className="branch-table">
-            <div className="branch-table-head">
-              <span>Sucursal</span>
+          <div className="branch-table" style={{ display: 'grid', gap: '8px' }}>
+            <div className="branch-table-head" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.5fr 1fr', alignItems: 'center', background: '#f8fafc', padding: '10px', borderRadius: '4px', fontWeight: 'bold' }}>
               <span>Categoría</span>
               <span>Producto</span>
               <span>Stock</span>
@@ -456,16 +467,15 @@ function AdminDashboardPage() {
             {stock
               .filter(item => filtroSucursal === 'Todas' || item.sucursal === filtroSucursal)
               .map((item) => (
-                <div key={item.id} className="branch-table-row">
-                  <span>{item.sucursal}</span>
+                <div key={item.id} className="branch-table-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.5fr 1fr', alignItems: 'center', padding: '10px', borderBottom: '1px solid #eee' }}>
                   <span>{item.categoria}</span>
                   <span>{item.producto}</span>
                   <strong>{item.cantidad}</strong>
-                  <span>${item.precioUnitario?.toLocaleString() || 0}</span>
+                  <span style={{ fontWeight: '600', color: '#2563eb' }}>${item.precioUnitario?.toLocaleString() || 0}</span>
                 </div>
               ))}
-            {stock.length === 0 && (
-              <p className="empty-state">No hay información de stock disponible.</p>
+            {stock.filter(item => filtroSucursal === 'Todas' || item.sucursal === filtroSucursal).length === 0 && (
+              <p className="empty-state" style={{ padding: '20px', textAlign: 'center', color: '#666' }}>No hay información de stock disponible para esta selección.</p>
             )}
           </div>
         </div>
