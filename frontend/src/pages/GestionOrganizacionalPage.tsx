@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, obtenerMetas, upsertMeta, registrarSucursal, obtenerSucursalesMaster } from '../api'
+import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster } from '../api'
 import type { Kpi, Venta } from '../types'
 
 type Sucursal = {

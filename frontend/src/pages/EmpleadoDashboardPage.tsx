@@ -101,13 +101,6 @@ function EmpleadoDashboardPage({
     return datoMes?.total ?? 0
   }, [periodoAnalisis, resumenSucursalActiva, serieSucursalActiva])
 
-  const stockPorCategoria = useMemo(() => {
-    const mapa = new Map<string, number>()
-    for (const item of stock) {
-      mapa.set(item.categoria, (mapa.get(item.categoria) ?? 0) + item.cantidad)
-    }
-    return Array.from(mapa.entries()).map(([categoria, total]) => ({ categoria, total }))
-  }, [stock])
 
 
 
