@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { obtenerKpis, obtenerVentas } from '../api'
-import type { ItemCatalogoSucursal, Kpi, Venta } from '../types'
+import { obtenerKpis, obtenerVentas, obtenerStock } from '../api'
+import type { ItemCatalogoSucursal, Kpi, Venta, StockItem } from '../types'
 import { FORMATO_MONEDA, monthLabelFormatter } from '../utils/formatters'
 import { BRANCH_ZONE_MAP } from '../constants/dashboardConfig'
 
@@ -27,6 +27,7 @@ function formatearEtiquetaMes(clave: string): string {
 function AdminDashboardPage() {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [kpis, setKpis] = useState<Kpi[]>([])
+  const [stock, setStock] = useState<StockItem[]>([])
   const [cargando, setCargando] = useState(true)
   const [fechaDesde, setFechaDesde] = useState('')
   const [fechaHasta, setFechaHasta] = useState('')
@@ -38,12 +39,14 @@ function AdminDashboardPage() {
       setCargando(true)
 
       try {
-        const [ventasData, kpisData] = await Promise.all([obtenerVentas(), obtenerKpis()])
+        const [ventasData, kpisData, stockData] = await Promise.all([obtenerVentas(), obtenerKpis(), obtenerStock()])
         setVentas(ventasData)
         setKpis(kpisData)
+        setStock(stockData)
       } catch {
         setVentas([])
         setKpis([])
+        setStock([])
       } finally {
         setCargando(false)
       }
@@ -430,6 +433,35 @@ function AdminDashboardPage() {
               )}
             </div>
           </article>
+        </div>
+      </section>
+
+      <section className="bloque" aria-label="Inventario global">
+        <h2>3. Inventario Global</h2>
+        <div className="tarjeta-resumen tarjeta-ancha">
+          <div className="panel-head">
+            <h2>Stock por Sucursal y Producto</h2>
+            <span>{stock.length} ítems en total</span>
+          </div>
+          <div className="branch-table">
+            <div className="branch-table-head">
+              <span>Sucursal</span>
+              <span>Categoría</span>
+              <span>Producto</span>
+              <span>Stock</span>
+            </div>
+            {stock.map((item) => (
+              <div key={item.id} className="branch-table-row">
+                <span>{item.sucursal}</span>
+                <span>{item.categoria}</span>
+                <span>{item.producto}</span>
+                <strong>{item.cantidad}</strong>
+              </div>
+            ))}
+            {!stock.length && (
+              <p className="empty-state">No hay información de stock disponible.</p>
+            )}
+          </div>
         </div>
       </section>
     </main>

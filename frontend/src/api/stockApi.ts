@@ -6,6 +6,7 @@ export type StockInput = {
   categoria: string
   producto: string
   cantidad: number
+  precioUnitario?: number
 }
 
 export async function obtenerStock(sucursal?: string): Promise<StockItem[]> {

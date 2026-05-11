@@ -2,6 +2,9 @@ export type Venta = {
   id: number
   fechaVenta: string
   montoTotal: number
+  cantidad?: number
+  precioUnitario?: number
+  producto?: string
   sistemaOrigen: string
   sucursal: string
 }
@@ -39,6 +42,7 @@ export type StockItem = {
   categoria: string
   producto: string
   cantidad: number
+  precioUnitario?: number
 }
 
 export type RespuestaLogin = {

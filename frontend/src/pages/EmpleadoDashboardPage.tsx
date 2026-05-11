@@ -203,19 +203,21 @@ function EmpleadoDashboardPage({
       </section>
 
       <section className="tarjeta-panel">
-        <h3>Stock disponible por categoría</h3>
+        <h3>Stock disponible detallado</h3>
         {stock.length === 0 ? (
           <p className="mensaje-demo">No hay stock registrado para esta sucursal.</p>
         ) : (
           <div className="tabla-simple">
             <div className="fila fila-encabezado">
               <span>Categoría</span>
-              <span>Total unidades</span>
+              <span>Producto</span>
+              <span>Stock</span>
             </div>
-            {stockPorCategoria.map((item) => (
-              <div key={item.categoria} className="fila">
+            {stock.map((item) => (
+              <div key={item.id} className="fila">
                 <span>{item.categoria}</span>
-                <span>{item.total}</span>
+                <span>{item.producto}</span>
+                <span>{item.cantidad}</span>
               </div>
             ))}
           </div>

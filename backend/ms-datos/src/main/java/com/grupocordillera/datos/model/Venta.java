@@ -26,7 +26,13 @@ public class Venta {
 
     private Double montoTotal;
 
-    // Ej: "Punto de Venta 1", "Ecommerce"
+    private Integer cantidad;
+
+    private Double precioUnitario;
+
+    private String producto;
+
+    // Ej: "POS", "Ecommerce"
     private String sistemaOrigen;
 
     private String sucursal;

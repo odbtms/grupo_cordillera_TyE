@@ -15,6 +15,5 @@ public class PlantillaReporte {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String titulo;
-    private String configuracionVisual;
     private String estado;
 }

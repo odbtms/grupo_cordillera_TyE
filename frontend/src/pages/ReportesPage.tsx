@@ -53,7 +53,6 @@ type ReportesPageProps = {
 
 function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   const [titulo, setTitulo] = useState('')
-  const [configuracionVisual, setConfiguracionVisual] = useState('')
   const [plantillas, setPlantillas] = useState<PlantillaReporte[]>([])
   const [paginaActual, setPaginaActual] = useState(1)
   const [mensajePlantilla, setMensajePlantilla] = useState('')
@@ -327,8 +326,8 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   async function crearPlantilla() {
     setMensajePlantilla('')
 
-    if (!titulo.trim() || !configuracionVisual.trim()) {
-      setMensajePlantilla('Debe completar título y configuración visual.')
+    if (!titulo.trim()) {
+      setMensajePlantilla('Debe completar el título.')
       return
     }
 
@@ -339,13 +338,12 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     try {
       const creada = await crearPlantillaReporte({
         titulo: tituloFinal,
-        configuracionVisual: configuracionVisual.trim(),
+        configuracionVisual: 'tabla', // Forzado para esquema simplificado
         estado: 'Activo',
       })
 
       setPlantillas((actual) => [creada, ...actual])
       setTitulo('')
-      setConfiguracionVisual('')
       setPaginaActual(1)
       setMensajePlantilla('Plantilla creada correctamente.')
     } catch {
@@ -547,15 +545,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
               type="text"
               value={titulo}
               onChange={(evento) => setTitulo(evento.target.value)}
-            />
-          </label>
-
-          <label>
-            Configuración visual
-            <input
-              type="text"
-              value={configuracionVisual}
-              onChange={(evento) => setConfiguracionVisual(evento.target.value)}
             />
           </label>
 

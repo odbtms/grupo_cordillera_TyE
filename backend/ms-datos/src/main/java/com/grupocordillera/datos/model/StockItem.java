@@ -23,4 +23,5 @@ public class StockItem {
     private String categoria;
     private String producto;
     private Integer cantidad;
+    private Double precioUnitario;
 }

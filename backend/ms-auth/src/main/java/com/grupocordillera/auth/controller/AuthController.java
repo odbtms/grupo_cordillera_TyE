@@ -68,9 +68,13 @@ public class AuthController {
         usuario.setUsername(request.username().trim());
         usuario.setEmail(request.email().trim());
         usuario.setPassword(passwordEncoder.encode(request.password()));
-        usuario.setRol(request.rol() == null || request.rol().isBlank()
-                ? "EJECUTIVO"
-                : request.rol().trim().toUpperCase());
+        
+        String rolAsignado = request.rol() != null ? request.rol().trim().toUpperCase() : "";
+        if (!rolAsignado.equals("ADMIN") && !rolAsignado.equals("EMPLEADO_TIENDA")) {
+            return ResponseEntity.badRequest().build();
+        }
+        usuario.setRol(rolAsignado);
+
         usuario.setSucursal(request.sucursal() == null || request.sucursal().isBlank() 
                 ? null 
                 : request.sucursal().trim());
@@ -99,22 +103,30 @@ public class AuthController {
         }
     }
 
+    public record RolRequest(String rol) {}
+
     @PutMapping("/usuarios/{id}/rol")
-    public Usuario actualizarRol(@PathVariable Long id, @RequestBody Usuario request) {
+    public ResponseEntity<Usuario> actualizarRol(@PathVariable Long id, @RequestBody RolRequest request) {
+        if (request.rol() == null || (!request.rol().trim().toUpperCase().equals("ADMIN") && !request.rol().trim().toUpperCase().equals("EMPLEADO_TIENDA"))) {
+            return ResponseEntity.badRequest().build();
+        }
         return repository.findById(id).map(u -> {
-            u.setRol(request.getRol());
-            return repository.save(u);
-        }).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            u.setRol(request.rol().trim().toUpperCase());
+            return ResponseEntity.ok(repository.save(u));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/usuarios/username/{username}/rol")
-    public Usuario actualizarRolPorUsername(
+    public ResponseEntity<Usuario> actualizarRolPorUsername(
             @PathVariable String username,
-            @RequestBody Usuario request) {
+            @RequestBody RolRequest request) {
+        if (request.rol() == null || (!request.rol().trim().toUpperCase().equals("ADMIN") && !request.rol().trim().toUpperCase().equals("EMPLEADO_TIENDA"))) {
+            return ResponseEntity.badRequest().build();
+        }
         return repository.findByUsername(username).map(u -> {
-            u.setRol(request.getRol());
-            return repository.save(u);
-        }).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            u.setRol(request.rol().trim().toUpperCase());
+            return ResponseEntity.ok(repository.save(u));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
 }

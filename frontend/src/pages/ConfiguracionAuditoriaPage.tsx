@@ -3,6 +3,7 @@ import {
   actualizarRolUsuarioPorUsername,
   crearPlantillaReporte,
   eliminarPlantillaReporte,
+  obtenerPlantillasReporte,
   obtenerKpis,
   obtenerVentas,
   validarToken,
@@ -44,15 +45,7 @@ function ConfiguracionAuditoriaPage({
         validarToken(token),
         obtenerVentas(),
         obtenerKpis(),
-        (async () => {
-          const temporal = await crearPlantillaReporte({
-            titulo: 'healthcheck-temp',
-            configuracionVisual: 'healthcheck-temp',
-            estado: 'Activo',
-          })
-          await eliminarPlantillaReporte(temporal.id)
-          return true
-        })(),
+        obtenerPlantillasReporte(),
       ])
 
       setEstadoServicios([
@@ -103,7 +96,7 @@ function ConfiguracionAuditoriaPage({
 
         <div className="formulario-simple">
           <label>
-            Cambiar rol (PUT ms-auth)
+            Cambiar Rol
             <select
               value={rolObjetivo}
               onChange={(evento) =>

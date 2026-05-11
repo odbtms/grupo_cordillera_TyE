@@ -15,3 +15,13 @@ export async function registrarVenta(payload: Omit<Venta, 'id'>): Promise<Venta>
   const { data } = await ventasHttp.post<Venta>('/registrar', payload)
   return data
 }
+
+export async function registrarSucursal(payload: { nombre: string; ubicacion?: string; metaVenta?: number }): Promise<any> {
+  const { data } = await ventasHttp.post('/sucursales', payload)
+  return data
+}
+
+export async function obtenerSucursalesMaster(): Promise<any[]> {
+  const { data } = await ventasHttp.get('/sucursales')
+  return Array.isArray(data) ? data : []
+}

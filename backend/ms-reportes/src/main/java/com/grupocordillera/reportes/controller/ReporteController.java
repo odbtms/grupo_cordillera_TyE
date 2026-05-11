@@ -2,6 +2,7 @@ package com.grupocordillera.reportes.controller;
 
 import com.grupocordillera.reportes.model.PlantillaReporte;
 import com.grupocordillera.reportes.repository.PlantillaReporteRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -17,19 +18,26 @@ public class ReporteController {
 
     @GetMapping
     public List<PlantillaReporte> listarPlantillas() {
-        return repository.findAll();
+        return repository.findAll().stream()
+                .filter(p -> !"Inactivo".equalsIgnoreCase(p.getEstado()))
+                .filter(p -> p.getTitulo() == null || !p.getTitulo().toLowerCase().contains("healthcheck"))
+                .toList();
     }
+    
     @PostMapping
     public PlantillaReporte crearPlantilla(@RequestBody PlantillaReporte plantilla) {
+        if (plantilla.getEstado() == null || plantilla.getEstado().isBlank()) {
+            plantilla.setEstado("Activo");
+        }
         return repository.save(plantilla);
     }
 
     @DeleteMapping("/{id}")
-    public void eliminarReporte(@PathVariable Long id) {
-        // En tu informe sugerías borrado lógico, así que actualizamos el estado
-        repository.findById(id).ifPresent(plantilla -> {
-            plantilla.setEstado("Inactivo");
-            repository.save(plantilla);
-        });
+    public ResponseEntity<Void> eliminarReporte(@PathVariable Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }

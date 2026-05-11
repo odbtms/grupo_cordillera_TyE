@@ -12,9 +12,11 @@ import java.util.List;
 public class StockController {
 
     private final StockRepository repository;
+    private final com.grupocordillera.datos.repository.SucursalRepository sucursalRepository;
 
-    public StockController(StockRepository repository) {
+    public StockController(StockRepository repository, com.grupocordillera.datos.repository.SucursalRepository sucursalRepository) {
         this.repository = repository;
+        this.sucursalRepository = sucursalRepository;
     }
 
     @GetMapping
@@ -27,12 +29,18 @@ public class StockController {
 
     @PostMapping
     public ResponseEntity<StockItem> upsertStock(@RequestBody StockItem payload) {
-        if (payload.getSucursal() == null || payload.getSucursal().isBlank()) {
+        if (payload.getSucursal() == null || payload.getSucursal().isBlank() || !sucursalRepository.existsByNombreIgnoreCase(payload.getSucursal())) {
             return ResponseEntity.badRequest().build();
         }
         if (payload.getCategoria() == null || payload.getCategoria().isBlank()) {
             return ResponseEntity.badRequest().build();
         }
+        
+        String categoriaUpper = payload.getCategoria().trim().toUpperCase();
+        if (!categoriaUpper.equals("ELECTRONICA") && !categoriaUpper.equals("HOGAR")) {
+            return ResponseEntity.badRequest().build();
+        }
+
         if (payload.getProducto() == null || payload.getProducto().isBlank()) {
             return ResponseEntity.badRequest().build();
         }
