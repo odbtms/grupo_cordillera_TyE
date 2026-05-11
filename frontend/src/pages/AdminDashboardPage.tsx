@@ -33,6 +33,7 @@ function AdminDashboardPage() {
   const [fechaHasta, setFechaHasta] = useState('')
   const [filtroZona, setFiltroZona] = useState('Todas')
   const [filtroOrigen, setFiltroOrigen] = useState('Todos')
+  const [filtroSucursal, setFiltroSucursal] = useState('Todas')
 
   useEffect(() => {
     async function cargarDatosDashboard() {
@@ -316,15 +317,21 @@ function AdminDashboardPage() {
             </label>
 
             <label>
-              Sistema origen
-              <select
-                value={filtroOrigen}
-                onChange={(evento) => setFiltroOrigen(evento.target.value)}
-              >
-                {opcionesOrigen.map((origen) => (
-                  <option key={origen} value={origen}>
-                    {origen}
-                  </option>
+              Sistema Origen
+              <select value={filtroOrigen} onChange={(e) => setFiltroOrigen(e.target.value)}>
+                <option value="Todos">Todos</option>
+                <option value="POS">POS</option>
+                <option value="WEB">WEB</option>
+                <option value="APP">APP</option>
+              </select>
+            </label>
+
+            <label>
+              Sucursal Específica
+              <select value={filtroSucursal} onChange={(e) => setFiltroSucursal(e.target.value)}>
+                <option value="Todas">Todas las sucursales</option>
+                {Array.from(new Set(stock.map(s => s.sucursal))).map(nombre => (
+                  <option key={nombre} value={nombre}>{nombre}</option>
                 ))}
               </select>
             </label>
@@ -437,11 +444,11 @@ function AdminDashboardPage() {
       </section>
 
       <section className="bloque" aria-label="Inventario global">
-        <h2>3. Inventario Global</h2>
+        <h2>3. Inventario Global y Detallado</h2>
         <div className="tarjeta-resumen tarjeta-ancha">
           <div className="panel-head">
-            <h2>Stock por Sucursal y Producto</h2>
-            <span>{stock.length} ítems en total</span>
+            <h2>Stock Detallado: {filtroSucursal === 'Todas' ? 'Todas las Sucursales' : filtroSucursal}</h2>
+            <span>{stock.filter(s => filtroSucursal === 'Todas' || s.sucursal === filtroSucursal).length} ítems encontrados</span>
           </div>
           <div className="branch-table">
             <div className="branch-table-head">
@@ -449,18 +456,20 @@ function AdminDashboardPage() {
               <span>Categoría</span>
               <span>Producto</span>
               <span>Stock</span>
-              <span>Precio</span>
+              <span>Precio Unitario</span>
             </div>
-            {stock.map((item) => (
-              <div key={item.id} className="branch-table-row">
-                <span>{item.sucursal}</span>
-                <span>{item.categoria}</span>
-                <span>{item.producto}</span>
-                <strong>{item.cantidad}</strong>
-                <span>${item.precioUnitario?.toLocaleString() || 0}</span>
-              </div>
-            ))}
-            {!stock.length && (
+            {stock
+              .filter(item => filtroSucursal === 'Todas' || item.sucursal === filtroSucursal)
+              .map((item) => (
+                <div key={item.id} className="branch-table-row">
+                  <span>{item.sucursal}</span>
+                  <span>{item.categoria}</span>
+                  <span>{item.producto}</span>
+                  <strong>{item.cantidad}</strong>
+                  <span>${item.precioUnitario?.toLocaleString() || 0}</span>
+                </div>
+              ))}
+            {stock.length === 0 && (
               <p className="empty-state">No hay información de stock disponible.</p>
             )}
           </div>
