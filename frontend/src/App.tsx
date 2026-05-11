@@ -127,7 +127,7 @@ function App() {
   }
 
   if (paginaActual === 'reportes') {
-    contenidoPagina = <ReportesPage />
+    contenidoPagina = <ReportesPage rol={rol} sucursalAsignada={sucursal} />
   }
 
   if (paginaActual === 'gestion-organizacional' && esAdmin && !esEmpleadoTienda) {
