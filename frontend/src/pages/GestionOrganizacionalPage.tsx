@@ -349,12 +349,12 @@ function GestionOrganizacionalPage() {
 
       <section className="tarjeta-panel">
         <h3>Metas de Venta por Sucursal</h3>
-        <div className="tabla-simple">
-          <div className="fila fila-encabezado">
+        <div className="tabla-simple" style={{ display: 'grid', gap: '8px' }}>
+          <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', alignItems: 'center' }}>
             <span>Sucursal</span>
-            <span>Ventas reales ($)</span>
-            <span>Meta de venta ($)</span>
-            <span>% de Logro</span>
+            <span>Ventas ($)</span>
+            <span>Meta ($)</span>
+            <span>% Logro</span>
           </div>
 
           {sucursales.map((sucursal, indice) => {
@@ -362,18 +362,19 @@ function GestionOrganizacionalPage() {
             const porcentaje = sucursal.metaVenta > 0 ? (ventasActuales / sucursal.metaVenta) * 100 : 0;
             
             return (
-              <div key={sucursal.nombre} className="fila">
+              <div key={sucursal.nombre} className="fila" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', alignItems: 'center' }}>
                 <span>{sucursal.nombre}</span>
                 <span>${ventasActuales.toLocaleString()}</span>
                 <span>
                   <input
                     type="number"
                     min={1}
+                    style={{ width: '100%', padding: '4px' }}
                     value={sucursal.metaVenta}
                     onChange={(evento) => actualizarMeta(indice, evento.target.value)}
                   />
                 </span>
-                <strong style={{ color: porcentaje >= 100 ? '#4CAF50' : '#FF9800' }}>
+                <strong style={{ color: porcentaje >= 100 ? '#4CAF50' : '#FF9800', textAlign: 'right' }}>
                   {porcentaje.toFixed(1)}%
                 </strong>
               </div>
