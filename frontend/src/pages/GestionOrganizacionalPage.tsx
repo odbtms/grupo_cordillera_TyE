@@ -29,6 +29,15 @@ function GestionOrganizacionalPage() {
   const [kpiSeleccionadoId, setKpiSeleccionadoId] = useState<number | null>(null)
   const [nuevaFormula, setNuevaFormula] = useState('')
 
+  // Sistema de Carrito para Ventas
+  const [carrito, setCarrito] = useState<Array<{
+    producto: string
+    cantidad: number
+    precioUnitario: number
+    subtotal: number
+    categoria: string
+  }>>([])
+
   // Estado para creación de empleado
   const [nuevoEmpleado, setNuevoEmpleado] = useState({
     username: '',
@@ -148,32 +157,71 @@ function GestionOrganizacionalPage() {
     }
   }
 
-  async function crearVenta() {
+  function agregarAlCarrito() {
+    if (!nuevaVenta.producto || nuevaVenta.cantidad <= 0) {
+      setMensajeVenta('Seleccione producto y cantidad válida.')
+      return
+    }
+    
+    setCarrito(actual => [
+      ...actual,
+      {
+        producto: nuevaVenta.producto,
+        cantidad: nuevaVenta.cantidad,
+        precioUnitario: nuevaVenta.precioUnitario,
+        subtotal: nuevaVenta.montoTotal,
+        categoria: nuevaVenta.categoria
+      }
+    ])
+    
+    // Limpiar campos de producto para el siguiente
+    setNuevaVenta(actual => ({
+      ...actual,
+      producto: '',
+      precioUnitario: 0,
+      montoTotal: 0,
+      cantidad: 1
+    }))
     setMensajeVenta('')
+  }
 
-    if (!nuevaVenta.sucursal.trim() || nuevaVenta.montoTotal <= 0) {
-      setMensajeVenta('Debe indicar sucursal y un monto mayor a cero.')
+  async function procesarVentaCompleta() {
+    if (carrito.length === 0) {
+      setMensajeVenta('El carrito está vacío.')
       return
     }
 
     try {
-      await registrarVenta({
-        fechaVenta: new Date().toISOString(),
-        montoTotal: nuevaVenta.montoTotal,
-        sistemaOrigen: nuevaVenta.sistemaOrigen.trim() || 'POS',
-        sucursal: nuevaVenta.sucursal.trim(),
-        producto: nuevaVenta.producto.trim(),
-        cantidad: nuevaVenta.cantidad,
-        precioUnitario: nuevaVenta.precioUnitario,
-      })
+      // Registrar cada item del carrito como una venta
+      await Promise.all(carrito.map(item => 
+        registrarVenta({
+          fechaVenta: new Date().toISOString(),
+          montoTotal: item.subtotal,
+          sistemaOrigen: nuevaVenta.sistemaOrigen.trim() || 'POS',
+          sucursal: nuevaVenta.sucursal.trim(),
+          producto: item.producto,
+          cantidad: item.cantidad,
+          precioUnitario: item.precioUnitario,
+        })
+      ))
 
       const [listaVentas, listaStock] = await Promise.all([obtenerVentas(), obtenerStock()])
       setVentas(listaVentas)
       setInventarioFull(listaStock)
-      setNuevaVenta({ montoTotal: 0, sistemaOrigen: 'POS', sucursal: '', categoria: 'TODOS', producto: '', cantidad: 1, precioUnitario: 0 })
-      setMensajeVenta('Venta registrada correctamente.')
+      
+      setCarrito([])
+      setNuevaVenta({ 
+        montoTotal: 0, 
+        sistemaOrigen: 'POS', 
+        sucursal: '', 
+        categoria: 'TODOS', 
+        producto: '', 
+        cantidad: 1, 
+        precioUnitario: 0 
+      })
+      setMensajeVenta('Venta completa registrada con éxito. Inventario actualizado.')
     } catch {
-      setMensajeVenta('No fue posible registrar la venta en ms-datos.')
+      setMensajeVenta('Error al procesar uno o más productos de la venta.')
     }
   }
 
@@ -436,11 +484,51 @@ function GestionOrganizacionalPage() {
             />
           </label>
 
-          <button type="button" onClick={crearVenta}>
-            Registrar venta
-          </button>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            <button type="button" onClick={agregarAlCarrito} style={{ flex: 1, background: '#4CAF50' }}>
+              + Añadir al Carrito
+            </button>
+          </div>
         </div>
-        {mensajeVenta && <p>{mensajeVenta}</p>}
+
+        {carrito.length > 0 && (
+          <div className="tabla-simple" style={{ marginTop: 20, border: '1px solid #ddd', padding: '10px' }}>
+            <h4>Carrito de Ventas</h4>
+            <div className="fila fila-encabezado">
+              <span>Producto</span>
+              <span>Cant</span>
+              <span>Subtotal</span>
+            </div>
+            {carrito.map((item, idx) => (
+              <div key={idx} className="fila">
+                <span>{item.producto}</span>
+                <span>{item.cantidad}</span>
+                <span>${item.subtotal.toLocaleString()}</span>
+              </div>
+            ))}
+            <div className="fila" style={{ borderTop: '2px solid #333', fontWeight: 'bold' }}>
+              <span>TOTAL VENTA</span>
+              <span>-</span>
+              <span>${carrito.reduce((acc, i) => acc + i.subtotal, 0).toLocaleString()}</span>
+            </div>
+            <button 
+              type="button" 
+              onClick={procesarVentaCompleta} 
+              style={{ width: '100%', marginTop: '10px', background: '#2196F3', color: 'white' }}
+            >
+              Confirmar y Registrar Venta Completa
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setCarrito([])}
+              style={{ width: '100%', marginTop: '5px', background: '#f44336', color: 'white', fontSize: '12px' }}
+            >
+              Vaciar Carrito
+            </button>
+          </div>
+        )}
+
+        {mensajeVenta && <p style={{ color: mensajeVenta.includes('éxito') ? 'green' : 'red' }}>{mensajeVenta}</p>}
       </section>
 
       <section className="tarjeta-panel">

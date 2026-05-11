@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface StockRepository extends JpaRepository<StockItem, Long> {
     List<StockItem> findBySucursalIgnoreCase(String sucursal);
 
+    Optional<StockItem> findBySucursalIgnoreCaseAndProductoIgnoreCase(String sucursal, String producto);
+
     Optional<StockItem> findBySucursalIgnoreCaseAndCategoriaIgnoreCaseAndProductoIgnoreCase(
             String sucursal,
             String categoria,
