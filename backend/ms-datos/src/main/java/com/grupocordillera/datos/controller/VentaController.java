@@ -45,14 +45,18 @@ public class VentaController {
             return ResponseEntity.badRequest().build();
         }
 
-        // Descontar stock automáticamente
+        // Descontar stock automáticamente con validación estricta
         if (venta.getProducto() != null && venta.getCantidad() != null) {
-            stockRepository.findBySucursalIgnoreCaseAndProductoIgnoreCase(venta.getSucursal(), venta.getProducto())
-                    .ifPresent(stock -> {
-                        int nuevoStock = stock.getCantidad() - venta.getCantidad();
-                        stock.setCantidad(Math.max(0, nuevoStock)); // No permitir stock negativo
-                        stockRepository.save(stock);
-                    });
+            var stockOpt = stockRepository.findBySucursalIgnoreCaseAndProductoIgnoreCase(venta.getSucursal(), venta.getProducto());
+            
+            if (stockOpt.isEmpty() || stockOpt.get().getCantidad() < venta.getCantidad()) {
+                return ResponseEntity.badRequest().build(); // No hay stock suficiente
+            }
+            
+            stockOpt.ifPresent(stock -> {
+                stock.setCantidad(stock.getCantidad() - venta.getCantidad());
+                stockRepository.save(stock);
+            });
         }
 
         return ResponseEntity.ok(repository.save(venta));

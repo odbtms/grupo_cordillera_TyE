@@ -162,6 +162,21 @@ function GestionOrganizacionalPage() {
       setMensajeVenta('Seleccione producto y cantidad válida.')
       return
     }
+
+    // Validación de stock disponible
+    const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const sucursalActual = normalizar(nuevaVenta.sucursal);
+    const itemStock = inventarioFull.find(i => 
+      normalizar(i.sucursal) === sucursalActual && 
+      normalizar(i.producto) === normalizar(nuevaVenta.producto)
+    );
+
+    const stockDisponible = itemStock?.cantidad || 0;
+    
+    if (nuevaVenta.cantidad > stockDisponible) {
+      setMensajeVenta(`Solamente queda ${stockDisponible} stock de este producto.`);
+      return;
+    }
     
     setCarrito(actual => [
       ...actual,
@@ -486,14 +501,14 @@ function GestionOrganizacionalPage() {
 
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
             <button type="button" onClick={agregarAlCarrito} style={{ flex: 1, background: '#4CAF50' }}>
-              + Añadir al Carrito
+              Añadir a venta
             </button>
           </div>
         </div>
 
         {carrito.length > 0 && (
           <div className="tabla-simple" style={{ marginTop: 20, border: '1px solid #ddd', padding: '10px' }}>
-            <h4>Carrito de Ventas</h4>
+            <h4>Ventas en total</h4>
             <div className="fila fila-encabezado">
               <span>Producto</span>
               <span>Cant</span>
