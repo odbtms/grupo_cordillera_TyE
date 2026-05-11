@@ -55,6 +55,9 @@ public class StockController {
                         payload.getProducto())
                 .map(existing -> {
                     existing.setCantidad(payload.getCantidad());
+                    if (payload.getPrecioUnitario() != null) {
+                        existing.setPrecioUnitario(payload.getPrecioUnitario());
+                    }
                     return existing;
                 })
                 .orElseGet(() -> {
@@ -63,6 +66,7 @@ public class StockController {
                     nuevo.setCategoria(payload.getCategoria().trim());
                     nuevo.setProducto(payload.getProducto().trim());
                     nuevo.setCantidad(payload.getCantidad());
+                    nuevo.setPrecioUnitario(payload.getPrecioUnitario());
                     return nuevo;
                 });
 

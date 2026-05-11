@@ -323,7 +323,7 @@ function GestionOrganizacionalPage() {
             <select
               value={nuevaVenta.sucursal}
               onChange={(evento) =>
-                setNuevaVenta((actual) => ({ ...actual, sucursal: evento.target.value, producto: '' }))
+                setNuevaVenta((actual) => ({ ...actual, sucursal: evento.target.value, producto: '', precioUnitario: 0, montoTotal: 0 }))
               }
             >
               <option value="">Seleccione Sucursal</option>
@@ -353,7 +353,14 @@ function GestionOrganizacionalPage() {
               value={nuevaVenta.producto}
               onChange={(evento) => {
                 const prodNombre = evento.target.value;
-                const infoStock = inventarioFull.find(i => i.sucursal === nuevaVenta.sucursal && i.producto === prodNombre);
+                const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                
+                const sucursalActual = normalizar(nuevaVenta.sucursal);
+                const infoStock = inventarioFull.find(i => 
+                  normalizar(i.sucursal) === sucursalActual && 
+                  normalizar(i.producto) === normalizar(prodNombre)
+                );
+                
                 const precio = infoStock?.precioUnitario || 0;
                 setNuevaVenta((actual) => ({ 
                   ...actual, 
@@ -366,7 +373,10 @@ function GestionOrganizacionalPage() {
             >
               <option value="">{nuevaVenta.sucursal ? 'Seleccione Producto' : 'Elija primero sucursal'}</option>
               {inventarioFull
-                .filter(i => i.sucursal === nuevaVenta.sucursal && i.cantidad > 0)
+                .filter(i => {
+                  const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                  return normalizar(i.sucursal) === normalizar(nuevaVenta.sucursal) && i.cantidad > 0;
+                })
                 .map(i => (
                   <option key={i.id} value={i.producto}>{i.producto} (Stock: {i.cantidad})</option>
                 ))
