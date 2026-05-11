@@ -7,6 +7,8 @@ export type Venta = {
   producto?: string
   sistemaOrigen: string
   sucursal: string
+  vendedor?: string
+  categoria?: string
 }
 
 export type Kpi = {

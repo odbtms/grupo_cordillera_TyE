@@ -607,6 +607,41 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
             Siguiente
           </button>
         </div>
+        <section className="tarjeta-resumen tarjeta-ancha" style={{ marginTop: '30px' }}>
+          <div className="panel-head">
+            <h2>Nueva Plantilla: Auditoría de Ventas Detallada</h2>
+            <span>{ventas.length} movimientos registrados</span>
+          </div>
+          <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '15px' }}>
+            Este reporte muestra cada objeto de venta de forma individual y ordenada por fecha.
+          </p>
+
+          <div className="tabla-simple" style={{ display: 'grid', gap: '5px' }}>
+            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 0.8fr 1fr', alignItems: 'center', background: '#f1f5f9', fontWeight: 'bold' }}>
+              <span>Sucursal</span>
+              <span>Empleado</span>
+              <span>Categoría</span>
+              <span>Producto</span>
+              <span>Cant.</span>
+              <span>Precio</span>
+            </div>
+            {ventas
+              .sort((a, b) => new Date(b.fechaVenta).getTime() - new Date(a.fechaVenta).getTime())
+              .map((venta, idx) => (
+                <div key={venta.id || idx} className="fila" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.5fr 0.8fr 1fr', alignItems: 'center', borderBottom: '1px solid #e2e8f0' }}>
+                  <span>{venta.sucursal}</span>
+                  <span style={{ color: '#2563eb', fontWeight: '500' }}>{venta.vendedor || 'S/A'}</span>
+                  <span style={{ fontSize: '0.85rem' }}>{venta.categoria || 'VARIOS'}</span>
+                  <span>{venta.producto}</span>
+                  <strong>{venta.cantidad}</strong>
+                  <span>${venta.precioUnitario?.toLocaleString() || 0}</span>
+                </div>
+              ))}
+            {ventas.length === 0 && (
+              <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No hay ventas registradas para auditar.</p>
+            )}
+          </div>
+        </section>
       </section>
     </section>
   )

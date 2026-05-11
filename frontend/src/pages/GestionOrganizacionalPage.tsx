@@ -7,7 +7,11 @@ type Sucursal = {
   metaVenta: number
 }
 
-function GestionOrganizacionalPage() {
+type GestionOrganizacionalPageProps = {
+  nombreUsuario?: string
+}
+
+function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizacionalPageProps) {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [kpis, setKpis] = useState<Kpi[]>([])
   const [sucursales, setSucursales] = useState<Sucursal[]>([])
@@ -214,6 +218,8 @@ function GestionOrganizacionalPage() {
           montoTotal: item.subtotal,
           sistemaOrigen: nuevaVenta.sistemaOrigen.trim() || 'POS',
           sucursal: nuevaVenta.sucursal.trim(),
+          vendedor: nombreUsuario,
+          categoria: item.categoria,
           producto: item.producto,
           cantidad: item.cantidad,
           precioUnitario: item.precioUnitario,

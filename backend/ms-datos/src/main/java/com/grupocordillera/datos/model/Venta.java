@@ -36,4 +36,8 @@ public class Venta {
     private String sistemaOrigen;
 
     private String sucursal;
+
+    private String vendedor;
+
+    private String categoria;
 }

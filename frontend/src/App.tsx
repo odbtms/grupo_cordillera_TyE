@@ -122,7 +122,7 @@ function App() {
   
   if (esEmpleadoTienda) {
     contenidoPagina = sucursal 
-      ? <EmpleadoDashboardPage sucursalAsignada={sucursal} />
+      ? <EmpleadoDashboardPage sucursalAsignada={sucursal} nombreUsuario={usuario} />
       : <div className="cargando-pantalla">Cargando sucursal asignada...</div>
   }
 
@@ -131,7 +131,7 @@ function App() {
   }
 
   if (paginaActual === 'gestion-organizacional' && esAdmin && !esEmpleadoTienda) {
-    contenidoPagina = <GestionOrganizacionalPage />
+    contenidoPagina = <GestionOrganizacionalPage nombreUsuario={usuario} />
   }
 
   if (paginaActual === 'configuracion-auditoria' && !esEmpleadoTienda) {
