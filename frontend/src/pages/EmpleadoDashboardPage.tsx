@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { obtenerStock, obtenerVentasPorSucursal, registrarVenta, upsertStock } from '../api'
+import { obtenerStock, obtenerVentasPorSucursal, registrarVenta, upsertStock, crearPlantillaReporte } from '../api'
 import type { StockItem, Venta } from '../types'
 import {
   Area,
@@ -162,6 +162,7 @@ function EmpleadoDashboardPage({
         cantidad: nuevoStock.cantidad,
         precioUnitario: nuevoStock.precioUnitario,
         vendedor: nombreUsuario,
+        fechaRegistro: new Date().toISOString(),
       })
       setMensajeStock('Stock registrado con éxito.')
       setNuevoStock({
@@ -224,14 +225,37 @@ function EmpleadoDashboardPage({
     return datoMes?.total ?? 0
   }, [periodoAnalisis, resumenSucursalActiva, serieSucursalActiva])
 
-
+  async function enviarReporteDiario() {
+    setMensajeVenta('')
+    try {
+      const hoy = new Date()
+      const diaMes = `${String(hoy.getDate()).padStart(2, '0')}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
+      
+      await crearPlantillaReporte({
+        titulo: `Reporte Sucursal ${sucursalAsignada}`,
+        estado: diaMes
+      })
+      
+      alert(`Reporte de ${sucursalAsignada} enviado con éxito al administrador.`)
+    } catch {
+      alert('Error al enviar el reporte. Intente nuevamente.')
+    }
+  }
 
 
   return (
     <section className="pagina-contenido">
-      <div className="encabezado-pagina">
-        <h2>Dashboard de Sucursal</h2>
-        <p>Rendimiento comercial y stock de {sucursalAsignada}</p>
+      <div className="encabezado-pagina" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2>Panel de Control - {sucursalAsignada}</h2>
+          <p>Bienvenido, {nombreUsuario}. Gestión de ventas y stock local.</p>
+        </div>
+        <button 
+          onClick={enviarReporteDiario}
+          style={{ background: '#2563eb', padding: '12px 24px', fontSize: '1.1rem', fontWeight: 'bold' }}
+        >
+          ENVIAR REPORTE AL ADMIN
+        </button>
       </div>
 
       {cargando && <p>Cargando información...</p>}
