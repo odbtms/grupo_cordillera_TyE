@@ -118,9 +118,13 @@ function App() {
         },
       ]
 
-  let contenidoPagina = esEmpleadoTienda && sucursal
-    ? <EmpleadoDashboardPage sucursalAsignada={sucursal} />
-    : <DashboardPrincipalPage />
+  let contenidoPagina = <DashboardPrincipalPage />
+  
+  if (esEmpleadoTienda) {
+    contenidoPagina = sucursal 
+      ? <EmpleadoDashboardPage sucursalAsignada={sucursal} />
+      : <div className="cargando-pantalla">Cargando sucursal asignada...</div>
+  }
 
   if (paginaActual === 'reportes') {
     contenidoPagina = <ReportesPage rol={rol} sucursalAsignada={sucursal} />

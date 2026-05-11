@@ -51,7 +51,7 @@ function EmpleadoDashboardPage({
     }
 
     cargarDatos()
-  }, [])
+  }, [sucursalAsignada])
 
   const serieSucursalActiva = useMemo(() => {
     const sucursalObjetivo = normalizarTexto(sucursalAsignada)
