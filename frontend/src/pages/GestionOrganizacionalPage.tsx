@@ -352,24 +352,33 @@ function GestionOrganizacionalPage() {
         <div className="tabla-simple">
           <div className="fila fila-encabezado">
             <span>Sucursal</span>
-            <span>Ventas acumuladas</span>
-            <span>Meta de venta</span>
+            <span>Ventas reales ($)</span>
+            <span>Meta de venta ($)</span>
+            <span>% de Logro</span>
           </div>
 
-          {sucursales.map((sucursal, indice) => (
-            <div key={sucursal.nombre} className="fila">
-              <span>{sucursal.nombre}</span>
-              <span>{resumenVentas.get(sucursal.nombre) ?? 0}</span>
-              <span>
-                <input
-                  type="number"
-                  min={1}
-                  value={sucursal.metaVenta}
-                  onChange={(evento) => actualizarMeta(indice, evento.target.value)}
-                />
-              </span>
-            </div>
-          ))}
+          {sucursales.map((sucursal, indice) => {
+            const ventasActuales = resumenVentas.get(sucursal.nombre) ?? 0;
+            const porcentaje = sucursal.metaVenta > 0 ? (ventasActuales / sucursal.metaVenta) * 100 : 0;
+            
+            return (
+              <div key={sucursal.nombre} className="fila">
+                <span>{sucursal.nombre}</span>
+                <span>${ventasActuales.toLocaleString()}</span>
+                <span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={sucursal.metaVenta}
+                    onChange={(evento) => actualizarMeta(indice, evento.target.value)}
+                  />
+                </span>
+                <strong style={{ color: porcentaje >= 100 ? '#4CAF50' : '#FF9800' }}>
+                  {porcentaje.toFixed(1)}%
+                </strong>
+              </div>
+            );
+          })}
           {sucursales.length === 0 && <p>No hay sucursales registradas.</p>}
         </div>
 
