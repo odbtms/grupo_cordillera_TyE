@@ -465,7 +465,11 @@ function AdminDashboardPage() {
               <span>Precio Unitario</span>
             </div>
             {stock
-              .filter(item => filtroSucursal === 'Todas' || item.sucursal === filtroSucursal)
+              .filter(item => {
+                if (filtroSucursal === 'Todas') return true;
+                const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                return normalizar(item.sucursal) === normalizar(filtroSucursal);
+              })
               .map((item) => (
                 <div key={item.id} className="branch-table-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.5fr 1fr', alignItems: 'center', padding: '10px', borderBottom: '1px solid #eee' }}>
                   <span>{item.categoria}</span>
@@ -474,7 +478,11 @@ function AdminDashboardPage() {
                   <span style={{ fontWeight: '600', color: '#2563eb' }}>${item.precioUnitario?.toLocaleString() || 0}</span>
                 </div>
               ))}
-            {stock.filter(item => filtroSucursal === 'Todas' || item.sucursal === filtroSucursal).length === 0 && (
+            {stock.filter(item => {
+              if (filtroSucursal === 'Todas') return true;
+              const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+              return normalizar(item.sucursal) === normalizar(filtroSucursal);
+            }).length === 0 && (
               <p className="empty-state" style={{ padding: '20px', textAlign: 'center', color: '#666' }}>No hay información de stock disponible para esta selección.</p>
             )}
           </div>
