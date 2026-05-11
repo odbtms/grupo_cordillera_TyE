@@ -205,12 +205,14 @@ function EmpleadoDashboardPage({
               <span>Categoría</span>
               <span>Producto</span>
               <span>Stock</span>
+              <span>Precio</span>
             </div>
             {stock.map((item) => (
               <div key={item.id} className="fila">
                 <span>{item.categoria}</span>
                 <span>{item.producto}</span>
                 <span>{item.cantidad}</span>
+                <span>${item.precioUnitario?.toLocaleString() || 0}</span>
               </div>
             ))}
           </div>

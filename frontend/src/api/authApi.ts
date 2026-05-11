@@ -55,3 +55,16 @@ export async function actualizarRolUsuarioPorUsername(username: string, rol: str
   })
   return data
 }
+
+export type Usuario = {
+  id: number
+  username: string
+  email: string
+  rol: string
+  sucursal: string | null
+}
+
+export async function obtenerUsuarios(): Promise<Usuario[]> {
+  const { data } = await authHttp.get<Usuario[]>('/usuarios')
+  return Array.isArray(data) ? data : []
+}

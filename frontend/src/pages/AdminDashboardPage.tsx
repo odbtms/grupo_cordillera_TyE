@@ -449,6 +449,7 @@ function AdminDashboardPage() {
               <span>Categoría</span>
               <span>Producto</span>
               <span>Stock</span>
+              <span>Precio</span>
             </div>
             {stock.map((item) => (
               <div key={item.id} className="branch-table-row">
@@ -456,6 +457,7 @@ function AdminDashboardPage() {
                 <span>{item.categoria}</span>
                 <span>{item.producto}</span>
                 <strong>{item.cantidad}</strong>
+                <span>${item.precioUnitario?.toLocaleString() || 0}</span>
               </div>
             ))}
             {!stock.length && (

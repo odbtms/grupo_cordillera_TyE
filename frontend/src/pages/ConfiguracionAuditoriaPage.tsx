@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import {
   actualizarRolUsuarioPorUsername,
+  actualizarRolUsuario,
+  obtenerUsuarios,
   obtenerPlantillasReporte,
   obtenerKpis,
   obtenerVentas,
   validarToken,
 } from '../api'
+import type { Usuario } from '../api'
 
 type EstadoServicio = {
   nombre: string
@@ -29,6 +32,7 @@ function ConfiguracionAuditoriaPage({
     rol.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'EMPLEADO_TIENDA',
   )
   const [mensajeRol, setMensajeRol] = useState('')
+  const [usuariosDb, setUsuariosDb] = useState<Usuario[]>([])
 
   const [estadoServicios, setEstadoServicios] = useState<EstadoServicio[]>([
     { nombre: 'ms-auth', estado: 'sin-conexion' },
@@ -44,6 +48,7 @@ function ConfiguracionAuditoriaPage({
         obtenerVentas(),
         obtenerKpis(),
         obtenerPlantillasReporte(),
+        obtenerUsuarios()
       ])
 
       setEstadoServicios([
@@ -64,6 +69,10 @@ function ConfiguracionAuditoriaPage({
           estado: resultados[3].status === 'fulfilled' ? 'conectado' : 'sin-conexion',
         },
       ])
+
+      if (resultados[4].status === 'fulfilled') {
+        setUsuariosDb(resultados[4].value as Usuario[])
+      }
     }
 
     validarServicios()
@@ -73,9 +82,22 @@ function ConfiguracionAuditoriaPage({
     setMensajeRol('')
     try {
       await actualizarRolUsuarioPorUsername(usuario, rolObjetivo)
-      setMensajeRol(`Rol actualizado en ms-auth para ${usuario}.`)
+      setMensajeRol(`Rol actualizado para ti (${usuario}).`)
+      const lista = await obtenerUsuarios()
+      setUsuariosDb(lista)
     } catch {
-      setMensajeRol('No fue posible actualizar rol en ms-auth.')
+      setMensajeRol('Error al actualizar tu propio rol.')
+    }
+  }
+
+  async function cambiarRolUsuarioExterno(id: number, nuevoRol: string) {
+    try {
+      await actualizarRolUsuario(id, nuevoRol)
+      const lista = await obtenerUsuarios()
+      setUsuariosDb(lista)
+      alert('Rol de usuario actualizado correctamente.')
+    } catch {
+      alert('No se pudo cambiar el rol del usuario.')
     }
   }
 
@@ -114,6 +136,37 @@ function ConfiguracionAuditoriaPage({
         <button type="button" onClick={onCerrarSesion}>
           Cerrar sesión
         </button>
+      </section>
+
+      <section className="tarjeta-panel">
+        <h3>Gestión de Usuarios (Base de Datos)</h3>
+        <p className="mensaje-demo">Administra los roles de todos los usuarios registrados.</p>
+        <div className="tabla-simple">
+          <div className="fila fila-encabezado">
+            <span>Usuario</span>
+            <span>Email</span>
+            <span>Rol Actual</span>
+            <span>Acciones</span>
+          </div>
+          {usuariosDb.map((u) => (
+            <div key={u.id} className="fila">
+              <span>{u.username}</span>
+              <span>{u.email}</span>
+              <strong>{u.rol}</strong>
+              <span>
+                <select 
+                  defaultValue={u.rol}
+                  onChange={(e) => cambiarRolUsuarioExterno(u.id, e.target.value)}
+                  style={{ fontSize: '12px', padding: '2px' }}
+                >
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="EMPLEADO_TIENDA">EMPLEADO_TIENDA</option>
+                </select>
+              </span>
+            </div>
+          ))}
+          {usuariosDb.length === 0 && <p>Cargando lista de usuarios...</p>}
+        </div>
       </section>
 
       <section className="tarjeta-panel">

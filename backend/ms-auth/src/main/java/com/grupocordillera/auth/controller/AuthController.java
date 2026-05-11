@@ -138,4 +138,9 @@ public class AuthController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/usuarios")
+    public ResponseEntity<java.util.List<Usuario>> listarUsuarios() {
+        return ResponseEntity.ok(repository.findAll());
+    }
+
 }
