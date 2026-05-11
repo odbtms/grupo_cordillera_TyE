@@ -20,6 +20,7 @@ function GestionOrganizacionalPage() {
     montoTotal: 0,
     sistemaOrigen: 'POS',
     sucursal: '',
+    categoria: 'TODOS',
     producto: '',
     cantidad: 1,
     precioUnitario: 0,
@@ -58,15 +59,15 @@ function GestionOrganizacionalPage() {
       setMensaje('')
       try {
         const [listaVentas, listaKpis, listaSucursales, listaStock] = await Promise.all([
-          obtenerVentas(), 
-          obtenerKpis(), 
+          obtenerVentas(),
+          obtenerKpis(),
           obtenerSucursalesMaster(),
           obtenerStock()
         ])
         setVentas(listaVentas)
         setKpis(listaKpis)
         setInventarioFull(listaStock)
-        
+
         setSucursales(
           listaSucursales.map((s: any) => ({
             nombre: s.nombre,
@@ -97,9 +98,9 @@ function GestionOrganizacionalPage() {
       actual.map((item, idx) =>
         idx === indice
           ? {
-              ...item,
-              metaVenta: Number.isNaN(meta) ? 0 : meta,
-            }
+            ...item,
+            metaVenta: Number.isNaN(meta) ? 0 : meta,
+          }
           : item,
       ),
     )
@@ -169,7 +170,7 @@ function GestionOrganizacionalPage() {
       const [listaVentas, listaStock] = await Promise.all([obtenerVentas(), obtenerStock()])
       setVentas(listaVentas)
       setInventarioFull(listaStock)
-      setNuevaVenta({ montoTotal: 0, sistemaOrigen: 'POS', sucursal: '', producto: '', cantidad: 1, precioUnitario: 0 })
+      setNuevaVenta({ montoTotal: 0, sistemaOrigen: 'POS', sucursal: '', categoria: 'TODOS', producto: '', cantidad: 1, precioUnitario: 0 })
       setMensajeVenta('Venta registrada correctamente.')
     } catch {
       setMensajeVenta('No fue posible registrar la venta en ms-datos.')
@@ -212,14 +213,14 @@ function GestionOrganizacionalPage() {
         rol: 'EMPLEADO_TIENDA',
         sucursal: sucursalAsignada.trim()
       })
-      
+
       setNuevoEmpleado({
         username: '',
         email: '',
         password: '',
         sucursalAsignada: '',
       })
-      
+
       setMensajeEmpleado(`Empleado ${username} creado exitosamente en la base de datos (ms-auth).`)
     } catch {
       setMensajeEmpleado('Hubo un error al guardar el empleado en ms-auth.')
@@ -275,7 +276,7 @@ function GestionOrganizacionalPage() {
               type="text"
               placeholder="Ej: Santiago Centro"
               value={nuevaSucursal.nombre}
-              onChange={(e) => setNuevaSucursal({...nuevaSucursal, nombre: e.target.value})}
+              onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, nombre: e.target.value })}
             />
           </label>
           <button type="button" onClick={crearSucursal}>Registrar Sucursal</button>
@@ -348,22 +349,36 @@ function GestionOrganizacionalPage() {
           </label>
 
           <label>
+            Filtrar por Categoría
+            <select
+              value={nuevaVenta.categoria}
+              onChange={(evento) =>
+                setNuevaVenta((actual) => ({ ...actual, categoria: evento.target.value, producto: '', precioUnitario: 0, montoTotal: 0 }))
+              }
+            >
+              <option value="TODOS">TODOS LOS PRODUCTOS</option>
+              <option value="ELECTRONICA">ELECTRÓNICA</option>
+              <option value="HOGAR">HOGAR</option>
+            </select>
+          </label>
+
+          <label>
             Producto (con Stock)
             <select
               value={nuevaVenta.producto}
               onChange={(evento) => {
                 const prodNombre = evento.target.value;
                 const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                
+
                 const sucursalActual = normalizar(nuevaVenta.sucursal);
-                const infoStock = inventarioFull.find(i => 
-                  normalizar(i.sucursal) === sucursalActual && 
+                const infoStock = inventarioFull.find(i =>
+                  normalizar(i.sucursal) === sucursalActual &&
                   normalizar(i.producto) === normalizar(prodNombre)
                 );
-                
+
                 const precio = infoStock?.precioUnitario || 0;
-                setNuevaVenta((actual) => ({ 
-                  ...actual, 
+                setNuevaVenta((actual) => ({
+                  ...actual,
                   producto: prodNombre,
                   precioUnitario: precio,
                   montoTotal: actual.cantidad * precio
@@ -375,7 +390,9 @@ function GestionOrganizacionalPage() {
               {inventarioFull
                 .filter(i => {
                   const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                  return normalizar(i.sucursal) === normalizar(nuevaVenta.sucursal) && i.cantidad > 0;
+                  const matchesSucursal = normalizar(i.sucursal) === normalizar(nuevaVenta.sucursal);
+                  const matchesCategoria = nuevaVenta.categoria === 'TODOS' || i.categoria.toUpperCase() === nuevaVenta.categoria;
+                  return matchesSucursal && matchesCategoria && i.cantidad > 0;
                 })
                 .map(i => (
                   <option key={i.id} value={i.producto}>{i.producto} (Stock: {i.cantidad})</option>
@@ -392,10 +409,10 @@ function GestionOrganizacionalPage() {
               value={nuevaVenta.cantidad}
               onChange={(evento) => {
                 const cant = Number(evento.target.value);
-                setNuevaVenta((actual) => ({ 
-                  ...actual, 
+                setNuevaVenta((actual) => ({
+                  ...actual,
                   cantidad: cant,
-                  montoTotal: cant * actual.precioUnitario 
+                  montoTotal: cant * actual.precioUnitario
                 }))
               }}
             />
