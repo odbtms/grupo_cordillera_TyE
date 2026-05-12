@@ -58,7 +58,7 @@ export default function ConsolidadoDashboard({
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <p className="mensaje-demo">Total consolidado: {FORMATO_MONEDA.format(ventasTotales)}</p>
+          <p className="mensaje">Total consolidado: {FORMATO_MONEDA.format(ventasTotales)}</p>
         </article>
 
         <article className="tarjeta-panel grafico-rendimiento">

@@ -10,7 +10,7 @@ export default function TablaStock({ stock }: TablaStockProps) {
     <section className="tarjeta-panel" style={{ marginTop: '30px' }}>
       <h3>Stock disponible detallado</h3>
       {stock.length === 0 ? (
-        <p className="mensaje-demo">No hay stock registrado para esta sucursal.</p>
+        <p className="mensaje">No hay stock registrado para esta sucursal.</p>
       ) : (
         <div className="tabla-simple">
           <div className="fila fila-encabezado">

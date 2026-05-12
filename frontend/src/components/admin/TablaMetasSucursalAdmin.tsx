@@ -21,7 +21,7 @@ export default function TablaMetasSucursalAdmin({
   return (
     <section className="tarjeta-panel">
       <h3>Metas de Venta por Sucursal</h3>
-      <p className="mensaje-demo">Visualización en tiempo real del cumplimiento de objetivos.</p>
+      <p className="mensaje">Visualización en tiempo real del cumplimiento de objetivos.</p>
       
       <div className="tabla-simple" style={{ display: 'grid', gap: '8px' }}>
         <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', alignItems: 'center' }}>

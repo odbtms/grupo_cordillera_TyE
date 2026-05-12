@@ -11,7 +11,7 @@ export default function EstadoServicios({ estadoServicios }: ServiceHealthCheckP
   return (
     <section className="tarjeta-panel">
       <h3>Estado de Microservicios (Health Check)</h3>
-      <p className="mensaje-demo">Conexión en tiempo real con la infraestructura AWS.</p>
+      <p className="mensaje">Conexión en tiempo real con la infraestructura AWS.</p>
       
       <ul className="lista-servicios" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', padding: 0 }}>
         {estadoServicios.map((servicio) => (

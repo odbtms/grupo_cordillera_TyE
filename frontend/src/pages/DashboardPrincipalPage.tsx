@@ -217,7 +217,7 @@ function DashboardPrincipalPage() {
 
       {cargando && <p>Cargando información...</p>}
       {mensajeError && <p className="mensaje-error">{mensajeError}</p>}
-      {!mensajeError && alertas.length > 0 && <p className="mensaje-demo">{alertas[0]}</p>}
+      {!mensajeError && alertas.length > 0 && <p className="mensaje">{alertas[0]}</p>}
 
       <MiniaturasSucursalesDashboard
         tarjetasVisibles={tarjetasVisibles}

@@ -25,7 +25,7 @@ export default function GestorInventarioAdmin({
   return (
     <section className="tarjeta-panel" style={{ marginTop: '20px' }}>
       <h3>Gestión de Inventario</h3>
-      <p className="mensaje-demo">Actualiza el stock real disponible por sucursal y categoría.</p>
+      <p className="mensaje">Actualiza el stock real disponible por sucursal y categoría.</p>
       
       <div className="formulario-simple" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
         <label>
@@ -56,7 +56,7 @@ export default function GestorInventarioAdmin({
           Nombre del Producto
           <input
             type="text"
-            placeholder="Ej: Televisor OLED 55"
+            placeholder="Ej: Televisor"
             value={nuevoStock.producto}
             onChange={(e) => setNuevoStock((a: StockInputType) => ({ ...a, producto: e.target.value }))}
           />
@@ -86,7 +86,7 @@ export default function GestorInventarioAdmin({
           onClick={guardarStock}
           style={{ gridColumn: 'span 2', background: '#059669', color: 'white', border: 'none', padding: '12px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
         >
-          Sincronizar Stock con ms-datos
+          Actualizar Stock
         </button>
       </div>
       {mensajeStock && <p style={{ marginTop: '10px', color: '#059669' }}>{mensajeStock}</p>}

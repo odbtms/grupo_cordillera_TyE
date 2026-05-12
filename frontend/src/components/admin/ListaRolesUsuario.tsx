@@ -9,7 +9,7 @@ export default function ListaRolesUsuario({ usuariosDb, cambiarRolUsuarioExterno
   return (
     <section className="tarjeta-panel">
       <h3>Gestión de Usuarios (Control de Acceso)</h3>
-      <p className="mensaje-demo">Administra los accesos y roles de la plataforma (ms-auth).</p>
+      <p className="mensaje">Administra los accesos y roles de la plataforma (ms-auth).</p>
       
       <div className="tabla-simple">
         <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr' }}>

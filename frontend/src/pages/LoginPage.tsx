@@ -70,7 +70,7 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
         {(mensajeError || mensajeExito) && (
           <div className="auth-mensajes">
             {mensajeError && <p className="mensaje-error">{mensajeError}</p>}
-            {mensajeExito && <p className="mensaje-demo">{mensajeExito}</p>}
+            {mensajeExito && <p className="mensaje-exito">{mensajeExito}</p>}
           </div>
         )}
       </section>

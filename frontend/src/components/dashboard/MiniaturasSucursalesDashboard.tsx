@@ -45,7 +45,7 @@ export default function MiniaturasSucursalesDashboard({
         </div>
       </div>
 
-      <p className="mensaje-demo">
+      <p className="mensaje">
         Ejemplo: Santiago {FORMATO_MONEDA.format(20000000)} y Concepción{' '}
         {FORMATO_MONEDA.format(12000000)}.
       </p>

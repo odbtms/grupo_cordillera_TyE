@@ -22,7 +22,7 @@ export default function GestorFormulasKpiAdmin({
   return (
     <section className="tarjeta-panel">
       <h3>Actualizar Fórmulas de KPI</h3>
-      <p className="mensaje-demo">Modifica cómo se procesan las métricas en tiempo real.</p>
+      <p className="mensaje">Modifica cómo se procesan las métricas en tiempo real.</p>
       
       <div className="formulario-simple">
         <label>
@@ -41,7 +41,7 @@ export default function GestorFormulasKpiAdmin({
         </label>
 
         <label>
-          Nueva fórmula (Sintaxis soportada por el motor java)
+          Nueva fórmula
           <input
             type="text"
             placeholder="Ej: (v.montoTotal * 0.95)"
@@ -55,7 +55,7 @@ export default function GestorFormulasKpiAdmin({
           onClick={guardarFormulaKpi}
           style={{ background: '#6366f1', color: 'white', border: 'none', padding: '10px', borderRadius: '4px', cursor: 'pointer' }}
         >
-          Guardar Cambios en ms-kpis
+          Guardar Cambios
         </button>
       </div>
 

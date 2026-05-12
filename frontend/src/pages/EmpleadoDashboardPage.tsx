@@ -241,14 +241,14 @@ function EmpleadoDashboardPage({
 
       {cargando && <p>Cargando información...</p>}
       {mensajeError && <p className="mensaje-error">{mensajeError}</p>}
-      {!mensajeError && alertas.length > 0 && <p className="mensaje-demo">{alertas[0]}</p>}
+      {!mensajeError && alertas.length > 0 && <p className="mensaje">{alertas[0]}</p>}
 
       <section className="tarjeta-panel">
         <div className="encabezado-mini-sucursales">
           <h3>Rendimiento (últimos 6 meses)</h3>
         </div>
 
-        <p className="mensaje-demo">
+        <p className="mensaje">
           Puedes revisar el rendimiento general de {sucursalAsignada} o seleccionar un mes puntual haciendo click en el gráfico.
         </p>
 

@@ -23,7 +23,7 @@ export default function FormularioNuevoEmpleado({
   return (
     <section className="tarjeta-panel" style={{ marginTop: '20px' }}>
       <h3>Registrar Nuevo Empleado</h3>
-      <p className="mensaje-demo">Crea credenciales de acceso para personal de tienda.</p>
+      <p className="mensaje">Crea credenciales de acceso para personal de tienda.</p>
       
       <div className="formulario-simple" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
         <input 
