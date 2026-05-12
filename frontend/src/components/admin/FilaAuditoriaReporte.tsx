@@ -8,6 +8,7 @@ type ReportRowProps = {
   onEliminar: (id: number) => void;
   ventas: Venta[];
   stock: StockItem[];
+  plantillas?: { id?: number; titulo: string; estado: string }[];
 };
 
 export default function FilaAuditoriaReporte({
@@ -16,19 +17,54 @@ export default function FilaAuditoriaReporte({
   onToggle,
   onEliminar,
   ventas,
-  stock
+  stock,
+  plantillas = []
 }: ReportRowProps) {
   const sucursalNombre = reporte.titulo.replace('Reporte Sucursal ', '').trim();
-  const fechaReporte = reporte.estado; // Formato DD-MM
+  const isISO = reporte.estado.includes('T');
+  let fechaReporteDisplay = reporte.estado;
 
-  // Normalización de fechas para el filtrado: comparamos DD-MM
-  const filtrarPorFecha = (fechaISO: string | undefined) => {
+  if (isISO) {
+    const d = new Date(reporte.estado);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    fechaReporteDisplay = `${dd}-${mm} ${hh}:${min}`;
+  }
+
+  // Find boundaries for this specific report
+  const reportesSucursal = plantillas
+    .filter(p => p.titulo === reporte.titulo && p.estado.includes('T'))
+    .sort((a, b) => new Date(a.estado).getTime() - new Date(b.estado).getTime());
+  
+  const miIndex = reportesSucursal.findIndex(p => p.id === reporte.id);
+  const reporteAnterior = miIndex > 0 ? reportesSucursal[miIndex - 1] : null;
+
+  const fechaInicio = reporteAnterior ? new Date(reporteAnterior.estado).getTime() : 0;
+  const fechaFin = isISO ? new Date(reporte.estado).getTime() : Infinity;
+
+  // Normalización de fechas para el filtrado
+  const filtrarPorFecha = (fechaISO: any) => {
     if (!fechaISO) return false;
-    const date = new Date(fechaISO);
+    let date;
+    if (Array.isArray(fechaISO) && fechaISO.length >= 3) {
+      // Spring Boot LocalDateTime as array: [YYYY, MM, DD, hh, mm, ss]
+      date = new Date(fechaISO[0], fechaISO[1] - 1, fechaISO[2], fechaISO[3] || 0, fechaISO[4] || 0, fechaISO[5] || 0);
+    } else {
+      date = new Date(fechaISO);
+    }
     if (isNaN(date.getTime())) return false;
-    const dd = String(date.getDate()).padStart(2, '0');
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    return `${dd}-${mm}` === fechaReporte;
+    
+    if (isISO) {
+      const t = date.getTime();
+      return t > fechaInicio && t <= fechaFin;
+    } else {
+      // Comportamiento legado (comparamos DD-MM)
+      const dd = String(date.getDate()).padStart(2, '0');
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      return `${dd}-${mm}` === reporte.estado;
+    }
   };
 
   const ventasFiltradas = ventas.filter(v => v.sucursal === sucursalNombre && filtrarPorFecha(v.fechaVenta));
@@ -49,7 +85,7 @@ export default function FilaAuditoriaReporte({
         onClick={onToggle}
       >
         <span style={{ fontWeight: 'bold' }}>{sucursalNombre}</span>
-        <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{fechaReporte}</span>
+        <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{fechaReporteDisplay}</span>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
           <button 
             className="btn-primario"
@@ -69,7 +105,7 @@ export default function FilaAuditoriaReporte({
 
       {isExpandido && (
         <div style={{ padding: '20px', background: '#f8fafc', borderTop: '2px solid #2563eb' }}>
-          <h4 style={{ marginBottom: '20px' }}>📄 Auditoría Detallada: {sucursalNombre} ({fechaReporte})</h4>
+          <h4 style={{ marginBottom: '20px' }}>📄 Auditoría Detallada: {sucursalNombre} ({fechaReporteDisplay})</h4>
           
           <div style={{ display: 'grid', gap: '30px' }}>
             <article>

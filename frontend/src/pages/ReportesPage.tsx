@@ -24,6 +24,19 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   const [idPlantillaExpandida, setIdPlantillaExpandida] = useState<number | null>(null)
   const [ventas, setVentas] = useState<Venta[]>([])
   const [stock, setStock] = useState<StockItem[]>([])
+  const [modalConfig, setModalConfig] = useState<{ visible: boolean, tipo: 'info' | 'confirm' | 'error', mensaje: string, onConfirm?: () => void }>({ visible: false, tipo: 'info', mensaje: '' })
+
+  const mostrarMensaje = (mensaje: string, tipo: 'info' | 'error' = 'info') => {
+    setModalConfig({ visible: true, tipo, mensaje })
+  }
+
+  const mostrarConfirmacion = (mensaje: string, onConfirm: () => void) => {
+    setModalConfig({ visible: true, tipo: 'confirm', mensaje, onConfirm })
+  }
+
+  const cerrarModal = () => {
+    setModalConfig({ ...modalConfig, visible: false })
+  }
 
   const esAdmin = (rol ?? '').toUpperCase() === 'ADMIN'
 
@@ -85,44 +98,105 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
 
   const sucursalTop = useMemo(() => analiticaSucursales[0] || { name: '-', value: 0 }, [analiticaSucursales])
 
+  const ultimoReporte = useMemo(() => {
+    return plantillas
+      .filter(p => p.titulo === `Reporte Sucursal ${sucursalAsignada}` && p.estado.includes('T'))
+      .sort((a, b) => new Date(b.estado).getTime() - new Date(a.estado).getTime())[0]
+  }, [plantillas, sucursalAsignada])
+
   // --- FUNCION DE ENVIO ---
   async function enviarReporteDiario() {
     try {
-      const hoy = new Date()
-      const diaMes = `${String(hoy.getDate()).padStart(2, '0')}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
+      const isoEstado = new Date().toISOString()
       
       await crearPlantillaReporte({
         titulo: `Reporte Sucursal ${sucursalAsignada}`,
-        estado: diaMes
+        estado: isoEstado
       })
       
-      alert(`Reporte de ${sucursalAsignada} enviado con éxito al administrador.`)
+      mostrarMensaje(`Reporte de ${sucursalAsignada} enviado con éxito al administrador.`)
       
-      // Limpiar las tablas para el empleado en la sesión actual
-      setVentas(prev => prev.filter(v => v.sucursal !== sucursalAsignada))
-      setStock(prev => prev.filter(s => s.sucursal !== sucursalAsignada))
-
       const lista = await obtenerPlantillasReporte()
       setPlantillas(lista.sort((a, b) => (b.id || 0) - (a.id || 0)))
     } catch {
-      alert('Error al enviar el reporte. Intente nuevamente.')
+      mostrarMensaje('Error al enviar el reporte. Intente nuevamente.', 'error')
     }
   }
+
+  // --- FILTROS PARA EL EMPLEADO ---
+  const ventasEmpleado = useMemo(() => {
+    return ventas.filter(v => {
+      if (v.sucursal !== sucursalAsignada) return false;
+      if (!ultimoReporte) return true;
+      let date;
+      if (Array.isArray(v.fechaVenta) && v.fechaVenta.length >= 3) {
+        date = new Date(v.fechaVenta[0], v.fechaVenta[1] - 1, v.fechaVenta[2], v.fechaVenta[3] || 0, v.fechaVenta[4] || 0, v.fechaVenta[5] || 0);
+      } else {
+        date = new Date(v.fechaVenta);
+      }
+      if (isNaN(date.getTime())) return true;
+      return date.getTime() > new Date(ultimoReporte.estado).getTime();
+    });
+  }, [ventas, sucursalAsignada, ultimoReporte])
+
+  const stockEmpleado = useMemo(() => {
+    return stock.filter(s => {
+      if (s.sucursal !== sucursalAsignada) return false;
+      if (!ultimoReporte) return true;
+      const date = new Date(s.fechaRegistro || '');
+      if (isNaN(date.getTime())) return true;
+      return date.getTime() > new Date(ultimoReporte.estado).getTime();
+    });
+  }, [stock, sucursalAsignada, ultimoReporte])
 
   // --- FUNCION DE ELIMINACION (ADMIN) ---
   async function manejarEliminarReporte(id: number | undefined) {
     if (!id) return;
-    if (confirm('¿Está seguro de que desea eliminar este reporte de forma permanente?')) {
+    mostrarConfirmacion('¿Está seguro de que desea eliminar este reporte de forma permanente?', async () => {
       try {
         await eliminarPlantillaReporte(id);
         const lista = await obtenerPlantillasReporte();
         setPlantillas(lista.sort((a, b) => (b.id || 0) - (a.id || 0)));
         if (idPlantillaExpandida === id) setIdPlantillaExpandida(null);
+        cerrarModal();
       } catch (error) {
-        alert('Error al eliminar el reporte.');
+        mostrarMensaje('Error al eliminar el reporte.', 'error');
       }
-    }
+    });
   }
+
+  const RenderModal = () => {
+    if (!modalConfig.visible) return null;
+    return (
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+        <div style={{ background: 'white', padding: '30px', borderRadius: '12px', minWidth: '300px', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
+          <h3 style={{ marginBottom: '15px', color: modalConfig.tipo === 'error' ? '#ef4444' : '#0f766e' }}>
+            {modalConfig.tipo === 'confirm' ? 'Confirmación' : modalConfig.tipo === 'error' ? 'Error' : 'Notificación'}
+          </h3>
+          <p style={{ marginBottom: '25px', color: '#334155' }}>{modalConfig.mensaje}</p>
+          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+            {modalConfig.tipo === 'confirm' && (
+              <button onClick={cerrarModal} style={{ padding: '8px 16px', background: '#94a3b8', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                Cancelar
+              </button>
+            )}
+            <button 
+              onClick={() => {
+                if (modalConfig.tipo === 'confirm' && modalConfig.onConfirm) {
+                  modalConfig.onConfirm();
+                } else {
+                  cerrarModal();
+                }
+              }} 
+              style={{ padding: '8px 16px', background: modalConfig.tipo === 'error' ? '#ef4444' : '#0f766e', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              Aceptar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // --- COLORES PARA GRAFICOS ---
   const COLORES = ['#0f766e', '#2563eb', '#7c3aed', '#db2777', '#ea580c']
@@ -179,10 +253,12 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
                 onEliminar={manejarEliminarReporte}
                 ventas={ventas}
                 stock={stock}
+                plantillas={plantillas}
               />
             ))}
           </div>
         </section>
+        {RenderModal()}
       </section>
     )
   }
@@ -215,8 +291,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
               <span>Precio Unitario</span>
               <span>Venta Total</span>
             </div>
-            {ventas
-              .filter(v => v.sucursal === sucursalAsignada)
+            {ventasEmpleado
               .sort((a, b) => new Date(b.fechaVenta).getTime() - new Date(a.fechaVenta).getTime())
               .map((v, i) => (
                 <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
@@ -242,8 +317,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
               <span>Precio Unitario</span>
               <span>Venta Total</span>
             </div>
-            {stock
-              .filter(s => s.sucursal === sucursalAsignada)
+            {stockEmpleado
               .map((s, i) => (
                 <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
                   <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{s.vendedor || 'Sistema'}</span>
@@ -257,6 +331,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
           </div>
         </section>
       </div>
+      {RenderModal()}
     </section>
   )
 }

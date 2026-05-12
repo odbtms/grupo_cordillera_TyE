@@ -58,6 +58,12 @@ public class StockController {
                     if (payload.getPrecioUnitario() != null) {
                         existing.setPrecioUnitario(payload.getPrecioUnitario());
                     }
+                    if (payload.getFechaRegistro() != null) {
+                        existing.setFechaRegistro(payload.getFechaRegistro());
+                    }
+                    if (payload.getVendedor() != null) {
+                        existing.setVendedor(payload.getVendedor());
+                    }
                     return existing;
                 })
                 .orElseGet(() -> {
@@ -67,6 +73,8 @@ public class StockController {
                     nuevo.setProducto(payload.getProducto().trim());
                     nuevo.setCantidad(payload.getCantidad());
                     nuevo.setPrecioUnitario(payload.getPrecioUnitario());
+                    nuevo.setFechaRegistro(payload.getFechaRegistro());
+                    nuevo.setVendedor(payload.getVendedor());
                     return nuevo;
                 });
 
