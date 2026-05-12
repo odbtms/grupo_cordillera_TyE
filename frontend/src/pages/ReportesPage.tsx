@@ -14,6 +14,7 @@ import {
 import {
   crearPlantillaReporte,
   obtenerPlantillasReporte,
+  eliminarPlantillaReporte,
   obtenerStock,
   obtenerVentas,
   type PlantillaReporte,
@@ -113,6 +114,21 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       setPlantillas(lista.sort((a, b) => (b.id || 0) - (a.id || 0)))
     } catch {
       alert('Error al enviar el reporte. Intente nuevamente.')
+    }
+  }
+
+  // --- FUNCION DE ELIMINACION (ADMIN) ---
+  async function manejarEliminarReporte(id: number | undefined) {
+    if (!id) return;
+    if (confirm('¿Está seguro de que desea eliminar este reporte de forma permanente?')) {
+      try {
+        await eliminarPlantillaReporte(id);
+        const lista = await obtenerPlantillasReporte();
+        setPlantillas(lista.sort((a, b) => (b.id || 0) - (a.id || 0)));
+        if (idPlantillaExpandida === id) setIdPlantillaExpandida(null);
+      } catch (error) {
+        alert('Error al eliminar el reporte.');
+      }
     }
   }
 
@@ -247,13 +263,23 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
                   <div 
                     className="fila" 
                     style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', alignItems: 'center', cursor: 'pointer', background: isExpandido ? '#f8fafc' : 'white' }}
-                    onClick={() => setIdPlantillaExpandida(isExpandido ? null : (p.id || null))}
                   >
-                    <span style={{ fontWeight: 'bold' }}>{sucursalNombre}</span>
-                    <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{fechaReporte}</span>
-                    <button style={{ background: isExpandido ? '#64748b' : '#2563eb', padding: '5px 12px' }}>
-                      {isExpandido ? 'Cerrar' : 'Revisar Detalle ↓'}
-                    </button>
+                    <span style={{ fontWeight: 'bold' }} onClick={() => setIdPlantillaExpandida(isExpandido ? null : (p.id || null))}>{sucursalNombre}</span>
+                    <span style={{ color: '#0f766e', fontWeight: 'bold' }} onClick={() => setIdPlantillaExpandida(isExpandido ? null : (p.id || null))}>{fechaReporte}</span>
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                      <button 
+                        style={{ background: isExpandido ? '#64748b' : '#2563eb', padding: '5px 12px' }}
+                        onClick={() => setIdPlantillaExpandida(isExpandido ? null : (p.id || null))}
+                      >
+                        {isExpandido ? 'Cerrar' : 'Revisar ↓'}
+                      </button>
+                      <button 
+                        style={{ background: '#ef4444', padding: '5px 12px' }}
+                        onClick={(e) => { e.stopPropagation(); manejarEliminarReporte(p.id) }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </div>
 
                   {isExpandido && (
@@ -264,20 +290,24 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
                         <article>
                           <h5 style={{ color: '#2563eb', marginBottom: '10px' }}>Auditoría de Ventas</h5>
                           <div className="tabla-simple">
-                            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 0.8fr 1fr' }}>
+                            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
                               <span>Empleado</span>
+                              <span>Categoría</span>
                               <span>Producto</span>
                               <span>Cant.</span>
-                              <span>Total</span>
+                              <span>Precio Unitario</span>
+                              <span>Venta Total</span>
                             </div>
                             {ventas
                               .filter(v => v.sucursal === sucursalNombre && (v.fechaVenta.includes(fechaReporte) || v.fechaVenta.includes(fechaReporte.split('-').reverse().join('-'))))
                               .map((v, i) => (
-                                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 0.8fr 1fr' }}>
-                                  <span>{v.vendedor || 'Admin'}</span>
+                                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
+                                  <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{v.vendedor || 'Admin'}</span>
+                                  <span>{v.categoria || 'VARIOS'}</span>
                                   <span>{v.producto}</span>
                                   <strong>{v.cantidad}</strong>
-                                  <span>{FORMATO_MONEDA.format(v.montoTotal)}</span>
+                                  <span>{FORMATO_MONEDA.format(v.precioUnitario || 0)}</span>
+                                  <span style={{ fontWeight: 'bold', color: '#0f766e' }}>{FORMATO_MONEDA.format((v.precioUnitario || 0) * (v.cantidad || 0))}</span>
                                 </div>
                               ))}
                           </div>
@@ -286,20 +316,24 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
                         <article>
                           <h5 style={{ color: '#0f766e', marginBottom: '10px' }}>Auditoría de Stock</h5>
                           <div className="tabla-simple">
-                            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 0.8fr 1fr' }}>
+                            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
                               <span>Empleado</span>
+                              <span>Categoría</span>
                               <span>Producto</span>
                               <span>Stock</span>
-                              <span>Precio Un.</span>
+                              <span>Precio Unitario</span>
+                              <span>Venta Total</span>
                             </div>
                             {stock
                               .filter(s => s.sucursal === sucursalNombre && (s.fechaRegistro?.includes(fechaReporte) || s.fechaRegistro?.includes(fechaReporte.split('-').reverse().join('-'))))
                               .map((s, i) => (
-                                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 0.8fr 1fr' }}>
-                                  <span>{s.vendedor || 'Sistema'}</span>
+                                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
+                                  <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{s.vendedor || 'Sistema'}</span>
+                                  <span>{s.categoria || 'VARIOS'}</span>
                                   <span>{s.producto}</span>
                                   <strong>{s.cantidad}</strong>
                                   <span>{FORMATO_MONEDA.format(s.precioUnitario || 0)}</span>
+                                  <span style={{ fontWeight: 'bold', color: '#0f766e' }}>{FORMATO_MONEDA.format((s.precioUnitario || 0) * (s.cantidad || 0))}</span>
                                 </div>
                               ))}
                           </div>

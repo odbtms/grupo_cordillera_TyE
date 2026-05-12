@@ -319,80 +319,7 @@ function EmpleadoDashboardPage({
 
       </section>
 
-      <section className="tarjeta-panel" style={{ marginTop: '30px' }}>
-        <h3>Registrar stock</h3>
-        <div className="formulario-simple" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-          <label>
-            Categoría
-            <select
-              value={nuevoStock.categoria}
-              onChange={(e) => setNuevoStock({ ...nuevoStock, categoria: e.target.value })}
-            >
-              <option value="HOGAR">HOGAR</option>
-              <option value="ELECTRONICA">ELECTRONICA</option>
-              <option value="VARIOS">VARIOS</option>
-            </select>
-          </label>
-          <label>
-            Producto
-            <input
-              type="text"
-              placeholder="Nombre del producto"
-              value={nuevoStock.producto}
-              onChange={(e) => setNuevoStock({ ...nuevoStock, producto: e.target.value })}
-            />
-          </label>
-          <label>
-            Cantidad a añadir
-            <input
-              type="number"
-              value={nuevoStock.cantidad}
-              onChange={(e) => setNuevoStock({ ...nuevoStock, cantidad: Number(e.target.value) })}
-            />
-          </label>
-          <label>
-            Precio Unitario
-            <input
-              type="number"
-              value={nuevoStock.precioUnitario}
-              onChange={(e) => setNuevoStock({ ...nuevoStock, precioUnitario: Number(e.target.value) })}
-            />
-          </label>
-        </div>
-        <button 
-          type="button" 
-          onClick={manejarRegistroStock} 
-          style={{ marginTop: '15px', width: '100%', background: '#0f766e' }}
-        >
-          Confirmar ingreso de stock
-        </button>
-        {mensajeStock && <p style={{ marginTop: '10px', color: mensajeStock.includes('éxito') ? 'green' : 'red' }}>{mensajeStock}</p>}
-      </section>
-
-      <section className="tarjeta-panel" style={{ marginTop: '30px' }}>
-        <h3>Stock disponible detallado</h3>
-        {stock.length === 0 ? (
-          <p className="mensaje-demo">No hay stock registrado para esta sucursal.</p>
-        ) : (
-          <div className="tabla-simple">
-            <div className="fila fila-encabezado">
-              <span>Categoría</span>
-              <span>Producto</span>
-              <span>Stock</span>
-              <span>Precio Unitario</span>
-            </div>
-            {stock.map((item) => (
-              <div key={item.id} className="fila">
-                <span>{item.categoria}</span>
-                <span>{item.producto}</span>
-                <span>{item.cantidad}</span>
-                <strong>${item.precioUnitario?.toLocaleString() || 0}</strong>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-      <section className="bloque">
+      <section className="bloque" style={{ marginTop: '30px' }}>
         <div className="panel-head">
           <h2>Registrar Venta</h2>
           <span>Sucursal actual: {sucursalAsignada}</span>
@@ -498,20 +425,93 @@ function EmpleadoDashboardPage({
             <div className="fila" style={{ fontWeight: 'bold', background: '#f8fafc' }}>
               <span>TOTAL</span>
               <span>-</span>
-              <span>${carrito.reduce((acc, i) => acc + i.subtotal, 0).toLocaleString()}</span>
+              <span>${carrito.reduce((acc, curr) => acc + curr.subtotal, 0).toLocaleString()}</span>
             </div>
-            <div style={{ padding: '10px', display: 'flex', gap: '10px' }}>
-              <button onClick={procesarVentaCompleta} style={{ flex: 2, background: '#2563eb', color: 'white', border: 'none', padding: '10px', borderRadius: '4px', cursor: 'pointer' }}>
-                Confirmar Venta
-              </button>
-              <button onClick={() => setCarrito([])} style={{ flex: 1, background: '#64748b', color: 'white', border: 'none', padding: '10px', borderRadius: '4px', cursor: 'pointer' }}>
-                Cancelar
-              </button>
-            </div>
+            <button 
+              type="button" 
+              onClick={procesarVentaCompleta}
+              style={{ width: '100%', marginTop: '15px', background: '#3b82f6', color: 'white', padding: '15px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 'bold' }}
+            >
+              Procesar y Enviar Venta Total
+            </button>
           </div>
         )}
+        
+        {mensajeVenta && <p style={{ marginTop: '10px', color: mensajeVenta.includes('éxito') ? 'green' : 'red' }}>{mensajeVenta}</p>}
+      </section>
 
-        {mensajeVenta && <p style={{ color: mensajeVenta.includes('éxito') ? 'green' : 'red', marginTop: '10px' }}>{mensajeVenta}</p>}
+      <section className="tarjeta-panel" style={{ marginTop: '30px' }}>
+        <h3>Registrar stock</h3>
+        <div className="formulario-simple" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+          <label>
+            Categoría
+            <select
+              value={nuevoStock.categoria}
+              onChange={(e) => setNuevoStock({ ...nuevoStock, categoria: e.target.value })}
+            >
+              <option value="HOGAR">HOGAR</option>
+              <option value="ELECTRONICA">ELECTRONICA</option>
+              <option value="VARIOS">VARIOS</option>
+            </select>
+          </label>
+          <label>
+            Producto
+            <input
+              type="text"
+              placeholder="Nombre del producto"
+              value={nuevoStock.producto}
+              onChange={(e) => setNuevoStock({ ...nuevoStock, producto: e.target.value })}
+            />
+          </label>
+          <label>
+            Cantidad a añadir
+            <input
+              type="number"
+              value={nuevoStock.cantidad}
+              onChange={(e) => setNuevoStock({ ...nuevoStock, cantidad: Number(e.target.value) })}
+            />
+          </label>
+          <label>
+            Precio Unitario
+            <input
+              type="number"
+              value={nuevoStock.precioUnitario}
+              onChange={(e) => setNuevoStock({ ...nuevoStock, precioUnitario: Number(e.target.value) })}
+            />
+          </label>
+        </div>
+        <button 
+          type="button" 
+          onClick={manejarRegistroStock} 
+          style={{ marginTop: '15px', width: '100%', background: '#0f766e' }}
+        >
+          Confirmar ingreso de stock
+        </button>
+        {mensajeStock && <p style={{ marginTop: '10px', color: mensajeStock.includes('éxito') ? 'green' : 'red' }}>{mensajeStock}</p>}
+      </section>
+
+      <section className="tarjeta-panel" style={{ marginTop: '30px' }}>
+        <h3>Stock disponible detallado</h3>
+        {stock.length === 0 ? (
+          <p className="mensaje-demo">No hay stock registrado para esta sucursal.</p>
+        ) : (
+          <div className="tabla-simple">
+            <div className="fila fila-encabezado">
+              <span>Categoría</span>
+              <span>Producto</span>
+              <span>Stock</span>
+              <span>Precio Unitario</span>
+            </div>
+            {stock.map((item) => (
+              <div key={item.id} className="fila">
+                <span>{item.categoria}</span>
+                <span>{item.producto}</span>
+                <span>{item.cantidad}</span>
+                <strong>${item.precioUnitario?.toLocaleString() || 0}</strong>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </section>
   )
