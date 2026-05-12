@@ -1,17 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Cell,
-  PieChart,
-  Pie,
-} from 'recharts'
-import {
   crearPlantillaReporte,
   obtenerPlantillasReporte,
   eliminarPlantillaReporte,
@@ -21,6 +9,10 @@ import {
 } from '../api'
 import type { StockItem, Venta } from '../types'
 import { FORMATO_MONEDA } from '../utils/formatters'
+import AdminKpiGrid from '../components/admin/AdminKpiGrid'
+import BranchRankList from '../components/admin/BranchRankList'
+import AdminCharts from '../components/admin/AdminCharts'
+import ReportAuditRow from '../components/admin/ReportAuditRow'
 
 type ReportesPageProps = {
   rol?: string
@@ -144,99 +136,24 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
           <p>Visión global del desempeño de sucursales y auditoría de envíos</p>
         </div>
 
-        {/* --- SECCION DE KPIS RAPIDOS --- */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-          <article className="tarjeta-resumen" style={{ borderLeft: '5px solid #0f766e' }}>
-            <span style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 'bold' }}>VENTA TOTAL RED</span>
-            <p style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#0f766e', margin: '5px 0' }}>
-              {FORMATO_MONEDA.format(ventaTotalGlobal)}
-            </p>
-            <span style={{ fontSize: '0.8rem', color: '#10b981' }}>↑ Rendimiento Global</span>
-          </article>
-
-          <article className="tarjeta-resumen" style={{ borderLeft: '5px solid #2563eb' }}>
-            <span style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 'bold' }}>SUCURSAL LÍDER</span>
-            <p style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#2563eb', margin: '5px 0' }}>
-              {sucursalTop.name}
-            </p>
-            <span style={{ fontSize: '0.8rem', color: '#2563eb' }}>{FORMATO_MONEDA.format(sucursalTop.value)} facturados</span>
-          </article>
-
-          <article className="tarjeta-resumen" style={{ borderLeft: '5px solid #7c3aed' }}>
-            <span style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 'bold' }}>OPERATIVIDAD</span>
-            <p style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#7c3aed', margin: '5px 0' }}>
-              100%
-            </p>
-            <span style={{ fontSize: '0.8rem', color: '#7c3aed' }}>Sistema en línea</span>
-          </article>
-        </div>
+        {/* Componente extraído de KPIs Rápidos */}
+        <AdminKpiGrid ventaTotalGlobal={ventaTotalGlobal} sucursalTop={sucursalTop} />
 
         {/* --- SECCION DE GRAFICOS Y DESEMPEÑO --- */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '20px', marginBottom: '30px' }}>
           
-          <article className="tarjeta-resumen" style={{ background: 'white' }}>
-            <h3>Mejor Rendimiento</h3>
-            <div style={{ marginTop: '15px' }}>
-              {analiticaSucursales.slice(0, 5).map((s, idx) => (
-                <div key={s.name} style={{ marginBottom: '15px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                    <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>{idx + 1}. {s.name}</span>
-                    <span style={{ fontSize: '0.9rem', color: '#0f766e', fontWeight: 'bold' }}>{FORMATO_MONEDA.format(s.value)}</span>
-                  </div>
-                  <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      height: '100%', 
-                      width: `${(s.value / (sucursalTop.value || 1)) * 100}%`, 
-                      background: COLORES[idx % COLORES.length],
-                      transition: 'width 1s ease-in-out'
-                    }}></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </article>
+          {/* Componente extraído de Ranking de Sucursales */}
+          <BranchRankList 
+            analiticaSucursales={analiticaSucursales} 
+            sucursalTop={sucursalTop} 
+            colores={COLORES} 
+          />
 
-          <article className="tarjeta-resumen">
-            <h3>Stock por Sucursal</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={analiticaStockSucursales}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" hide />
-                <YAxis hide />
-                <Tooltip 
-                  formatter={(val: any) => [`${Number(val) || 0} unidades`, 'Stock Disp.']}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {analiticaStockSucursales.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORES[index % COLORES.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </article>
-
-          <article className="tarjeta-resumen">
-            <h3>Ventas por Categoría</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={analiticaCategorias}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label
-                >
-                  {analiticaCategorias.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORES[(index + 2) % COLORES.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(val: any) => FORMATO_MONEDA.format(Number(val) || 0)} />
-              </PieChart>
-            </ResponsiveContainer>
-          </article>
+          <AdminCharts 
+            analiticaStockSucursales={analiticaStockSucursales}
+            analiticaCategorias={analiticaCategorias}
+            colores={COLORES}
+          />
         </div>
 
         {/* --- LISTADO DE REPORTES RECIBIDOS (ACORDEONES) --- */}
@@ -253,97 +170,17 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
               <span style={{ textAlign: 'center' }}>Acción</span>
             </div>
 
-            {plantillas.map((p) => {
-              const isExpandido = idPlantillaExpandida === p.id
-              const sucursalNombre = p.titulo.replace('Reporte Sucursal ', '').trim()
-              const fechaReporte = p.estado // "11-05"
-
-              return (
-                <div key={p.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                  <div 
-                    className="fila" 
-                    style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', alignItems: 'center', cursor: 'pointer', background: isExpandido ? '#f8fafc' : 'white' }}
-                  >
-                    <span style={{ fontWeight: 'bold' }} onClick={() => setIdPlantillaExpandida(isExpandido ? null : (p.id || null))}>{sucursalNombre}</span>
-                    <span style={{ color: '#0f766e', fontWeight: 'bold' }} onClick={() => setIdPlantillaExpandida(isExpandido ? null : (p.id || null))}>{fechaReporte}</span>
-                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                      <button 
-                        style={{ background: isExpandido ? '#64748b' : '#2563eb', padding: '5px 12px' }}
-                        onClick={() => setIdPlantillaExpandida(isExpandido ? null : (p.id || null))}
-                      >
-                        {isExpandido ? 'Cerrar' : 'Revisar ↓'}
-                      </button>
-                      <button 
-                        style={{ background: '#ef4444', padding: '5px 12px' }}
-                        onClick={(e) => { e.stopPropagation(); manejarEliminarReporte(p.id) }}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </div>
-
-                  {isExpandido && (
-                    <div style={{ padding: '20px', background: '#f8fafc', borderTop: '2px solid #2563eb' }}>
-                      <h4 style={{ marginBottom: '20px' }}>📄 Auditoría Detallada: {sucursalNombre} ({fechaReporte})</h4>
-                      
-                      <div style={{ display: 'grid', gap: '30px' }}>
-                        <article>
-                          <h5 style={{ color: '#2563eb', marginBottom: '10px' }}>Auditoría de Ventas</h5>
-                          <div className="tabla-simple">
-                            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
-                              <span>Empleado</span>
-                              <span>Categoría</span>
-                              <span>Producto</span>
-                              <span>Cant.</span>
-                              <span>Precio Unitario</span>
-                              <span>Venta Total</span>
-                            </div>
-                            {ventas
-                              .filter(v => v.sucursal === sucursalNombre && (v.fechaVenta.includes(fechaReporte) || v.fechaVenta.includes(fechaReporte.split('-').reverse().join('-'))))
-                              .map((v, i) => (
-                                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
-                                  <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{v.vendedor || 'Admin'}</span>
-                                  <span>{v.categoria || 'VARIOS'}</span>
-                                  <span>{v.producto}</span>
-                                  <strong>{v.cantidad}</strong>
-                                  <span>{FORMATO_MONEDA.format(v.precioUnitario || 0)}</span>
-                                  <span style={{ fontWeight: 'bold', color: '#0f766e' }}>{FORMATO_MONEDA.format((v.precioUnitario || 0) * (v.cantidad || 0))}</span>
-                                </div>
-                              ))}
-                          </div>
-                        </article>
-
-                        <article>
-                          <h5 style={{ color: '#0f766e', marginBottom: '10px' }}>Auditoría de Stock</h5>
-                          <div className="tabla-simple">
-                            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
-                              <span>Empleado</span>
-                              <span>Categoría</span>
-                              <span>Producto</span>
-                              <span>Stock</span>
-                              <span>Precio Unitario</span>
-                              <span>Venta Total</span>
-                            </div>
-                            {stock
-                              .filter(s => s.sucursal === sucursalNombre && (s.fechaRegistro?.includes(fechaReporte) || s.fechaRegistro?.includes(fechaReporte.split('-').reverse().join('-'))))
-                              .map((s, i) => (
-                                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
-                                  <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{s.vendedor || 'Sistema'}</span>
-                                  <span>{s.categoria || 'VARIOS'}</span>
-                                  <span>{s.producto}</span>
-                                  <strong>{s.cantidad}</strong>
-                                  <span>{FORMATO_MONEDA.format(s.precioUnitario || 0)}</span>
-                                  <span style={{ fontWeight: 'bold', color: '#0f766e' }}>{FORMATO_MONEDA.format((s.precioUnitario || 0) * (s.cantidad || 0))}</span>
-                                </div>
-                              ))}
-                          </div>
-                        </article>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+            {plantillas.map((p) => (
+              <ReportAuditRow
+                key={p.id}
+                reporte={p}
+                isExpandido={idPlantillaExpandida === p.id}
+                onToggle={() => setIdPlantillaExpandida(idPlantillaExpandida === p.id ? null : (p.id || null))}
+                onEliminar={manejarEliminarReporte}
+                ventas={ventas}
+                stock={stock}
+              />
+            ))}
           </div>
         </section>
       </section>

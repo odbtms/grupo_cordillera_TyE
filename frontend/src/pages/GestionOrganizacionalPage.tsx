@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster, obtenerStock } from '../api'
 import type { Kpi, Venta, StockItem } from '../types'
+import {
+  AdminFormularioVenta,
+  FormularioNuevoEmpleado,
+  FormularioNuevaSucursal,
+  AdminBranchMetaTable,
+  AdminStockManager,
+  AdminKpiFormulaManager
+} from '../components'
 
 type Sucursal = {
   nombre: string
@@ -339,421 +347,58 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
         <p>Mantenimiento de sucursales, metas y parámetros del sistema</p>
       </div>
 
-      <section className="tarjeta-panel">
-        <h3>Registro de Nueva Sucursal</h3>
-        <div className="formulario-simple">
-          <label>
-            Nombre de Sucursal
-            <input
-              type="text"
-              placeholder="Ej: Santiago Centro"
-              value={nuevaSucursal.nombre}
-              onChange={(e) => setNuevaSucursal({ ...nuevaSucursal, nombre: e.target.value })}
-            />
-          </label>
-          <button type="button" onClick={crearSucursal}>Registrar Sucursal</button>
-        </div>
-        {mensajeSucursal && <p>{mensajeSucursal}</p>}
-      </section>
+      <FormularioNuevaSucursal 
+        nuevaSucursal={nuevaSucursal}
+        setNuevaSucursal={setNuevaSucursal}
+        crearSucursal={crearSucursal}
+        mensajeSucursal={mensajeSucursal}
+      />
 
-      <section className="tarjeta-panel">
-        <h3>Metas de Venta por Sucursal</h3>
-        <div className="tabla-simple" style={{ display: 'grid', gap: '8px' }}>
-          <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', alignItems: 'center' }}>
-            <span>Sucursal</span>
-            <span>Ventas ($)</span>
-            <span>Meta ($)</span>
-            <span>% Logro</span>
-          </div>
+      <AdminBranchMetaTable 
+        sucursales={sucursales}
+        resumenVentas={resumenVentas}
+        actualizarMeta={actualizarMeta}
+        guardarCambios={guardarCambios}
+        mensaje={mensaje}
+      />
 
-          {sucursales.map((sucursal, indice) => {
-            const ventasActuales = resumenVentas.get(sucursal.nombre) ?? 0;
-            const porcentaje = sucursal.metaVenta > 0 ? (ventasActuales / sucursal.metaVenta) * 100 : 0;
-            
-            return (
-              <div key={sucursal.nombre} className="fila" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', alignItems: 'center' }}>
-                <span>{sucursal.nombre}</span>
-                <span>${ventasActuales.toLocaleString()}</span>
-                <span>
-                  <input
-                    type="number"
-                    min={1}
-                    style={{ width: '100%', padding: '4px' }}
-                    value={sucursal.metaVenta}
-                    onChange={(evento) => actualizarMeta(indice, evento.target.value)}
-                  />
-                </span>
-                <strong style={{ color: porcentaje >= 100 ? '#4CAF50' : '#FF9800', textAlign: 'right' }}>
-                  {porcentaje.toFixed(1)}%
-                </strong>
-              </div>
-            );
-          })}
-          {sucursales.length === 0 && <p>No hay sucursales registradas.</p>}
-        </div>
+      <AdminFormularioVenta 
+        nuevaVenta={nuevaVenta}
+        setNuevaVenta={setNuevaVenta}
+        sucursales={sucursales}
+        inventarioFull={inventarioFull}
+        carrito={carrito}
+        setCarrito={setCarrito}
+        agregarAlCarrito={agregarAlCarrito}
+        procesarVentaCompleta={procesarVentaCompleta}
+        mensajeVenta={mensajeVenta}
+      />
 
-        <button type="button" onClick={guardarCambios}>
-          Guardar Metas
-        </button>
-        {mensaje && <p>{mensaje}</p>}
-      </section>
+      <AdminKpiFormulaManager 
+        kpiSeleccionadoId={kpiSeleccionadoId}
+        setKpiSeleccionadoId={setKpiSeleccionadoId}
+        kpis={kpis}
+        nuevaFormula={nuevaFormula}
+        setNuevaFormula={setNuevaFormula}
+        guardarFormulaKpi={guardarFormulaKpi}
+        mensajeKpi={mensajeKpi}
+      />
 
-      <section className="tarjeta-panel">
-        <h3>Registrar Venta</h3>
-        <div className="formulario-simple">
-          <label>
-            Sucursal
-            <select
-              value={nuevaVenta.sucursal}
-              onChange={(evento) =>
-                setNuevaVenta((actual) => ({ ...actual, sucursal: evento.target.value, producto: '', precioUnitario: 0, montoTotal: 0 }))
-              }
-            >
-              <option value="">Seleccione Sucursal</option>
-              {sucursales.map(s => (
-                <option key={s.nombre} value={s.nombre}>{s.nombre}</option>
-              ))}
-            </select>
-          </label>
+      <FormularioNuevoEmpleado 
+        nuevoEmpleado={nuevoEmpleado}
+        setNuevoEmpleado={setNuevoEmpleado}
+        sucursales={sucursales}
+        crearEmpleado={crearEmpleado}
+        mensajeEmpleado={mensajeEmpleado}
+      />
 
-          <label>
-            Sistema origen
-            <select
-              value={nuevaVenta.sistemaOrigen}
-              onChange={(evento) =>
-                setNuevaVenta((actual) => ({ ...actual, sistemaOrigen: evento.target.value }))
-              }
-            >
-              <option value="POS">POS</option>
-              <option value="WEB">WEB</option>
-              <option value="APP">APP</option>
-            </select>
-          </label>
-
-          <label>
-            Filtrar por Categoría
-            <select
-              value={nuevaVenta.categoria}
-              onChange={(evento) =>
-                setNuevaVenta((actual) => ({ ...actual, categoria: evento.target.value, producto: '', precioUnitario: 0, montoTotal: 0 }))
-              }
-            >
-              <option value="TODOS">TODOS LOS PRODUCTOS</option>
-              <option value="ELECTRONICA">ELECTRÓNICA</option>
-              <option value="HOGAR">HOGAR</option>
-            </select>
-          </label>
-
-          <label>
-            Producto (con Stock)
-            <select
-              value={nuevaVenta.producto}
-              onChange={(evento) => {
-                const prodNombre = evento.target.value;
-                const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-                const sucursalActual = normalizar(nuevaVenta.sucursal);
-                const infoStock = inventarioFull.find(i =>
-                  normalizar(i.sucursal) === sucursalActual &&
-                  normalizar(i.producto) === normalizar(prodNombre)
-                );
-
-                const precio = infoStock?.precioUnitario || 0;
-                setNuevaVenta((actual) => ({
-                  ...actual,
-                  producto: prodNombre,
-                  precioUnitario: precio,
-                  montoTotal: actual.cantidad * precio
-                }))
-              }}
-              disabled={!nuevaVenta.sucursal}
-            >
-              <option value="">{nuevaVenta.sucursal ? 'Seleccione Producto' : 'Elija primero sucursal'}</option>
-              {inventarioFull
-                .filter(i => {
-                  const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                  const matchesSucursal = normalizar(i.sucursal) === normalizar(nuevaVenta.sucursal);
-                  const matchesCategoria = nuevaVenta.categoria === 'TODOS' || i.categoria.toUpperCase() === nuevaVenta.categoria;
-                  return matchesSucursal && matchesCategoria && i.cantidad > 0;
-                })
-                .map(i => (
-                  <option key={i.id} value={i.producto}>{i.producto} (Stock: {i.cantidad})</option>
-                ))
-              }
-            </select>
-          </label>
-
-          <label>
-            Cantidad
-            <input
-              type="number"
-              min={1}
-              value={nuevaVenta.cantidad}
-              onChange={(evento) => {
-                const cant = Number(evento.target.value);
-                setNuevaVenta((actual) => ({
-                  ...actual,
-                  cantidad: cant,
-                  montoTotal: cant * actual.precioUnitario
-                }))
-              }}
-            />
-          </label>
-
-          <label>
-            Precio Unitario
-            <input
-              type="number"
-              disabled
-              value={nuevaVenta.precioUnitario}
-            />
-          </label>
-
-          <label>
-            Monto total (Calculado)
-            <input
-              type="number"
-              disabled
-              value={nuevaVenta.montoTotal}
-            />
-          </label>
-
-          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-            <button type="button" onClick={agregarAlCarrito} style={{ flex: 1, background: '#4CAF50' }}>
-              Añadir a venta
-            </button>
-          </div>
-        </div>
-
-        {carrito.length > 0 && (
-          <div className="tabla-simple" style={{ marginTop: 20, border: '1px solid #ddd', padding: '10px' }}>
-            <h4>Ventas en total</h4>
-            <div className="fila fila-encabezado">
-              <span>Producto</span>
-              <span>Cant</span>
-              <span>Subtotal</span>
-            </div>
-            {carrito.map((item, idx) => (
-              <div key={idx} className="fila">
-                <span>{item.producto}</span>
-                <span>{item.cantidad}</span>
-                <span>${item.subtotal.toLocaleString()}</span>
-              </div>
-            ))}
-            <div className="fila" style={{ borderTop: '2px solid #333', fontWeight: 'bold' }}>
-              <span>TOTAL VENTA</span>
-              <span>-</span>
-              <span>${carrito.reduce((acc, i) => acc + i.subtotal, 0).toLocaleString()}</span>
-            </div>
-            <button 
-              type="button" 
-              onClick={procesarVentaCompleta} 
-              style={{ width: '100%', marginTop: '10px', background: '#2196F3', color: 'white' }}
-            >
-              Confirmar y Registrar Venta Completa
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setCarrito([])}
-              style={{ width: '100%', marginTop: '5px', background: '#f44336', color: 'white', fontSize: '12px' }}
-            >
-              Vaciar Carrito
-            </button>
-          </div>
-        )}
-
-        {mensajeVenta && <p style={{ color: mensajeVenta.includes('éxito') ? 'green' : 'red' }}>{mensajeVenta}</p>}
-      </section>
-
-      <section className="tarjeta-panel">
-        <h3>Actualizar KPI</h3>
-        <div className="formulario-simple">
-          <label>
-            KPI
-            <select
-              value={kpiSeleccionadoId ?? ''}
-              onChange={(evento) => setKpiSeleccionadoId(Number(evento.target.value))}
-            >
-              <option value="">Seleccione un KPI</option>
-              {kpis.map((kpi) => (
-                <option key={kpi.id} value={kpi.id}>
-                  {kpi.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Nueva fórmula
-            <input
-              type="text"
-              value={nuevaFormula}
-              onChange={(evento) => setNuevaFormula(evento.target.value)}
-            />
-          </label>
-
-          <button type="button" onClick={guardarFormulaKpi}>
-            Guardar fórmula
-          </button>
-        </div>
-
-        <div className="tabla-simple" style={{ marginTop: 20 }}>
-          <div className="fila fila-encabezado">
-            <span>KPI</span>
-            <span>Fórmula</span>
-            <span>Meta</span>
-          </div>
-          {kpis.map(kpi => (
-            <div key={kpi.id} className="fila">
-              <span>{kpi.nombre}</span>
-              <span><code>{kpi.formula}</code></span>
-              <span>{kpi.meta}</span>
-            </div>
-          ))}
-        </div>
-
-        {mensajeKpi && <p>{mensajeKpi}</p>}
-      </section>
-
-      <section className="tarjeta-panel">
-        <h3>Crear Empleado</h3>
-        <p className="mensaje-demo">
-          Crea credenciales para que un empleado inicie sesión y visualice solamente su sucursal.
-        </p>
-        <div className="formulario-simple">
-          <label>
-            Usuario
-            <input
-              type="text"
-              placeholder="Ej: empleado.valpo"
-              value={nuevoEmpleado.username}
-              onChange={(e) =>
-                setNuevoEmpleado((actual) => ({ ...actual, username: e.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Correo Electrónico
-            <input
-              type="email"
-              placeholder="Ej: empleado@tienda.cl"
-              value={nuevoEmpleado.email}
-              onChange={(e) =>
-                setNuevoEmpleado((actual) => ({ ...actual, email: e.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Contraseña
-            <input
-              type="password"
-              value={nuevoEmpleado.password}
-              onChange={(e) =>
-                setNuevoEmpleado((actual) => ({ ...actual, password: e.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Sucursal asignada
-            <select
-              value={nuevoEmpleado.sucursalAsignada}
-              onChange={(e) =>
-                setNuevoEmpleado((actual) => ({ ...actual, sucursalAsignada: e.target.value }))
-              }
-            >
-              <option value="">Seleccione Sucursal</option>
-              {sucursales.map(s => (
-                <option key={s.nombre} value={s.nombre}>{s.nombre}</option>
-              ))}
-            </select>
-          </label>
-
-          <button type="button" onClick={crearEmpleado}>
-            Registrar Empleado
-          </button>
-        </div>
-        {mensajeEmpleado && <p className="mensaje-demo" style={{ marginTop: 12 }}>{mensajeEmpleado}</p>}
-      </section>
-
-      <section className="tarjeta-panel">
-        <h3>Registrar stock por sucursal</h3>
-        <p className="mensaje-demo">
-          Guarda stock real para cada sucursal y categoría (Electrónica/Hogar).
-        </p>
-        <div className="formulario-simple">
-          <label>
-            Sucursal
-            <select
-              value={nuevoStock.sucursal}
-              onChange={(e) =>
-                setNuevoStock((actual) => ({ ...actual, sucursal: e.target.value }))
-              }
-            >
-              <option value="">Seleccione Sucursal</option>
-              {sucursales.map(s => (
-                <option key={s.nombre} value={s.nombre}>{s.nombre}</option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Categoría
-            <select
-              value={nuevoStock.categoria}
-              onChange={(e) =>
-                setNuevoStock((actual) => ({ ...actual, categoria: e.target.value }))
-              }
-            >
-              <option value="ELECTRONICA">ELECTRONICA</option>
-              <option value="HOGAR">HOGAR</option>
-            </select>
-          </label>
-
-          <label>
-            Producto
-            <input
-              type="text"
-              placeholder="Ej: Audífonos"
-              value={nuevoStock.producto}
-              onChange={(e) =>
-                setNuevoStock((actual) => ({ ...actual, producto: e.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Cantidad
-            <input
-              type="number"
-              min={0}
-              value={nuevoStock.cantidad}
-              onChange={(e) =>
-                setNuevoStock((actual) => ({ ...actual, cantidad: Number(e.target.value) }))
-              }
-            />
-          </label>
-
-          <label>
-            Precio Unitario
-            <input
-              type="number"
-              min={0}
-              value={nuevoStock.precioUnitario}
-              onChange={(e) =>
-                setNuevoStock((actual) => ({ ...actual, precioUnitario: Number(e.target.value) }))
-              }
-            />
-          </label>
-
-          <button type="button" onClick={guardarStock}>
-            Guardar Stock
-          </button>
-        </div>
-        {mensajeStock && <p className="mensaje-demo" style={{ marginTop: 12 }}>{mensajeStock}</p>}
-      </section>
+      <AdminStockManager 
+        nuevoStock={nuevoStock}
+        setNuevoStock={setNuevoStock}
+        sucursales={sucursales}
+        guardarStock={guardarStock}
+        mensajeStock={mensajeStock}
+      />
     </section>
   )
 }

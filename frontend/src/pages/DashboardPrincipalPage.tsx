@@ -1,20 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { obtenerDashboard } from '../api'
 import type { Kpi, Venta } from '../types'
+import { normalizarTexto } from '../utils/formatters'
+import { TARJETAS_POR_PAGINA } from '../constants/dashboardConfig'
 import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import { FORMATO_MONEDA, FORMATO_COMPACTO, normalizarTexto } from '../utils/formatters'
-import { COLORES_GRAFICO, TARJETAS_POR_PAGINA } from '../constants/dashboardConfig'
+  DashboardMiniBranches,
+  DashboardBranchDetail,
+  DashboardConsolidated,
+} from '../components'
 
 function DashboardPrincipalPage() {
   const [ventas, setVentas] = useState<Venta[]>([])
@@ -65,8 +58,7 @@ function DashboardPrincipalPage() {
       })
     }
 
-    return Array.from(porSucursal.values())
-      .sort((a, b) => b.total - a.total)
+    return Array.from(porSucursal.values()).sort((a, b) => b.total - a.total)
   }, [ventas])
 
   const ventasTotales = useMemo(
@@ -216,8 +208,6 @@ function DashboardPrincipalPage() {
     return datoMes?.total ?? 0
   }, [periodoAnalisis, resumenSucursalActiva, serieSucursalActiva, sucursalActiva])
 
-
-
   return (
     <section className="pagina-contenido">
       <div className="encabezado-pagina">
@@ -229,260 +219,36 @@ function DashboardPrincipalPage() {
       {mensajeError && <p className="mensaje-error">{mensajeError}</p>}
       {!mensajeError && alertas.length > 0 && <p className="mensaje-demo">{alertas[0]}</p>}
 
-      <section className="tarjeta-panel">
-        <div className="encabezado-mini-sucursales">
-          <h3>Ventas por sucursal</h3>
-          <div className="controles-mini-sucursales">
-            <button type="button" onClick={paginaAnteriorSucursales} aria-label="Página anterior">
-              ◀
-            </button>
-            <span>
-              {Math.min(paginaSucursales + 1, totalPaginasSucursales)} / {totalPaginasSucursales}
-            </span>
-            <button type="button" onClick={paginaSiguienteSucursales} aria-label="Página siguiente">
-              ▶
-            </button>
-          </div>
-        </div>
-
-        <p className="mensaje-demo">
-          Ejemplo: Santiago {FORMATO_MONEDA.format(20000000)} y Concepción{' '}
-          {FORMATO_MONEDA.format(12000000)}.
-        </p>
-
-        <div className="rejilla-mini-sucursales">
-          {tarjetasVisibles.map((item, index) => {
-            const miniId = `mini-${inicioPagina + index}`
-            return (
-            <article className="tarjeta-mini-sucursal" key={item.sucursal}>
-              <button
-                type="button"
-                className="boton-mini-sucursal"
-                onClick={() => setSucursalActiva(item.sucursal)}
-              >
-              <h4>{item.sucursal}</h4>
-              <p>{FORMATO_MONEDA.format(item.total)}</p>
-              <div className="mini-grafico-sucursal">
-                <ResponsiveContainer width="100%" height={90}>
-                  <AreaChart data={item.serie}>
-                    <defs>
-                      <linearGradient id={miniId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0f766e" stopOpacity={0.32} />
-                        <stop offset="95%" stopColor="#0f766e" stopOpacity={0.05} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="periodo" hide />
-                    <YAxis hide />
-                    <Tooltip formatter={(valor) => FORMATO_MONEDA.format(Number(valor))} />
-                    <Area
-                      type="monotone"
-                      dataKey="total"
-                      stroke="#0f766e"
-                      strokeWidth={2}
-                      dot={{ r: 2.5, fill: '#ffffff', stroke: '#0f766e', strokeWidth: 1.5 }}
-                      activeDot={{ r: 4 }}
-                      fillOpacity={1}
-                      fill={`url(#${miniId})`}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-              </button>
-            </article>
-          )})}
-        </div>
-      </section>
+      <DashboardMiniBranches
+        tarjetasVisibles={tarjetasVisibles}
+        paginaSucursales={paginaSucursales}
+        totalPaginasSucursales={totalPaginasSucursales}
+        paginaAnteriorSucursales={paginaAnteriorSucursales}
+        paginaSiguienteSucursales={paginaSiguienteSucursales}
+        setSucursalActiva={setSucursalActiva}
+        inicioPagina={inicioPagina}
+      />
 
       {sucursalActiva ? (
-        <>
-          <section className="tarjeta-panel">
-            <div className="encabezado-mini-sucursales">
-              <h3>Rendimiento de {sucursalActiva} (últimos 6 meses)</h3>
-              <button
-                type="button"
-                className="boton-volver-general"
-                onClick={() => setSucursalActiva(null)}
-              >
-                Volver al general
-              </button>
-            </div>
-
-            <div className="contenedor-grafico">
-              <ResponsiveContainer width="100%" height={320}>
-                <AreaChart
-                  data={serieSucursalActiva}
-                  onClick={(evento) => {
-                    const etiqueta = (evento as { activeLabel?: string })?.activeLabel
-                    if (etiqueta) {
-                      setPeriodoAnalisis(etiqueta)
-                    }
-                  }}
-                  margin={{ top: 8, right: 18, left: 8, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="colorSucursalDetalle" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0f766e" stopOpacity={0.38} />
-                      <stop offset="95%" stopColor="#0f766e" stopOpacity={0.06} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="periodo" />
-                  <YAxis
-                    width={70}
-                    tickFormatter={(valor) => FORMATO_COMPACTO.format(Number(valor))}
-                  />
-                  <Tooltip formatter={(valor) => FORMATO_MONEDA.format(Number(valor))} />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    stroke="#0f766e"
-                    dot={{ r: 3, fill: '#ffffff', stroke: '#0f766e', strokeWidth: 1.5 }}
-                    activeDot={{ r: 5 }}
-                    fillOpacity={1}
-                    fill="url(#colorSucursalDetalle)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </section>
-
-          <section className="tarjeta-panel">
-            <h3>Resumen rápido ({sucursalActiva})</h3>
-
-            <div className="rejilla-kpi">
-              <article className="tarjeta-kpi">
-                <h3>{periodoAnalisis === 'GENERAL' ? 'Ventas 6 meses' : 'Ventas del mes'}</h3>
-                <p>{FORMATO_MONEDA.format(ventasAnalisis)}</p>
-              </article>
-
-              <article className="tarjeta-kpi">
-                <h3>Promedio mensual</h3>
-                <p>
-                  {FORMATO_MONEDA.format(resumenSucursalActiva?.promedioMensual ?? 0)}
-                </p>
-              </article>
-
-              <article className="tarjeta-kpi">
-                <h3>Mejor mes</h3>
-                <p>
-                  {resumenSucursalActiva?.mejorMes?.periodo ?? '-'}
-                </p>
-              </article>
-
-              <article className="tarjeta-kpi">
-                <h3>Registros de venta</h3>
-                <p>
-                  {resumenSucursalActiva?.registros ?? 0}
-                </p>
-              </article>
-            </div>
-          </section>
-        </>
+        <DashboardBranchDetail
+          sucursalActiva={sucursalActiva}
+          setSucursalActiva={setSucursalActiva}
+          serieSucursalActiva={serieSucursalActiva}
+          setPeriodoAnalisis={setPeriodoAnalisis}
+          periodoAnalisis={periodoAnalisis}
+          resumenSucursalActiva={resumenSucursalActiva}
+          ventasAnalisis={ventasAnalisis}
+        />
       ) : (
-        <section className="panel-graficos">
-        <article className="tarjeta-panel grafico-principal">
-          <h3>Venta consolidada (todas las sucursales)</h3>
-          <div className="contenedor-grafico">
-            <ResponsiveContainer width="100%" height={320}>
-              <AreaChart
-                data={graficoConsolidado}
-                margin={{ top: 8, right: 18, left: 8, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.34} />
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="periodo" />
-                <YAxis
-                  width={70}
-                  tickFormatter={(valor) => FORMATO_COMPACTO.format(Number(valor))}
-                />
-                <Tooltip formatter={(valor) => FORMATO_MONEDA.format(Number(valor))} />
-                <Area
-                  type="monotone"
-                  dataKey="total"
-                  stroke="#2563eb"
-                  fillOpacity={1}
-                  fill="url(#colorVentas)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <p className="mensaje-demo">Total consolidado: {FORMATO_MONEDA.format(ventasTotales)}</p>
-        </article>
-
-        <article className="tarjeta-panel grafico-rendimiento">
-          <h3>Rendimiento por sucursal</h3>
-          <div className="contenedor-grafico">
-            <ResponsiveContainer width="100%" height={320}>
-              <PieChart>
-                <Pie
-                  data={rendimientoSucursales}
-                  dataKey="porcentaje"
-                  nameKey="sucursal"
-                  innerRadius={60}
-                  outerRadius={110}
-                  paddingAngle={1}
-                >
-                  {rendimientoSucursales.map((item, index) => (
-                    <Cell
-                      key={item.sucursal}
-                      fill={COLORES_GRAFICO[index % COLORES_GRAFICO.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(valor, _, item) => {
-                    const total = item?.payload?.total ?? 0
-                    return [
-                      `${Number(valor).toFixed(2)}% • ${FORMATO_MONEDA.format(total)}`,
-                      'Participación',
-                    ]
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="lista-sucursales-resumen">
-            {rendimientoSucursales.slice(0, 8).map((item) => (
-              <p key={item.sucursal}>
-                <strong>{item.sucursal}:</strong> {item.porcentaje.toFixed(1)}%
-              </p>
-            ))}
-          </div>
-        </article>
-      </section>
+        <DashboardConsolidated
+          graficoConsolidado={graficoConsolidado}
+          ventasTotales={ventasTotales}
+          rendimientoSucursales={rendimientoSucursales}
+          ventasPorSucursal={ventasPorSucursal}
+          ventas={ventas}
+          kpis={kpis}
+        />
       )}
-
-      {!sucursalActiva && <section className="tarjeta-panel">
-        <h3>Resumen rápido</h3>
-        <div className="rejilla-kpi">
-          <article className="tarjeta-kpi">
-            <h3>Ventas Totales</h3>
-            <p>{FORMATO_MONEDA.format(ventasTotales)}</p>
-          </article>
-
-          <article className="tarjeta-kpi">
-            <h3>Ventas registradas</h3>
-            <p>{ventas.length}</p>
-          </article>
-
-          <article className="tarjeta-kpi">
-            <h3>Sucursales activas</h3>
-            <p>{ventasPorSucursal.length}</p>
-          </article>
-
-          <article className="tarjeta-kpi">
-            <h3>KPIs disponibles</h3>
-            <p>{kpis.length}</p>
-          </article>
-        </div>
-      </section>}
-
-
     </section>
   )
 }

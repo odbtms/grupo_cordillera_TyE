@@ -9,6 +9,7 @@ import {
   validarToken,
 } from '../api'
 import type { Usuario } from '../api'
+import { UserProfileManager, UserRoleList, ServiceHealthCheck } from '../components'
 
 type EstadoServicio = {
   nombre: string
@@ -108,82 +109,25 @@ function ConfiguracionAuditoriaPage({
         <p>Control de sesión y estado de integración backend</p>
       </div>
 
-      <section className="tarjeta-panel">
-        <h3>Perfil de usuario</h3>
-        <p>Usuario: {usuario}</p>
-        <p>Rol: {rol}</p>
-        <p>Token activo: {token ? 'Sí' : 'No'}</p>
+      <UserProfileManager
+        usuario={usuario}
+        rol={rol}
+        token={token}
+        rolObjetivo={rolObjetivo}
+        setRolObjetivo={setRolObjetivo}
+        guardarRol={guardarRol}
+        mensajeRol={mensajeRol}
+        onCerrarSesion={onCerrarSesion}
+      />
 
-        <div className="formulario-simple">
-          <label>
-            Cambiar Rol
-            <select
-              value={rolObjetivo}
-              onChange={(evento) =>
-                setRolObjetivo(evento.target.value as 'ADMIN' | 'EMPLEADO_TIENDA')
-              }
-            >
-              <option value="ADMIN">ADMIN</option>
-              <option value="EMPLEADO_TIENDA">EMPLEADO_TIENDA</option>
-            </select>
-          </label>
-          <button type="button" onClick={guardarRol}>
-            Actualizar rol
-          </button>
-        </div>
-        {mensajeRol && <p>{mensajeRol}</p>}
+      <UserRoleList
+        usuariosDb={usuariosDb}
+        cambiarRolUsuarioExterno={cambiarRolUsuarioExterno}
+      />
 
-        <button type="button" onClick={onCerrarSesion}>
-          Cerrar sesión
-        </button>
-      </section>
-
-      <section className="tarjeta-panel">
-        <h3>Gestión de Usuarios (Base de Datos)</h3>
-        <p className="mensaje-demo">Administra los roles de todos los usuarios registrados.</p>
-        <div className="tabla-simple">
-          <div className="fila fila-encabezado">
-            <span>Usuario</span>
-            <span>Email</span>
-            <span>Rol Actual</span>
-            <span>Acciones</span>
-          </div>
-          {usuariosDb.map((u) => (
-            <div key={u.id} className="fila">
-              <span>{u.username}</span>
-              <span>{u.email}</span>
-              <strong>{u.rol}</strong>
-              <span>
-                <select 
-                  defaultValue={u.rol}
-                  onChange={(e) => cambiarRolUsuarioExterno(u.id, e.target.value)}
-                  style={{ fontSize: '12px', padding: '2px' }}
-                >
-                  <option value="ADMIN">ADMIN</option>
-                  <option value="EMPLEADO_TIENDA">EMPLEADO_TIENDA</option>
-                </select>
-              </span>
-            </div>
-          ))}
-          {usuariosDb.length === 0 && <p>Cargando lista de usuarios...</p>}
-        </div>
-      </section>
-
-      <section className="tarjeta-panel">
-        <h3>Health Check de servicios</h3>
-        <ul className="lista-servicios">
-          {estadoServicios.map((servicio) => (
-            <li key={servicio.nombre}>
-              <span
-                className={`estado-circulo ${
-                  servicio.estado === 'conectado' ? 'ok' : 'error'
-                }`}
-              />
-              {servicio.nombre} - {servicio.estado}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <ServiceHealthCheck
+        estadoServicios={estadoServicios}
+      />
     </section>
   )
 }

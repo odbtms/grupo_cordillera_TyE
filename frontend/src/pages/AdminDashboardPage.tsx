@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { obtenerKpis, obtenerVentas, obtenerStock } from '../api'
 import type { ItemCatalogoSucursal, Kpi, Venta, StockItem } from '../types'
-import { FORMATO_MONEDA, monthLabelFormatter } from '../utils/formatters'
+import { monthLabelFormatter } from '../utils/formatters'
 import { BRANCH_ZONE_MAP } from '../constants/dashboardConfig'
+import { 
+  AdminDashboardGeneral, 
+  AdminDashboardFiltros, 
+  AdminDashboardResumenVentas, 
+  AdminDashboardInventario 
+} from '../components'
 
 function claveMes(textoFecha: string): string {
   const fecha = new Date(textoFecha)
@@ -219,57 +225,15 @@ function AdminDashboardPage() {
         </p>
       </header>
 
-      <section className="bloque" aria-label="Resumen de ventas totales">
-        <h2>1. Dashboard general</h2>
-        <div className="resumen-grid">
-          <div className="tarjeta-resumen">
-            <h3>Resumen de ventas totales</h3>
-            <p className="valor-principal">{FORMATO_MONEDA.format(ventasTotales)}</p>
-            <p>
-              Registros: {ventas.length} | Sucursales con ventas:{' '}
-              {datosSucursales.length}
-            </p>
-          </div>
-          <div className="tarjeta-resumen">
-            <h3>Comparacion entre sucursales</h3>
-            <ul className="lista-simple">
-              {datosSucursales.map((dato) => (
-                <li key={dato.sucursal}>
-                  <span>{dato.sucursal}</span>
-                  <strong>{FORMATO_MONEDA.format(dato.total)}</strong>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="tarjeta-resumen">
-            <h3>KPIs clave</h3>
-            <ul className="lista-simple">
-              <li>
-                <span>Ticket promedio</span>
-                <strong>{FORMATO_MONEDA.format(ticketPromedio)}</strong>
-              </li>
-              <li>
-                <span>Sucursal lider</span>
-                <strong>{sucursalLider?.sucursal ?? 'Sin datos'}</strong>
-              </li>
-              {kpis.slice(0, 2).map((kpi) => (
-                <li key={kpi.id}>
-                  <span>{kpi.nombre}</span>
-                  <strong>{kpi.valorCalculado}</strong>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="tarjeta-resumen">
-            <h3>Alertas o variaciones importantes</h3>
-            <ul className="lista-alertas">
-              {alertas.map((mensaje) => (
-                <li key={mensaje}>{mensaje}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+      <AdminDashboardGeneral
+        ventasTotales={ventasTotales}
+        ventasCount={ventas.length}
+        datosSucursales={datosSucursales}
+        ticketPromedio={ticketPromedio}
+        sucursalLider={sucursalLider}
+        kpis={kpis}
+        alertas={alertas}
+      />
 
       <section className="bloque" aria-label="Sucursales y ventas">
         <div className="section-title-row">
@@ -277,217 +241,36 @@ function AdminDashboardPage() {
           <p>Analisis basico por sucursal con filtros.</p>
         </div>
 
-        <div className="filtros-simples">
-          <div className="filters-grid">
-            <label>
-              Fecha desde
-              <input
-                type="date"
-                value={fechaDesde}
-                onChange={(evento) => setFechaDesde(evento.target.value)}
-              />
-            </label>
+        <AdminDashboardFiltros
+          fechaDesde={fechaDesde}
+          setFechaDesde={setFechaDesde}
+          fechaHasta={fechaHasta}
+          setFechaHasta={setFechaHasta}
+          filtroZona={filtroZona}
+          setFiltroZona={setFiltroZona}
+          opcionesZona={opcionesZona}
+          filtroOrigen={filtroOrigen}
+          setFiltroOrigen={setFiltroOrigen}
+          filtroSucursal={filtroSucursal}
+          setFiltroSucursal={setFiltroSucursal}
+          stock={stock}
+          ventasFiltradasCount={ventasFiltradas.length}
+          totalFiltrado={totalFiltrado}
+        />
 
-            <label>
-              Fecha hasta
-              <input
-                type="date"
-                value={fechaHasta}
-                onChange={(evento) => setFechaHasta(evento.target.value)}
-              />
-            </label>
-
-            <label>
-              Zona
-              <select
-                value={filtroZona}
-                onChange={(evento) => setFiltroZona(evento.target.value)}
-              >
-                {opcionesZona.map((zona) => (
-                  <option key={zona} value={zona}>
-                    {zona}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Sistema Origen
-              <select value={filtroOrigen} onChange={(e) => setFiltroOrigen(e.target.value)}>
-                <option value="Todos">Todos</option>
-                <option value="POS">POS</option>
-                <option value="WEB">WEB</option>
-                <option value="APP">APP</option>
-              </select>
-            </label>
-
-            <label>
-              Sucursal Específica
-              <select value={filtroSucursal} onChange={(e) => setFiltroSucursal(e.target.value)}>
-                <option value="Todas">Todas las sucursales</option>
-                {Array.from(new Set(stock.map(s => s.sucursal))).map(nombre => (
-                  <option key={nombre} value={nombre}>{nombre}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="filters-summary">
-            <span>{ventasFiltradas.length} ventas filtradas</span>
-            <strong>{FORMATO_MONEDA.format(totalFiltrado)}</strong>
-            <button
-              type="button"
-              onClick={() => {
-                setFechaDesde('')
-                setFechaHasta('')
-                setFiltroZona('Todas')
-                setFiltroOrigen('Todos')
-              }}
-            >
-              Limpiar filtros
-            </button>
-          </div>
-        </div>
-
-        <div className="resumen-grid">
-          <article className="tarjeta-resumen" aria-label="Lista de sucursales">
-            <div className="panel-head">
-              <h2>Lista de Sucursales</h2>
-              <span>{catalogoFiltrado.length} activas</span>
-            </div>
-
-            <div className="branch-table">
-              <div className="branch-table-head">
-                <span>Sucursal</span>
-                <span>Zona</span>
-                <span>Total</span>
-              </div>
-              {catalogoFiltrado.map((item) => (
-                <div 
-                  key={item.sucursal} 
-                  className="branch-table-row" 
-                  onClick={() => setFiltroSucursal(item.sucursal)}
-                  style={{ cursor: 'pointer', transition: 'background 0.2s' }}
-                  title={`Ver stock de ${item.sucursal}`}
-                >
-                  <span>{item.sucursal}</span>
-                  <span>{item.zona}</span>
-                  <strong>{FORMATO_MONEDA.format(item.total)}</strong>
-                </div>
-              ))}
-              {!catalogoFiltrado.length && (
-                <p className="empty-state">No hay sucursales para el filtro actual.</p>
-              )}
-            </div>
-          </article>
-
-          <article className="tarjeta-resumen" aria-label="Ventas por sucursal">
-            <div className="panel-head">
-              <h2>Ventas por Sucursal</h2>
-              <span>Total filtrado</span>
-            </div>
-
-            <div className="branch-list">
-              {datosSucursalesFiltrados.map((dato) => {
-                const ancho =
-                  maxVentaSucursalFiltrada > 0
-                    ? (dato.total / maxVentaSucursalFiltrada) * 100
-                    : 0
-                return (
-                  <div 
-                    key={dato.sucursal} 
-                    className="branch-item"
-                    onClick={() => setFiltroSucursal(dato.sucursal)}
-                    style={{ cursor: 'pointer' }}
-                    title={`Ver stock de ${dato.sucursal}`}
-                  >
-                    <div className="branch-top">
-                      <span>{dato.sucursal}</span>
-                      <strong>{FORMATO_MONEDA.format(dato.total)}</strong>
-                    </div>
-                    <div className="branch-bar-bg">
-                      <div
-                        className="branch-bar-fill"
-                        style={{ width: `${ancho}%` }}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
-              {!datosSucursalesFiltrados.length && (
-                <p className="empty-state">Sin ventas para los filtros seleccionados.</p>
-              )}
-            </div>
-          </article>
-
-          <article
-            className="tarjeta-resumen tarjeta-ancha"
-            aria-label="Detalle por periodo"
-          >
-            <div className="panel-head">
-              <h2>Detalle de Ingresos por Periodo</h2>
-              <span>Mensual</span>
-            </div>
-
-            <div className="period-table">
-              <div className="period-table-head">
-                <span>Periodo</span>
-                <span>Operaciones</span>
-                <span>Ingresos</span>
-              </div>
-              {detallesPeriodo.map((detalle) => (
-                <div key={detalle.periodo} className="period-table-row">
-                  <span>{detalle.etiqueta}</span>
-                  <span>{detalle.operaciones}</span>
-                  <strong>{FORMATO_MONEDA.format(detalle.total)}</strong>
-                </div>
-              ))}
-              {!detallesPeriodo.length && (
-                <p className="empty-state">No existen ingresos en el periodo filtrado.</p>
-              )}
-            </div>
-          </article>
-        </div>
+        <AdminDashboardResumenVentas
+          catalogoFiltrado={catalogoFiltrado}
+          datosSucursalesFiltrados={datosSucursalesFiltrados}
+          maxVentaSucursalFiltrada={maxVentaSucursalFiltrada}
+          detallesPeriodo={detallesPeriodo}
+          setFiltroSucursal={setFiltroSucursal}
+        />
       </section>
 
-      <section className="bloque" aria-label="Inventario global">
-        <h2>3. Inventario Global y Detallado</h2>
-        <div className="tarjeta-resumen tarjeta-ancha">
-          <div className="panel-head">
-            <h2>Stock Detallado: {filtroSucursal === 'Todas' ? 'Todas las Sucursales' : filtroSucursal}</h2>
-            <span>{stock.filter(s => filtroSucursal === 'Todas' || s.sucursal === filtroSucursal).length} ítems encontrados</span>
-          </div>
-          <div className="branch-table" style={{ display: 'grid', gap: '8px' }}>
-            <div className="branch-table-head" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.5fr 1fr', alignItems: 'center', background: '#f8fafc', padding: '10px', borderRadius: '4px', fontWeight: 'bold' }}>
-              <span>Categoría</span>
-              <span>Producto</span>
-              <span>Stock</span>
-              <span>Precio Unitario</span>
-            </div>
-            {stock
-              .filter(item => {
-                if (filtroSucursal === 'Todas') return true;
-                const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                return normalizar(item.sucursal) === normalizar(filtroSucursal);
-              })
-              .map((item) => (
-                <div key={item.id} className="branch-table-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.5fr 1fr', alignItems: 'center', padding: '10px', borderBottom: '1px solid #eee' }}>
-                  <span>{item.categoria}</span>
-                  <span>{item.producto}</span>
-                  <strong>{item.cantidad}</strong>
-                  <span style={{ fontWeight: '600', color: '#2563eb' }}>${item.precioUnitario?.toLocaleString() || 0}</span>
-                </div>
-              ))}
-            {stock.filter(item => {
-              if (filtroSucursal === 'Todas') return true;
-              const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-              return normalizar(item.sucursal) === normalizar(filtroSucursal);
-            }).length === 0 && (
-              <p className="empty-state" style={{ padding: '20px', textAlign: 'center', color: '#666' }}>No hay información de stock disponible para esta selección.</p>
-            )}
-          </div>
-        </div>
-      </section>
+      <AdminDashboardInventario
+        stock={stock}
+        filtroSucursal={filtroSucursal}
+      />
     </main>
   )
 }
