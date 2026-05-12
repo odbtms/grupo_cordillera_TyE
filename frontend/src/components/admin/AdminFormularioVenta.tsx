@@ -138,14 +138,14 @@ export default function AdminFormularioVenta({
           onClick={agregarAlCarrito}
           style={{ width: '100%', marginTop: '15px', background: '#4CAF50', color: 'white', padding: '10px', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
         >
-          Añadir al carrito
+          Añadir a ventas
         </button>
       </div>
 
       {carrito.length > 0 && (
         <div className="tabla-simple" style={{ marginTop: '20px', border: '1px solid #cbd5e1' }}>
           <div className="panel-head" style={{ padding: '10px', background: '#f1f5f9' }}>
-            <h4 style={{ margin: 0 }}>Ventas pendientes</h4>
+            <h4 style={{ margin: 0 }}>Ventas</h4>
           </div>
           <div className="fila fila-encabezado">
             <span>Producto</span>

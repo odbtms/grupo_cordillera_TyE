@@ -24,7 +24,7 @@ export default function AdminStockManager({
 }: AdminStockManagerProps) {
   return (
     <section className="tarjeta-panel" style={{ marginTop: '20px' }}>
-      <h3>Gestión de Inventario (Carga de Productos)</h3>
+      <h3>Gestión de Inventario</h3>
       <p className="mensaje-demo">Actualiza el stock real disponible por sucursal y categoría.</p>
       
       <div className="formulario-simple" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -63,7 +63,7 @@ export default function AdminStockManager({
         </label>
 
         <label>
-          Cantidad Inicial / Reposición
+          Cantidad
           <input
             type="number"
             min={0}

@@ -21,7 +21,7 @@ export default function AdminKpiFormulaManager({
 }: AdminKpiFormulaManagerProps) {
   return (
     <section className="tarjeta-panel">
-      <h3>Actualizar Fórmulas de KPI (Cálculo Dinámico)</h3>
+      <h3>Actualizar Fórmulas de KPI</h3>
       <p className="mensaje-demo">Modifica cómo se procesan las métricas en tiempo real.</p>
       
       <div className="formulario-simple">

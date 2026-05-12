@@ -62,7 +62,7 @@ export default function AdminBranchMetaTable({
         onClick={guardarCambios}
         style={{ marginTop: '20px', background: '#334155', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer' }}
       >
-        Guardar Metas en BD
+        Guardar Metas
       </button>
       {mensaje && <p style={{ marginTop: '10px', color: '#334155' }}>{mensaje}</p>}
     </section>
