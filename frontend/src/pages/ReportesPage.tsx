@@ -69,12 +69,26 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   const analiticaCategorias = useMemo(() => {
     const mapa = new Map<string, number>()
     ventas.forEach(v => {
-      const cat = v.categoria || 'VARIOS'
-      const actual = mapa.get(cat) ?? 0
-      mapa.set(cat, actual + (v.montoTotal || 0))
+      const cat = (v.categoria || '').toUpperCase()
+      if (cat === 'HOGAR' || cat === 'ELECTRONICA' || cat === 'ELECTRÓNICA') {
+        const nombreLimpio = cat === 'ELECTRÓNICA' ? 'ELECTRONICA' : cat
+        const actual = mapa.get(nombreLimpio) ?? 0
+        mapa.set(nombreLimpio, actual + (v.montoTotal || 0))
+      }
     })
     return Array.from(mapa.entries()).map(([name, value]) => ({ name, value }))
   }, [ventas])
+
+  const analiticaStockSucursales = useMemo(() => {
+    const mapa = new Map<string, number>()
+    stock.forEach(s => {
+      const actual = mapa.get(s.sucursal) ?? 0
+      mapa.set(s.sucursal, actual + (s.cantidad || 0))
+    })
+    return Array.from(mapa.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+  }, [stock])
 
   const sucursalTop = useMemo(() => analiticaSucursales[0] || { name: '-', value: 0 }, [analiticaSucursales])
 
@@ -90,6 +104,11 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       })
       
       alert(`Reporte de ${sucursalAsignada} enviado con éxito al administrador.`)
+      
+      // Limpiar las tablas para el empleado en la sesión actual
+      setVentas(prev => prev.filter(v => v.sucursal !== sucursalAsignada))
+      setStock(prev => prev.filter(s => s.sucursal !== sucursalAsignada))
+
       const lista = await obtenerPlantillasReporte()
       setPlantillas(lista.sort((a, b) => (b.id || 0) - (a.id || 0)))
     } catch {
@@ -162,18 +181,18 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
           </article>
 
           <article className="tarjeta-resumen">
-            <h3>Ventas por Sucursal</h3>
+            <h3>Stock por Sucursal</h3>
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={analiticaSucursales}>
+              <BarChart data={analiticaStockSucursales}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" hide />
                 <YAxis hide />
                 <Tooltip 
-                  formatter={(val: any) => FORMATO_MONEDA.format(Number(val) || 0)}
+                  formatter={(val: any) => [`${Number(val) || 0} unidades`, 'Stock Disp.']}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {analiticaSucursales.map((_entry, index) => (
+                  {analiticaStockSucursales.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORES[index % COLORES.length]} />
                   ))}
                 </Bar>
@@ -317,23 +336,25 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
         <section className="tarjeta-panel">
           <h3 style={{ color: '#2563eb', marginBottom: '15px' }}>Auditoría de Ventas Detallada</h3>
           <div className="tabla-simple">
-            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
+            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
               <span>Empleado</span>
               <span>Categoría</span>
               <span>Producto</span>
               <span>Cant.</span>
-              <span>Precio</span>
+              <span>Precio Unitario</span>
+              <span>Venta Total</span>
             </div>
             {ventas
               .filter(v => v.sucursal === sucursalAsignada)
               .sort((a, b) => new Date(b.fechaVenta).getTime() - new Date(a.fechaVenta).getTime())
               .map((v, i) => (
-                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
+                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
                   <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{v.vendedor || 'Admin'}</span>
                   <span>{v.categoria || 'VARIOS'}</span>
                   <span>{v.producto}</span>
                   <strong>{v.cantidad}</strong>
                   <span>{FORMATO_MONEDA.format(v.precioUnitario || 0)}</span>
+                  <span style={{ fontWeight: 'bold', color: '#0f766e' }}>{FORMATO_MONEDA.format((v.precioUnitario || 0) * (v.cantidad || 0))}</span>
                 </div>
               ))}
           </div>
@@ -342,22 +363,24 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
         <section className="tarjeta-panel">
           <h3 style={{ color: '#0f766e', marginBottom: '15px' }}>Auditoría de Stock (Ingresos)</h3>
           <div className="tabla-simple">
-            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
+            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
               <span>Empleado</span>
               <span>Categoría</span>
               <span>Producto</span>
               <span>Stock</span>
-              <span>Precio Un.</span>
+              <span>Precio Unitario</span>
+              <span>Venta Total</span>
             </div>
             {stock
               .filter(s => s.sucursal === sucursalAsignada)
               .map((s, i) => (
-                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
+                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
                   <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{s.vendedor || 'Sistema'}</span>
                   <span>{s.categoria}</span>
                   <span>{s.producto}</span>
                   <strong>{s.cantidad}</strong>
                   <span>{FORMATO_MONEDA.format(s.precioUnitario || 0)}</span>
+                  <span style={{ fontWeight: 'bold', color: '#0f766e' }}>{FORMATO_MONEDA.format((s.precioUnitario || 0) * (s.cantidad || 0))}</span>
                 </div>
               ))}
           </div>
