@@ -4,9 +4,9 @@ import type { Kpi, Venta } from '../types'
 import { normalizarTexto } from '../utils/formatters'
 import { TARJETAS_POR_PAGINA } from '../constants/dashboardConfig'
 import {
-  DashboardMiniBranches,
-  DashboardBranchDetail,
-  DashboardConsolidated,
+  MiniaturasSucursalesDashboard,
+  DetalleSucursalDashboard,
+  ConsolidadoDashboard,
 } from '../components'
 
 function DashboardPrincipalPage() {
@@ -219,7 +219,7 @@ function DashboardPrincipalPage() {
       {mensajeError && <p className="mensaje-error">{mensajeError}</p>}
       {!mensajeError && alertas.length > 0 && <p className="mensaje-demo">{alertas[0]}</p>}
 
-      <DashboardMiniBranches
+      <MiniaturasSucursalesDashboard
         tarjetasVisibles={tarjetasVisibles}
         paginaSucursales={paginaSucursales}
         totalPaginasSucursales={totalPaginasSucursales}
@@ -230,7 +230,7 @@ function DashboardPrincipalPage() {
       />
 
       {sucursalActiva ? (
-        <DashboardBranchDetail
+        <DetalleSucursalDashboard
           sucursalActiva={sucursalActiva}
           setSucursalActiva={setSucursalActiva}
           serieSucursalActiva={serieSucursalActiva}
@@ -240,7 +240,7 @@ function DashboardPrincipalPage() {
           ventasAnalisis={ventasAnalisis}
         />
       ) : (
-        <DashboardConsolidated
+        <ConsolidadoDashboard
           graficoConsolidado={graficoConsolidado}
           ventasTotales={ventasTotales}
           rendimientoSucursales={rendimientoSucursales}

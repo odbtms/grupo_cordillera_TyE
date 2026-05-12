@@ -9,10 +9,10 @@ import {
 } from '../api'
 import type { StockItem, Venta } from '../types'
 import { FORMATO_MONEDA } from '../utils/formatters'
-import AdminKpiGrid from '../components/admin/AdminKpiGrid'
-import BranchRankList from '../components/admin/BranchRankList'
-import AdminCharts from '../components/admin/AdminCharts'
-import ReportAuditRow from '../components/admin/ReportAuditRow'
+import GrillaKpiAdmin from '../components/admin/GrillaKpiAdmin'
+import ListaRankingSucursales from '../components/admin/ListaRankingSucursales'
+import GraficosAdmin from '../components/admin/GraficosAdmin'
+import FilaAuditoriaReporte from '../components/admin/FilaAuditoriaReporte'
 
 type ReportesPageProps = {
   rol?: string
@@ -137,19 +137,19 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
         </div>
 
         {/* Componente extraído de KPIs Rápidos */}
-        <AdminKpiGrid ventaTotalGlobal={ventaTotalGlobal} sucursalTop={sucursalTop} />
+        <GrillaKpiAdmin ventaTotalGlobal={ventaTotalGlobal} sucursalTop={sucursalTop} />
 
         {/* --- SECCION DE GRAFICOS Y DESEMPEÑO --- */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '20px', marginBottom: '30px' }}>
           
           {/* Componente extraído de Ranking de Sucursales */}
-          <BranchRankList 
+          <ListaRankingSucursales 
             analiticaSucursales={analiticaSucursales} 
             sucursalTop={sucursalTop} 
             colores={COLORES} 
           />
 
-          <AdminCharts 
+          <GraficosAdmin 
             analiticaStockSucursales={analiticaStockSucursales}
             analiticaCategorias={analiticaCategorias}
             colores={COLORES}
@@ -171,7 +171,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
             </div>
 
             {plantillas.map((p) => (
-              <ReportAuditRow
+              <FilaAuditoriaReporte
                 key={p.id}
                 reporte={p}
                 isExpandido={idPlantillaExpandida === p.id}

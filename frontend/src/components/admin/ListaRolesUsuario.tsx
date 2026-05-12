@@ -5,7 +5,7 @@ type UserRoleListProps = {
   cambiarRolUsuarioExterno: (id: number, nuevoRol: string) => void;
 };
 
-export default function UserRoleList({ usuariosDb, cambiarRolUsuarioExterno }: UserRoleListProps) {
+export default function ListaRolesUsuario({ usuariosDb, cambiarRolUsuarioExterno }: UserRoleListProps) {
   return (
     <section className="tarjeta-panel">
       <h3>Gestión de Usuarios (Control de Acceso)</h3>

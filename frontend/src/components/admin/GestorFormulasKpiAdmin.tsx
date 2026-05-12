@@ -10,7 +10,7 @@ type AdminKpiFormulaManagerProps = {
   mensajeKpi: string;
 };
 
-export default function AdminKpiFormulaManager({
+export default function GestorFormulasKpiAdmin({
   kpiSeleccionadoId,
   setKpiSeleccionadoId,
   kpis,

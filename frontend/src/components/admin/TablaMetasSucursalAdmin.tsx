@@ -11,7 +11,7 @@ type AdminBranchMetaTableProps = {
   mensaje: string;
 };
 
-export default function AdminBranchMetaTable({
+export default function TablaMetasSucursalAdmin({
   sucursales,
   resumenVentas,
   actualizarMeta,

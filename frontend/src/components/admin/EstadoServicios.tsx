@@ -7,7 +7,7 @@ type ServiceHealthCheckProps = {
   estadoServicios: EstadoServicio[];
 };
 
-export default function ServiceHealthCheck({ estadoServicios }: ServiceHealthCheckProps) {
+export default function EstadoServicios({ estadoServicios }: ServiceHealthCheckProps) {
   return (
     <section className="tarjeta-panel">
       <h3>Estado de Microservicios (Health Check)</h3>

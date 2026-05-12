@@ -20,7 +20,7 @@ type AdminChartsProps = {
   colores: string[];
 };
 
-export default function AdminCharts({ 
+export default function GraficosAdmin({ 
   analiticaStockSucursales, 
   analiticaCategorias, 
   colores 

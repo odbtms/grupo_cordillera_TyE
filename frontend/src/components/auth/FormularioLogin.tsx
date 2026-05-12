@@ -8,7 +8,7 @@ type AuthLoginFormProps = {
   setMensajeExito: (mssg: string) => void;
 };
 
-export default function AuthLoginForm({ onLoginExitoso, setMensajeError, setMensajeExito }: AuthLoginFormProps) {
+export default function FormularioLogin({ onLoginExitoso, setMensajeError, setMensajeExito }: AuthLoginFormProps) {
   const [usuario, setUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [cargando, setCargando] = useState(false);

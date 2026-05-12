@@ -10,7 +10,7 @@ type ReportRowProps = {
   stock: StockItem[];
 };
 
-export default function ReportAuditRow({
+export default function FilaAuditoriaReporte({
   reporte,
   isExpandido,
   onToggle,

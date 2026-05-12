@@ -16,7 +16,7 @@ type DashboardConsolidatedProps = {
   kpis: Kpi[];
 };
 
-export default function DashboardConsolidated({
+export default function ConsolidadoDashboard({
   graficoConsolidado,
   ventasTotales,
   rendimientoSucursales,

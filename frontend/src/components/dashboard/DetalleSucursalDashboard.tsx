@@ -20,7 +20,7 @@ type DashboardBranchDetailProps = {
   ventasAnalisis: number;
 };
 
-export default function DashboardBranchDetail({
+export default function DetalleSucursalDashboard({
   sucursalActiva,
   setSucursalActiva,
   serieSucursalActiva,

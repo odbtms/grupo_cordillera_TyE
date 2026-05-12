@@ -6,7 +6,7 @@ type BranchRankListProps = {
   colores: string[]
 }
 
-export default function BranchRankList({ analiticaSucursales, sucursalTop, colores }: BranchRankListProps) {
+export default function ListaRankingSucursales({ analiticaSucursales, sucursalTop, colores }: BranchRankListProps) {
   return (
     <article className="tarjeta-resumen" style={{ background: 'white' }}>
       <h3>Mejor Rendimiento</h3>

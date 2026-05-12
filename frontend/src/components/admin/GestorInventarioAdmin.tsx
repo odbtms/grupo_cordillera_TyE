@@ -15,7 +15,7 @@ type AdminStockManagerProps = {
   mensajeStock: string;
 };
 
-export default function AdminStockManager({
+export default function GestorInventarioAdmin({
   nuevoStock,
   setNuevoStock,
   sucursales,

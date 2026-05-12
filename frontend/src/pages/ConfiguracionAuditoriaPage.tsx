@@ -9,7 +9,7 @@ import {
   validarToken,
 } from '../api'
 import type { Usuario } from '../api'
-import { UserProfileManager, UserRoleList, ServiceHealthCheck } from '../components'
+import { AdministradorPerfilUsuario, ListaRolesUsuario, EstadoServicios } from '../components'
 
 type EstadoServicio = {
   nombre: string
@@ -109,7 +109,7 @@ function ConfiguracionAuditoriaPage({
         <p>Control de sesión y estado de integración backend</p>
       </div>
 
-      <UserProfileManager
+      <AdministradorPerfilUsuario
         usuario={usuario}
         rol={rol}
         token={token}
@@ -120,12 +120,12 @@ function ConfiguracionAuditoriaPage({
         onCerrarSesion={onCerrarSesion}
       />
 
-      <UserRoleList
+      <ListaRolesUsuario
         usuariosDb={usuariosDb}
         cambiarRolUsuarioExterno={cambiarRolUsuarioExterno}
       />
 
-      <ServiceHealthCheck
+      <EstadoServicios
         estadoServicios={estadoServicios}
       />
     </section>

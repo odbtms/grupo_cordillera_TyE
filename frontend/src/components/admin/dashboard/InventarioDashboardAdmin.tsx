@@ -5,7 +5,7 @@ type AdminDashboardInventarioProps = {
   filtroSucursal: string;
 };
 
-export default function AdminDashboardInventario({ stock, filtroSucursal }: AdminDashboardInventarioProps) {
+export default function InventarioDashboardAdmin({ stock, filtroSucursal }: AdminDashboardInventarioProps) {
   const stockFiltrado = stock.filter(item => {
     if (filtroSucursal === 'Todas') return true;
     const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");

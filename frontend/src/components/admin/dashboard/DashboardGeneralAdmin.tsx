@@ -16,7 +16,7 @@ type AdminDashboardGeneralProps = {
   alertas: string[];
 };
 
-export default function AdminDashboardGeneral({
+export default function DashboardGeneralAdmin({
   ventasTotales,
   ventasCount,
   datosSucursales,

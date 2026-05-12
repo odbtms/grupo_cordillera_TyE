@@ -19,7 +19,7 @@ type DashboardMiniBranchesProps = {
   inicioPagina: number;
 };
 
-export default function DashboardMiniBranches({
+export default function MiniaturasSucursalesDashboard({
   tarjetasVisibles,
   paginaSucursales,
   totalPaginasSucursales,

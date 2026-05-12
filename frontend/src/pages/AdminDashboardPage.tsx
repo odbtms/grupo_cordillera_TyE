@@ -4,10 +4,10 @@ import type { ItemCatalogoSucursal, Kpi, Venta, StockItem } from '../types'
 import { monthLabelFormatter } from '../utils/formatters'
 import { BRANCH_ZONE_MAP } from '../constants/dashboardConfig'
 import { 
-  AdminDashboardGeneral, 
-  AdminDashboardFiltros, 
-  AdminDashboardResumenVentas, 
-  AdminDashboardInventario 
+  DashboardGeneralAdmin, 
+  FiltrosDashboardAdmin, 
+  ResumenVentasDashboardAdmin, 
+  InventarioDashboardAdmin 
 } from '../components'
 
 function claveMes(textoFecha: string): string {
@@ -225,7 +225,7 @@ function AdminDashboardPage() {
         </p>
       </header>
 
-      <AdminDashboardGeneral
+      <DashboardGeneralAdmin
         ventasTotales={ventasTotales}
         ventasCount={ventas.length}
         datosSucursales={datosSucursales}
@@ -241,7 +241,7 @@ function AdminDashboardPage() {
           <p>Analisis basico por sucursal con filtros.</p>
         </div>
 
-        <AdminDashboardFiltros
+        <FiltrosDashboardAdmin
           fechaDesde={fechaDesde}
           setFechaDesde={setFechaDesde}
           fechaHasta={fechaHasta}
@@ -258,7 +258,7 @@ function AdminDashboardPage() {
           totalFiltrado={totalFiltrado}
         />
 
-        <AdminDashboardResumenVentas
+        <ResumenVentasDashboardAdmin
           catalogoFiltrado={catalogoFiltrado}
           datosSucursalesFiltrados={datosSucursalesFiltrados}
           maxVentaSucursalFiltrada={maxVentaSucursalFiltrada}
@@ -267,7 +267,7 @@ function AdminDashboardPage() {
         />
       </section>
 
-      <AdminDashboardInventario
+      <InventarioDashboardAdmin
         stock={stock}
         filtroSucursal={filtroSucursal}
       />

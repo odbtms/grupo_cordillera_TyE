@@ -9,7 +9,7 @@ type UserProfileManagerProps = {
   onCerrarSesion: () => void;
 };
 
-export default function UserProfileManager({
+export default function AdministradorPerfilUsuario({
   usuario,
   rol,
   token,

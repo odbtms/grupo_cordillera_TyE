@@ -5,7 +5,7 @@ type AdminKpiGridProps = {
   sucursalTop: { name: string; value: number }
 }
 
-export default function AdminKpiGrid({ ventaTotalGlobal, sucursalTop }: AdminKpiGridProps) {
+export default function GrillaKpiAdmin({ ventaTotalGlobal, sucursalTop }: AdminKpiGridProps) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '30px' }}>
       <article className="tarjeta-resumen" style={{ borderLeft: '5px solid #0f766e' }}>

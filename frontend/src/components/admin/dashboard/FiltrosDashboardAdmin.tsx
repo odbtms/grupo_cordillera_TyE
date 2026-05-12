@@ -18,7 +18,7 @@ type AdminDashboardFiltrosProps = {
   totalFiltrado: number;
 };
 
-export default function AdminDashboardFiltros({
+export default function FiltrosDashboardAdmin({
   fechaDesde, setFechaDesde,
   fechaHasta, setFechaHasta,
   filtroZona, setFiltroZona, opcionesZona,

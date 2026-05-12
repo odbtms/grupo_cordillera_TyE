@@ -5,9 +5,9 @@ import {
   AdminFormularioVenta,
   FormularioNuevoEmpleado,
   FormularioNuevaSucursal,
-  AdminBranchMetaTable,
-  AdminStockManager,
-  AdminKpiFormulaManager
+  TablaMetasSucursalAdmin,
+  GestorInventarioAdmin,
+  GestorFormulasKpiAdmin
 } from '../components'
 
 type Sucursal = {
@@ -354,7 +354,7 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
         mensajeSucursal={mensajeSucursal}
       />
 
-      <AdminBranchMetaTable 
+      <TablaMetasSucursalAdmin 
         sucursales={sucursales}
         resumenVentas={resumenVentas}
         actualizarMeta={actualizarMeta}
@@ -374,7 +374,7 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
         mensajeVenta={mensajeVenta}
       />
 
-      <AdminKpiFormulaManager 
+      <GestorFormulasKpiAdmin 
         kpiSeleccionadoId={kpiSeleccionadoId}
         setKpiSeleccionadoId={setKpiSeleccionadoId}
         kpis={kpis}
@@ -392,7 +392,7 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
         mensajeEmpleado={mensajeEmpleado}
       />
 
-      <AdminStockManager 
+      <GestorInventarioAdmin 
         nuevoStock={nuevoStock}
         setNuevoStock={setNuevoStock}
         sucursales={sucursales}

@@ -21,7 +21,7 @@ type AdminDashboardResumenVentasProps = {
   setFiltroSucursal: (val: string) => void;
 };
 
-export default function AdminDashboardResumenVentas({
+export default function ResumenVentasDashboardAdmin({
   catalogoFiltrado,
   datosSucursalesFiltrados,
   maxVentaSucursalFiltrada,

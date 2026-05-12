@@ -7,7 +7,7 @@ type AuthRegisterFormProps = {
   setMensajeExito: (mssg: string) => void;
 };
 
-export default function AuthRegisterForm({ onLoginExitoso, setMensajeError, setMensajeExito }: AuthRegisterFormProps) {
+export default function FormularioRegistro({ onLoginExitoso, setMensajeError, setMensajeExito }: AuthRegisterFormProps) {
   const [usuarioRegistro, setUsuarioRegistro] = useState('');
   const [correoRegistro, setCorreoRegistro] = useState('');
   const [contrasenaRegistro, setContrasenaRegistro] = useState('');

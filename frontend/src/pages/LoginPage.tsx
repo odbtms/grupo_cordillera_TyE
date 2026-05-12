@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AuthLoginForm, AuthRegisterForm } from '../components'
+import { FormularioLogin, FormularioRegistro } from '../components'
 
 type LoginPageProps = {
   onLoginExitoso: (
@@ -19,12 +19,12 @@ function LoginPage({ onLoginExitoso }: LoginPageProps) {
     <main className="pagina-login">
       <section className={`auth-contenedor ${modo === 'register' ? 'modo-register' : ''}`}>
         <div className="auth-panel-base">
-          <AuthLoginForm 
+          <FormularioLogin 
             onLoginExitoso={onLoginExitoso}
             setMensajeError={setMensajeError}
             setMensajeExito={setMensajeExito}
           />
-          <AuthRegisterForm 
+          <FormularioRegistro 
             onLoginExitoso={onLoginExitoso}
             setMensajeError={setMensajeError}
             setMensajeExito={setMensajeExito}
