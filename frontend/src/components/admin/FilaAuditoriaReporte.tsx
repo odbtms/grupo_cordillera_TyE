@@ -11,6 +11,15 @@ type ReportRowProps = {
   plantillas?: { id?: number; titulo: string; estado: string }[];
 };
 
+// Parsea el JSON guardado en "estado" cuando el empleado envió el reporte
+function parseMeta(estado: string): { maxVentaId: number; maxStockId: number; prevMaxVentaId: number; prevMaxStockId: number } | null {
+  try {
+    return JSON.parse(estado);
+  } catch {
+    return null;
+  }
+}
+
 export default function FilaAuditoriaReporte({
   reporte,
   isExpandido,
@@ -21,10 +30,18 @@ export default function FilaAuditoriaReporte({
   plantillas = []
 }: ReportRowProps) {
   const sucursalNombre = reporte.titulo.replace('Reporte Sucursal ', '').trim();
-  const isISO = reporte.estado.includes('T');
-  let fechaReporteDisplay = reporte.estado;
 
-  if (isISO) {
+  // Mostrar fecha de forma amigable si el estado trae JSON con fechaISO
+  let fechaReporteDisplay = reporte.estado;
+  const meta = parseMeta(reporte.estado);
+  if (meta && (meta as any).fechaISO) {
+    const d = new Date((meta as any).fechaISO);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    fechaReporteDisplay = `${dd}-${mm} ${hh}:${min}`;
+  } else if (reporte.estado.includes('T')) {
     const d = new Date(reporte.estado);
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -33,52 +50,50 @@ export default function FilaAuditoriaReporte({
     fechaReporteDisplay = `${dd}-${mm} ${hh}:${min}`;
   }
 
-  // Find boundaries for this specific report
-  const reportesSucursal = plantillas
-    .filter(p => p.titulo === reporte.titulo && p.estado.includes('T'))
-    .sort((a, b) => new Date(a.estado).getTime() - new Date(b.estado).getTime());
-  
-  const miIndex = reportesSucursal.findIndex(p => p.id === reporte.id);
-  const reporteAnterior = miIndex > 0 ? reportesSucursal[miIndex - 1] : null;
+  // --- FILTRADO POR ID (sin fechas, sin zonas horarias) ---
+  let ventasFiltradas: Venta[] = [];
+  let stockFiltrado: StockItem[] = [];
 
-  const fechaInicio = reporteAnterior ? new Date(reporteAnterior.estado).getTime() : 0;
-  const fechaFin = isISO ? new Date(reporte.estado).getTime() : Infinity;
+  if (meta) {
+    // Reporte nuevo con metadata de IDs
+    // Buscar el reporte anterior de la misma sucursal para obtener el límite inferior
+    const reportesSucursal = plantillas
+      .filter(p => p.titulo === reporte.titulo)
+      .sort((a, b) => (a.id || 0) - (b.id || 0));
 
-  // Normalización de fechas para el filtrado
-  const filtrarPorFecha = (fechaISO: any) => {
-    if (!fechaISO) return false;
-    let date;
-    if (Array.isArray(fechaISO) && fechaISO.length >= 3) {
-      // Spring Boot LocalDateTime as array: [YYYY, MM, DD, hh, mm, ss]
-      date = new Date(fechaISO[0], fechaISO[1] - 1, fechaISO[2], fechaISO[3] || 0, fechaISO[4] || 0, fechaISO[5] || 0);
-    } else {
-      date = new Date(fechaISO);
-    }
-    if (isNaN(date.getTime())) return false;
-    
-    if (isISO) {
-      const t = date.getTime();
-      return t > fechaInicio && t <= fechaFin;
-    } else {
-      // Comportamiento legado (comparamos DD-MM)
-      const dd = String(date.getDate()).padStart(2, '0');
-      const mm = String(date.getMonth() + 1).padStart(2, '0');
-      return `${dd}-${mm}` === reporte.estado;
-    }
-  };
+    const miIndex = reportesSucursal.findIndex(p => p.id === reporte.id);
+    const reporteAnterior = miIndex > 0 ? reportesSucursal[miIndex - 1] : null;
+    const metaAnterior = reporteAnterior ? parseMeta(reporteAnterior.estado) : null;
 
-  const ventasFiltradas = ventas.filter(v => v.sucursal === sucursalNombre && filtrarPorFecha(v.fechaVenta));
-  const stockFiltrado = stock.filter(s => s.sucursal === sucursalNombre && filtrarPorFecha(s.fechaRegistro));
+    const prevMaxVentaId = metaAnterior ? metaAnterior.maxVentaId : 0;
+    const prevMaxStockId = metaAnterior ? metaAnterior.maxStockId : 0;
+
+    ventasFiltradas = ventas.filter(v =>
+      v.sucursal === sucursalNombre &&
+      v.id > prevMaxVentaId &&
+      v.id <= meta.maxVentaId
+    );
+
+    stockFiltrado = stock.filter(s =>
+      s.sucursal === sucursalNombre &&
+      s.id > prevMaxStockId &&
+      s.id <= meta.maxStockId
+    );
+  } else {
+    // Reporte antiguo (formato legado con ISO string o DD-MM) — mostrar todo de la sucursal
+    ventasFiltradas = ventas.filter(v => v.sucursal === sucursalNombre);
+    stockFiltrado = stock.filter(s => s.sucursal === sucursalNombre);
+  }
 
   return (
     <div style={{ borderBottom: '1px solid #e2e8f0' }}>
-      <div 
-        className="fila" 
-        style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '2fr 1fr 1fr', 
-          alignItems: 'center', 
-          cursor: 'pointer', 
+      <div
+        className="fila"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr 1fr',
+          alignItems: 'center',
+          cursor: 'pointer',
           background: isExpandido ? '#f8fafc' : 'white',
           padding: '12px'
         }}
@@ -87,16 +102,16 @@ export default function FilaAuditoriaReporte({
         <span style={{ fontWeight: 'bold' }}>{sucursalNombre}</span>
         <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{fechaReporteDisplay}</span>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-          <button 
+          <button
             className="btn-primario"
             style={{ background: isExpandido ? '#64748b' : '#2563eb', padding: '5px 12px', minWidth: '80px' }}
           >
             {isExpandido ? 'Cerrar' : 'Revisar ↓'}
           </button>
-          <button 
+          <button
             className="btn-peligro"
             style={{ background: '#ef4444', padding: '5px 12px' }}
-            onClick={(e) => { e.stopPropagation(); if(reporte.id) onEliminar(reporte.id); }}
+            onClick={(e) => { e.stopPropagation(); if (reporte.id) onEliminar(reporte.id); }}
           >
             Eliminar
           </button>
@@ -106,7 +121,7 @@ export default function FilaAuditoriaReporte({
       {isExpandido && (
         <div style={{ padding: '20px', background: '#f8fafc', borderTop: '2px solid #2563eb' }}>
           <h4 style={{ marginBottom: '20px' }}>📄 Auditoría Detallada: {sucursalNombre} ({fechaReporteDisplay})</h4>
-          
+
           <div style={{ display: 'grid', gap: '30px' }}>
             <article>
               <h5 style={{ color: '#2563eb', marginBottom: '10px' }}>Ventas del Día</h5>
@@ -131,7 +146,7 @@ export default function FilaAuditoriaReporte({
                     </div>
                   ))}
                 </div>
-              ) : <p>No se encontraron registros de ventas para esta fecha.</p>}
+              ) : <p>No se encontraron registros de ventas para este reporte.</p>}
             </article>
 
             <article>
@@ -155,7 +170,7 @@ export default function FilaAuditoriaReporte({
                     </div>
                   ))}
                 </div>
-              ) : <p>No se encontraron movimientos de stock para esta fecha.</p>}
+              ) : <p>No se encontraron movimientos de stock para este reporte.</p>}
             </article>
           </div>
         </div>

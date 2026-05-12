@@ -98,20 +98,40 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
 
   const sucursalTop = useMemo(() => analiticaSucursales[0] || { name: '-', value: 0 }, [analiticaSucursales])
 
+  // --- FUNCIONES AUXILIARES PARA METADATA ---
+  const parseMetadata = (estado: string) => {
+    try {
+      return JSON.parse(estado);
+    } catch {
+      return null; // Reportes antiguos no usarán esta lógica
+    }
+  };
+
   const ultimoReporte = useMemo(() => {
     return plantillas
-      .filter(p => p.titulo === `Reporte Sucursal ${sucursalAsignada}` && p.estado.includes('T'))
-      .sort((a, b) => new Date(b.estado).getTime() - new Date(a.estado).getTime())[0]
+      .filter(p => p.titulo === `Reporte Sucursal ${sucursalAsignada}` && p.estado.includes('{'))
+      .sort((a, b) => (b.id || 0) - (a.id || 0))[0]
   }, [plantillas, sucursalAsignada])
 
   // --- FUNCION DE ENVIO ---
   async function enviarReporteDiario() {
     try {
+      const ventasSucursal = ventas.filter(v => v.sucursal === sucursalAsignada);
+      const stockSucursal = stock.filter(s => s.sucursal === sucursalAsignada);
+      
+      const maxVentaId = ventasSucursal.length > 0 ? Math.max(...ventasSucursal.map(v => v.id)) : 0;
+      const maxStockId = stockSucursal.length > 0 ? Math.max(...stockSucursal.map(s => s.id)) : 0;
+      
       const isoEstado = new Date().toISOString()
+      const estadoData = JSON.stringify({
+        maxVentaId,
+        maxStockId,
+        fechaISO: isoEstado
+      });
       
       await crearPlantillaReporte({
         titulo: `Reporte Sucursal ${sucursalAsignada}`,
-        estado: isoEstado
+        estado: estadoData
       })
       
       mostrarMensaje(`Reporte de ${sucursalAsignada} enviado con éxito al administrador.`)
@@ -128,14 +148,9 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     return ventas.filter(v => {
       if (v.sucursal !== sucursalAsignada) return false;
       if (!ultimoReporte) return true;
-      let date;
-      if (Array.isArray(v.fechaVenta) && v.fechaVenta.length >= 3) {
-        date = new Date(v.fechaVenta[0], v.fechaVenta[1] - 1, v.fechaVenta[2], v.fechaVenta[3] || 0, v.fechaVenta[4] || 0, v.fechaVenta[5] || 0);
-      } else {
-        date = new Date(v.fechaVenta);
-      }
-      if (isNaN(date.getTime())) return false;
-      return date.getTime() > new Date(ultimoReporte.estado).getTime();
+      const meta = parseMetadata(ultimoReporte.estado);
+      if (!meta) return true;
+      return v.id > meta.maxVentaId;
     });
   }, [ventas, sucursalAsignada, ultimoReporte])
 
@@ -143,14 +158,9 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     return stock.filter(s => {
       if (s.sucursal !== sucursalAsignada) return false;
       if (!ultimoReporte) return true;
-      let date;
-      if (Array.isArray(s.fechaRegistro) && s.fechaRegistro.length >= 3) {
-        date = new Date(s.fechaRegistro[0], s.fechaRegistro[1] - 1, s.fechaRegistro[2], s.fechaRegistro[3] || 0, s.fechaRegistro[4] || 0, s.fechaRegistro[5] || 0);
-      } else {
-        date = new Date(s.fechaRegistro || '');
-      }
-      if (isNaN(date.getTime())) return false;
-      return date.getTime() > new Date(ultimoReporte.estado).getTime();
+      const meta = parseMetadata(ultimoReporte.estado);
+      if (!meta) return true;
+      return s.id > meta.maxStockId;
     });
   }, [stock, sucursalAsignada, ultimoReporte])
 
@@ -297,7 +307,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
               <span>Venta Total</span>
             </div>
             {ventasEmpleado
-              .sort((a, b) => new Date(b.fechaVenta).getTime() - new Date(a.fechaVenta).getTime())
+              .sort((a, b) => b.id - a.id)
               .map((v, i) => (
                 <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
                   <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{v.vendedor || 'Admin'}</span>
@@ -322,6 +332,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
               <span>Precio Unitario</span>
             </div>
             {stockEmpleado
+              .sort((a, b) => b.id - a.id)
               .map((s, i) => (
                 <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
                   <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{s.vendedor || 'Sistema'}</span>
