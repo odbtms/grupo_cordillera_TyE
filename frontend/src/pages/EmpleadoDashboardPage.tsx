@@ -130,7 +130,6 @@ function EmpleadoDashboardPage({
     try {
       await Promise.all(carrito.map(item => 
         registrarVenta({
-          fechaVenta: new Date().toISOString(),
           montoTotal: item.subtotal,
           sistemaOrigen: nuevaVenta.sistemaOrigen,
           sucursal: sucursalAsignada,

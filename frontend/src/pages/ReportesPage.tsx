@@ -143,7 +143,12 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
     return stock.filter(s => {
       if (s.sucursal !== sucursalAsignada) return false;
       if (!ultimoReporte) return true;
-      const date = new Date(s.fechaRegistro || '');
+      let date;
+      if (Array.isArray(s.fechaRegistro) && s.fechaRegistro.length >= 3) {
+        date = new Date(s.fechaRegistro[0], s.fechaRegistro[1] - 1, s.fechaRegistro[2], s.fechaRegistro[3] || 0, s.fechaRegistro[4] || 0, s.fechaRegistro[5] || 0);
+      } else {
+        date = new Date(s.fechaRegistro || '');
+      }
       if (isNaN(date.getTime())) return true;
       return date.getTime() > new Date(ultimoReporte.estado).getTime();
     });
@@ -309,23 +314,21 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
         <section className="tarjeta-panel">
           <h3 style={{ color: '#0f766e', marginBottom: '15px' }}>Auditoría de Stock (Ingresos)</h3>
           <div className="tabla-simple">
-            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
+            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
               <span>Empleado</span>
               <span>Categoría</span>
               <span>Producto</span>
               <span>Stock</span>
               <span>Precio Unitario</span>
-              <span>Venta Total</span>
             </div>
             {stockEmpleado
               .map((s, i) => (
-                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
+                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
                   <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{s.vendedor || 'Sistema'}</span>
                   <span>{s.categoria}</span>
                   <span>{s.producto}</span>
                   <strong>{s.cantidad}</strong>
                   <span>{FORMATO_MONEDA.format(s.precioUnitario || 0)}</span>
-                  <span style={{ fontWeight: 'bold', color: '#0f766e' }}>{FORMATO_MONEDA.format((s.precioUnitario || 0) * (s.cantidad || 0))}</span>
                 </div>
               ))}
           </div>

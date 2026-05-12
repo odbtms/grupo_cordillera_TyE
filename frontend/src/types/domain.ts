@@ -1,6 +1,6 @@
 export type Venta = {
   id: number
-  fechaVenta: string
+  fechaVenta?: any
   montoTotal: number
   cantidad?: number
   precioUnitario?: number

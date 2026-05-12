@@ -138,22 +138,20 @@ export default function FilaAuditoriaReporte({
               <h5 style={{ color: '#0f766e', marginBottom: '10px' }}>Stock Registrado/Actualizado</h5>
               {stockFiltrado.length > 0 ? (
                 <div className="tabla-simple">
-                  <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
+                  <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
                     <span>Responsable</span>
                     <span>Categoría</span>
                     <span>Producto</span>
                     <span>Stock</span>
                     <span>P. Unit</span>
-                    <span>Valor Est.</span>
                   </div>
                   {stockFiltrado.map((s, i) => (
-                    <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
+                    <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
                       <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{s.vendedor || 'Sistema'}</span>
                       <span>{s.categoria || 'VARIOS'}</span>
                       <span>{s.producto}</span>
                       <strong>{s.cantidad}</strong>
                       <span>{FORMATO_MONEDA.format(s.precioUnitario || 0)}</span>
-                      <span style={{ fontWeight: 'bold', color: '#0f766e' }}>{FORMATO_MONEDA.format((s.precioUnitario || 0) * (s.cantidad || 0))}</span>
                     </div>
                   ))}
                 </div>
