@@ -149,7 +149,7 @@ function App() {
     <AdminLayout>
       <main className="aplicacion-contenedor">
         <aside className="menu-lateral">
-          <h2>Panel Admin</h2>
+          <h2>Panel Empleado</h2>
           <p>{usuario}</p>
           {esEmpleadoTienda && sucursal && <p>Sucursal: {sucursal}</p>}
 

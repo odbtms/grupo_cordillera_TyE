@@ -31,7 +31,6 @@ export default function FormularioStock({
           >
             <option value="HOGAR">HOGAR</option>
             <option value="ELECTRONICA">ELECTRONICA</option>
-            <option value="VARIOS">VARIOS</option>
           </select>
         </label>
         <label>
