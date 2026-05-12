@@ -134,7 +134,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       } else {
         date = new Date(v.fechaVenta);
       }
-      if (isNaN(date.getTime())) return true;
+      if (isNaN(date.getTime())) return false;
       return date.getTime() > new Date(ultimoReporte.estado).getTime();
     });
   }, [ventas, sucursalAsignada, ultimoReporte])
@@ -149,7 +149,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
       } else {
         date = new Date(s.fechaRegistro || '');
       }
-      if (isNaN(date.getTime())) return true;
+      if (isNaN(date.getTime())) return false;
       return date.getTime() > new Date(ultimoReporte.estado).getTime();
     });
   }, [stock, sucursalAsignada, ultimoReporte])
