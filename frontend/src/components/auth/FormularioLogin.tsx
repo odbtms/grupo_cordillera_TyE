@@ -38,7 +38,7 @@ export default function FormularioLogin({ onLoginExitoso, setMensajeError, setMe
         respuesta.sucursal,
       );
     } catch (error) {
-      const mensajeGenerico = 'No se pudo iniciar sesión. Verifique credenciales o conexión con ms-auth.';
+      const mensajeGenerico = 'No se pudo iniciar sesión. Verifique credenciales o la conexión.';
       if (typeof error === 'object' && error !== null && 'message' in error) {
         setMensajeError(String(error.message) || mensajeGenerico);
       } else {
