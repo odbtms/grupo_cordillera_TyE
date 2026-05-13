@@ -1,5 +1,7 @@
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { FORMATO_MONEDA, FORMATO_COMPACTO } from '../../utils/formatters';
+import type { StockItem } from '../../types';
+import TablaStock from '../empleado/TablaStock';
 
 type SerieMes = { periodo: string; total: number };
 
@@ -18,6 +20,7 @@ type DashboardBranchDetailProps = {
   periodoAnalisis: string;
   resumenSucursalActiva: ResumenActiva | null;
   ventasAnalisis: number;
+  stockSucursal: StockItem[];
 };
 
 export default function DetalleSucursalDashboard({
@@ -28,6 +31,7 @@ export default function DetalleSucursalDashboard({
   periodoAnalisis,
   resumenSucursalActiva,
   ventasAnalisis,
+  stockSucursal,
 }: DashboardBranchDetailProps) {
   return (
     <>
@@ -113,6 +117,8 @@ export default function DetalleSucursalDashboard({
           </article>
         </div>
       </section>
+
+      <TablaStock stock={stockSucursal} />
     </>
   );
 }

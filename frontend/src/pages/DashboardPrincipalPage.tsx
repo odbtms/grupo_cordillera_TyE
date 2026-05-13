@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { obtenerDashboard } from '../api'
-import type { Kpi, Venta } from '../types'
+import { obtenerStock } from '../api/stockApi'
+import type { Kpi, Venta, StockItem } from '../types'
 import { normalizarTexto } from '../utils/formatters'
 import { TARJETAS_POR_PAGINA } from '../constants/dashboardConfig'
 import {
@@ -13,6 +14,7 @@ function DashboardPrincipalPage() {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [kpis, setKpis] = useState<Kpi[]>([])
   const [alertas, setAlertas] = useState<string[]>([])
+  const [stock, setStock] = useState<StockItem[]>([])
   const [cargando, setCargando] = useState(false)
   const [mensajeError, setMensajeError] = useState('')
   const [paginaSucursales, setPaginaSucursales] = useState(0)
@@ -32,6 +34,9 @@ function DashboardPrincipalPage() {
         setVentas(mergedVentas)
         setKpis(mergedKpis)
         setAlertas(respuesta.alertas)
+
+        const stockData = await obtenerStock()
+        setStock(Array.isArray(stockData) ? stockData : [])
       } catch {
         setVentas([])
         setKpis([])
@@ -238,6 +243,7 @@ function DashboardPrincipalPage() {
           periodoAnalisis={periodoAnalisis}
           resumenSucursalActiva={resumenSucursalActiva}
           ventasAnalisis={ventasAnalisis}
+          stockSucursal={stock.filter(s => normalizarTexto(s.sucursal) === normalizarTexto(sucursalActiva))}
         />
       ) : (
         <ConsolidadoDashboard
