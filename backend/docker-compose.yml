@@ -33,7 +33,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com:5432/bd_reportes
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com:5432/bd_reporte
       - SPRING_DATASOURCE_USERNAME=admin3
       - SPRING_DATASOURCE_PASSWORD=cordillera
 
