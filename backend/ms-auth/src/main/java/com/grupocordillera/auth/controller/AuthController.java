@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-
 /**
  * Controlador principal para la autenticación y gestión de usuarios.
  * Proporciona endpoints para iniciar sesión, registrarse, validar tokens
@@ -37,7 +36,8 @@ public class AuthController {
 
     /**
      * Endpoint para iniciar sesión.
-     * Valida las credenciales y, si son correctas, retorna un JWT junto a los datos básicos del usuario.
+     * Valida las credenciales y, si son correctas, retorna un JWT junto a los datos
+     * básicos del usuario.
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> iniciarSesion(@RequestBody LoginRequest credentials) {
@@ -59,7 +59,8 @@ public class AuthController {
 
     /**
      * Endpoint para registrar un nuevo usuario en el sistema.
-     * Valida que los datos obligatorios estén presentes y que el usuario o email no existan previamente.
+     * Valida que los datos obligatorios estén presentes y que el usuario o email no
+     * existan previamente.
      */
     @PostMapping("/register")
     public ResponseEntity<LoginResponse> registrarUsuario(@RequestBody RegisterRequest request) {
@@ -74,7 +75,8 @@ public class AuthController {
             return ResponseEntity.badRequest().build();
         }
 
-        // Verifica si ya existe un usuario con el mismo username o email para evitar duplicados (409 Conflict)
+        // Verifica si ya existe un usuario con el mismo username o email para evitar
+        // duplicados (409 Conflict)
         if (repository.findByUsername(request.username()).isPresent()) {
             return ResponseEntity.status(409).build();
         }
@@ -91,8 +93,8 @@ public class AuthController {
         usuario.setRol(request.rol() == null || request.rol().isBlank()
                 ? "EJECUTIVO"
                 : request.rol().trim().toUpperCase());
-        usuario.setSucursal(request.sucursal() == null || request.sucursal().isBlank() 
-                ? null 
+        usuario.setSucursal(request.sucursal() == null || request.sucursal().isBlank()
+                ? null
                 : request.sucursal().trim());
 
         // Guarda el usuario en la base de datos
@@ -109,7 +111,8 @@ public class AuthController {
     }
 
     /**
-     * Endpoint para validar si un token JWT enviado en el header Authorization es válido.
+     * Endpoint para validar si un token JWT enviado en el header Authorization es
+     * válido.
      */
     @GetMapping("/validar")
     public ResponseEntity<String> validarSesion(@RequestHeader("Authorization") String token) {
@@ -132,7 +135,8 @@ public class AuthController {
      */
     @PutMapping("/usuarios/{id}/rol")
     public Usuario actualizarRol(@PathVariable Long id, @RequestBody Usuario request) {
-        // Busca al usuario, actualiza el rol y lo guarda, o lanza excepción si no lo encuentra
+        // Busca al usuario, actualiza el rol y lo guarda, o lanza excepción si no lo
+        // encuentra
         return repository.findById(id).map(u -> {
             u.setRol(request.getRol());
             return repository.save(u);
