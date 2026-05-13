@@ -9,6 +9,7 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] }) as any
   ],
   test: {
+    globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
   },
