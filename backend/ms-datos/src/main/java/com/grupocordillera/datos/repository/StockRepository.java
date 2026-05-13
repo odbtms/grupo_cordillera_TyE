@@ -7,10 +7,21 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repositorio de acceso a datos para la entidad StockItem.
+ */
 @Repository
 public interface StockRepository extends JpaRepository<StockItem, Long> {
+    
+    /**
+     * Busca todos los registros de stock filtrando por sucursal (ignora mayúsculas).
+     */
     List<StockItem> findBySucursalIgnoreCase(String sucursal);
 
+    /**
+     * Busca un item de stock específico combinando sucursal, categoría y producto.
+     * Útil para validar existencias al realizar un upsert.
+     */
     Optional<StockItem> findBySucursalIgnoreCaseAndCategoriaIgnoreCaseAndProductoIgnoreCase(
             String sucursal,
             String categoria,

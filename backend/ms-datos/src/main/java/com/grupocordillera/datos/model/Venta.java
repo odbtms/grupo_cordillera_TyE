@@ -11,6 +11,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * Entidad que representa una Venta realizada en el sistema.
+ * Mapeada a la tabla "ventas" en la base de datos.
+ */
 @Entity
 @Table(name = "ventas")
 @Data
@@ -20,14 +24,14 @@ public class Venta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // Identificador único de la venta
 
-    private LocalDateTime fechaVenta;
+    private LocalDateTime fechaVenta; // Fecha y hora exacta en que ocurrió la venta
 
-    private Double montoTotal;
+    private Double montoTotal; // Monto total recaudado en la venta
 
     // Ej: "Punto de Venta 1", "Ecommerce"
-    private String sistemaOrigen;
+    private String sistemaOrigen; // Origen desde donde se registró la transacción
 
-    private String sucursal;
+    private String sucursal; // Sucursal donde se efectuó la venta
 }
