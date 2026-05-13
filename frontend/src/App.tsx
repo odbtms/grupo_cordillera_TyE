@@ -98,30 +98,30 @@ function App() {
 
   const opcionesMenu: Array<{ clave: PaginaSistema; texto: string }> = esEmpleadoTienda
     ? [
-        { clave: 'dashboard', texto: 'Dashboard principal' },
-        { clave: 'reportes', texto: 'Módulo de reportes' },
-      ]
+      { clave: 'dashboard', texto: 'Dashboard principal' },
+      { clave: 'reportes', texto: 'Módulo de reportes' },
+    ]
     : [
-        { clave: 'dashboard', texto: 'Dashboard principal' },
-        { clave: 'reportes', texto: 'Módulo de reportes' },
-        ...(esAdmin
-          ? ([
-              {
-                clave: 'gestion-organizacional',
-                texto: 'Gestión organizacional',
-              },
-            ] as Array<{ clave: PaginaSistema; texto: string }>)
-          : []),
-        {
-          clave: 'configuracion-auditoria',
-          texto: 'Configuración y auditoría',
-        },
-      ]
+      { clave: 'dashboard', texto: 'Dashboard principal' },
+      { clave: 'reportes', texto: 'Módulo de reportes' },
+      ...(esAdmin
+        ? ([
+          {
+            clave: 'gestion-organizacional',
+            texto: 'Gestión organizacional',
+          },
+        ] as Array<{ clave: PaginaSistema; texto: string }>)
+        : []),
+      {
+        clave: 'configuracion-auditoria',
+        texto: 'Configuración y auditoría',
+      },
+    ]
 
   let contenidoPagina = <DashboardPrincipalPage />
-  
+
   if (esEmpleadoTienda) {
-    contenidoPagina = sucursal 
+    contenidoPagina = sucursal
       ? <EmpleadoDashboardPage sucursalAsignada={sucursal} nombreUsuario={usuario} />
       : <div className="cargando-pantalla">Cargando sucursal asignada...</div>
   }
