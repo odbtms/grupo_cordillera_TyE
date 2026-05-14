@@ -70,10 +70,3 @@ services:
     ports:
       - "80:80"
 
-  ms-bff:
-    build:
-      context: ./ms-bff/ms-bff
-      dockerfile: Dockerfile
-    container_name: ms-bff
-    ports:
-      - "8085:8085"
