@@ -28,4 +28,7 @@ public class StockItem {
     private String categoria; // Categoría del producto (ej. Herramientas)
     private String producto; // Nombre del producto (ej. Taladro)
     private Integer cantidad; // Cantidad de unidades disponibles en stock
+    private Double precioUnitario;
+    private String vendedor;
+    private String fechaRegistro;
 }

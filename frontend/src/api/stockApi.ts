@@ -6,9 +6,12 @@ export type StockInput = {
   categoria: string
   producto: string
   cantidad: number
+  precioUnitario?: number
+  vendedor?: string
+  fechaRegistro?: string
 }
 
-export async function fetchStock(sucursal?: string): Promise<StockItem[]> {
+export async function obtenerStock(sucursal?: string): Promise<StockItem[]> {
   const { data } = await ventasHttp.get<StockItem[]>('/stock', {
     params: sucursal ? { sucursal } : undefined,
   })

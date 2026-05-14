@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import {
   actualizarRolUsuarioPorUsername,
-  createPlantillaReporte,
-  eliminarPlantillaReporte,
-  fetchKpis,
-  fetchVentas,
-  validateToken,
+  actualizarRolUsuario,
+  obtenerUsuarios,
+  obtenerPlantillasReporte,
+  obtenerKpis,
+  obtenerVentas,
+  validarToken,
 } from '../api'
+import type { Usuario } from '../api'
+import { AdministradorPerfilUsuario, ListaRolesUsuario, EstadoServicios } from '../components'
 
 type EstadoServicio = {
   nombre: string
@@ -26,10 +29,11 @@ function ConfiguracionAuditoriaPage({
   rol,
   onCerrarSesion,
 }: ConfiguracionAuditoriaPageProps) {
-  const [rolObjetivo, setRolObjetivo] = useState<'ADMIN' | 'EJECUTIVO'>(
-    rol.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'EJECUTIVO',
+  const [rolObjetivo, setRolObjetivo] = useState<'ADMIN' | 'EMPLEADO_TIENDA'>(
+    rol.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'EMPLEADO_TIENDA',
   )
   const [mensajeRol, setMensajeRol] = useState('')
+  const [usuariosDb, setUsuariosDb] = useState<Usuario[]>([])
 
   const [estadoServicios, setEstadoServicios] = useState<EstadoServicio[]>([
     { nombre: 'ms-auth', estado: 'sin-conexion' },
@@ -41,18 +45,11 @@ function ConfiguracionAuditoriaPage({
   useEffect(() => {
     async function validarServicios() {
       const resultados = await Promise.allSettled([
-        validateToken(token),
-        fetchVentas(),
-        fetchKpis(),
-        (async () => {
-          const temporal = await createPlantillaReporte({
-            titulo: 'healthcheck-temp',
-            configuracionVisual: 'healthcheck-temp',
-            estado: 'Activo',
-          })
-          await eliminarPlantillaReporte(temporal.id)
-          return true
-        })(),
+        validarToken(token),
+        obtenerVentas(),
+        obtenerKpis(),
+        obtenerPlantillasReporte(),
+        obtenerUsuarios()
       ])
 
       setEstadoServicios([
@@ -73,6 +70,10 @@ function ConfiguracionAuditoriaPage({
           estado: resultados[3].status === 'fulfilled' ? 'conectado' : 'sin-conexion',
         },
       ])
+
+      if (resultados[4].status === 'fulfilled') {
+        setUsuariosDb(resultados[4].value as Usuario[])
+      }
     }
 
     validarServicios()
@@ -82,9 +83,22 @@ function ConfiguracionAuditoriaPage({
     setMensajeRol('')
     try {
       await actualizarRolUsuarioPorUsername(usuario, rolObjetivo)
-      setMensajeRol(`Rol actualizado en ms-auth para ${usuario}.`)
+      setMensajeRol(`Rol actualizado para ti (${usuario}).`)
+      const lista = await obtenerUsuarios()
+      setUsuariosDb(lista)
     } catch {
-      setMensajeRol('No fue posible actualizar rol en ms-auth.')
+      setMensajeRol('Error al actualizar tu propio rol.')
+    }
+  }
+
+  async function cambiarRolUsuarioExterno(id: number, nuevoRol: string) {
+    try {
+      await actualizarRolUsuario(id, nuevoRol)
+      const lista = await obtenerUsuarios()
+      setUsuariosDb(lista)
+      alert('Rol de usuario actualizado correctamente.')
+    } catch {
+      alert('No se pudo cambiar el rol del usuario.')
     }
   }
 
@@ -95,51 +109,25 @@ function ConfiguracionAuditoriaPage({
         <p>Control de sesión y estado de integración backend</p>
       </div>
 
-      <section className="tarjeta-panel">
-        <h3>Perfil de usuario</h3>
-        <p>Usuario: {usuario}</p>
-        <p>Rol: {rol}</p>
-        <p>Token activo: {token ? 'Sí' : 'No'}</p>
+      <AdministradorPerfilUsuario
+        usuario={usuario}
+        rol={rol}
+        token={token}
+        rolObjetivo={rolObjetivo}
+        setRolObjetivo={setRolObjetivo}
+        guardarRol={guardarRol}
+        mensajeRol={mensajeRol}
+        onCerrarSesion={onCerrarSesion}
+      />
 
-        <div className="formulario-simple">
-          <label>
-            Cambiar rol (PUT ms-auth)
-            <select
-              value={rolObjetivo}
-              onChange={(evento) =>
-                setRolObjetivo(evento.target.value as 'ADMIN' | 'EJECUTIVO')
-              }
-            >
-              <option value="ADMIN">ADMIN</option>
-              <option value="EJECUTIVO">EJECUTIVO</option>
-            </select>
-          </label>
-          <button type="button" onClick={guardarRol}>
-            Actualizar rol
-          </button>
-        </div>
-        {mensajeRol && <p>{mensajeRol}</p>}
+      <ListaRolesUsuario
+        usuariosDb={usuariosDb}
+        cambiarRolUsuarioExterno={cambiarRolUsuarioExterno}
+      />
 
-        <button type="button" onClick={onCerrarSesion}>
-          Cerrar sesión
-        </button>
-      </section>
-
-      <section className="tarjeta-panel">
-        <h3>Health Check de servicios</h3>
-        <ul className="lista-servicios">
-          {estadoServicios.map((servicio) => (
-            <li key={servicio.nombre}>
-              <span
-                className={`estado-circulo ${
-                  servicio.estado === 'conectado' ? 'ok' : 'error'
-                }`}
-              />
-              {servicio.nombre} - {servicio.estado}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <EstadoServicios
+        estadoServicios={estadoServicios}
+      />
     </section>
   )
 }

@@ -18,6 +18,8 @@ public interface StockRepository extends JpaRepository<StockItem, Long> {
      */
     List<StockItem> findBySucursalIgnoreCase(String sucursal);
 
+    Optional<StockItem> findBySucursalIgnoreCaseAndProductoIgnoreCase(String sucursal, String producto);
+
     /**
      * Busca un item de stock específico combinando sucursal, categoría y producto.
      * Útil para validar existencias al realizar un upsert.

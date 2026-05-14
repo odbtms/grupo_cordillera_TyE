@@ -13,14 +13,15 @@ import java.util.List;
  * las sucursales.
  */
 @RestController
-@CrossOrigin(origins = "*")
-@RequestMapping("/api/stock")
+@RequestMapping("/api/ventas/stock")
 public class StockController {
 
     private final StockRepository repository;
+    private final com.grupocordillera.datos.repository.SucursalRepository sucursalRepository;
 
-    public StockController(StockRepository repository) {
+    public StockController(StockRepository repository, com.grupocordillera.datos.repository.SucursalRepository sucursalRepository) {
         this.repository = repository;
+        this.sucursalRepository = sucursalRepository;
     }
 
     /**
@@ -53,12 +54,18 @@ public class StockController {
     @PostMapping
     public ResponseEntity<StockItem> upsertStock(@RequestBody StockItem payload) {
         // Validaciones de campos obligatorios para el upsert
-        if (payload.getSucursal() == null || payload.getSucursal().isBlank()) {
+        if (payload.getSucursal() == null || payload.getSucursal().isBlank() || !sucursalRepository.existsByNombreIgnoreCase(payload.getSucursal())) {
             return ResponseEntity.badRequest().build();
         }
         if (payload.getCategoria() == null || payload.getCategoria().isBlank()) {
             return ResponseEntity.badRequest().build();
         }
+        
+        String categoriaUpper = payload.getCategoria().trim().toUpperCase();
+        if (!categoriaUpper.equals("ELECTRONICA") && !categoriaUpper.equals("HOGAR")) {
+            return ResponseEntity.badRequest().build();
+        }
+
         if (payload.getProducto() == null || payload.getProducto().isBlank()) {
             return ResponseEntity.badRequest().build();
         }
@@ -75,6 +82,15 @@ public class StockController {
                 .map(existing -> {
                     // Si existe, solo actualiza la cantidad
                     existing.setCantidad(payload.getCantidad());
+                    if (payload.getPrecioUnitario() != null) {
+                        existing.setPrecioUnitario(payload.getPrecioUnitario());
+                    }
+                    if (payload.getFechaRegistro() != null) {
+                        existing.setFechaRegistro(payload.getFechaRegistro());
+                    }
+                    if (payload.getVendedor() != null) {
+                        existing.setVendedor(payload.getVendedor());
+                    }
                     return existing;
                 })
                 .orElseGet(() -> {
@@ -84,6 +100,9 @@ public class StockController {
                     nuevo.setCategoria(payload.getCategoria().trim());
                     nuevo.setProducto(payload.getProducto().trim());
                     nuevo.setCantidad(payload.getCantidad());
+                    nuevo.setPrecioUnitario(payload.getPrecioUnitario());
+                    nuevo.setFechaRegistro(payload.getFechaRegistro());
+                    nuevo.setVendedor(payload.getVendedor());
                     return nuevo;
                 });
 

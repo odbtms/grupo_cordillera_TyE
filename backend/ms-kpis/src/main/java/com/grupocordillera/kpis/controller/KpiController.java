@@ -2,6 +2,7 @@ package com.grupocordillera.kpis.controller;
 
 import com.grupocordillera.kpis.model.Kpi;
 import com.grupocordillera.kpis.repository.KpiRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -11,7 +12,6 @@ import java.util.List;
  * Controlador REST para la gestión de Indicadores Clave de Rendimiento (KPIs).
  */
 @RestController
-@CrossOrigin(origins = "*")
 @RequestMapping("/api/kpis")
 public class KpiController {
 
@@ -39,12 +39,16 @@ public class KpiController {
      * @return El KPI actualizado.
      */
     @PutMapping("/{id}/formula")
-    public Kpi actualizarFormula(@PathVariable Long id, @RequestBody Kpi request) {
+    public ResponseEntity<Kpi> actualizarFormula(@PathVariable Long id, @RequestBody Kpi request) {
         // Busca el KPI por ID, actualiza su fórmula y fecha, luego lo guarda
+        if (request.getFormula() == null || request.getFormula().isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
         return repository.findById(id).map(kpi -> {
-            kpi.setFormula(request.getFormula());
+            if (request.getFormula() != null) kpi.setFormula(request.getFormula());
+            if (request.getMeta() != null) kpi.setMeta(request.getMeta());
             kpi.setFechaActualizacion(LocalDateTime.now());
-            return repository.save(kpi);
-        }).orElseThrow(() -> new RuntimeException("KPI no encontrado")); // Lanza error si no existe
+            return ResponseEntity.ok(repository.save(kpi));
+        }).orElse(ResponseEntity.notFound().build()); // Retorna 404 si no existe
     }
 }

@@ -1,16 +1,29 @@
 import { useEffect, useMemo, useState } from 'react'
-import { actualizarFormulaKpi, fetchKpis, fetchVentas, registrarVenta, registrarUsuario, upsertStock } from '../api'
-import type { Kpi, Venta } from '../types'
+import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster, obtenerStock } from '../api'
+import type { Kpi, Venta, StockItem } from '../types'
+import {
+  AdminFormularioVenta,
+  FormularioNuevoEmpleado,
+  FormularioNuevaSucursal,
+  TablaMetasSucursalAdmin,
+  GestorInventarioAdmin,
+  GestorFormulasKpiAdmin
+} from '../components'
 
 type Sucursal = {
   nombre: string
   metaVenta: number
 }
 
-function GestionOrganizacionalPage() {
+type GestionOrganizacionalPageProps = {
+  nombreUsuario?: string
+}
+
+function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizacionalPageProps) {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [kpis, setKpis] = useState<Kpi[]>([])
   const [sucursales, setSucursales] = useState<Sucursal[]>([])
+  const [inventarioFull, setInventarioFull] = useState<StockItem[]>([])
   const [mensaje, setMensaje] = useState('')
   const [mensajeKpi, setMensajeKpi] = useState('')
   const [mensajeVenta, setMensajeVenta] = useState('')
@@ -19,10 +32,23 @@ function GestionOrganizacionalPage() {
     montoTotal: 0,
     sistemaOrigen: 'POS',
     sucursal: '',
+    categoria: 'TODOS',
+    producto: '',
+    cantidad: 1,
+    precioUnitario: 0,
   })
 
   const [kpiSeleccionadoId, setKpiSeleccionadoId] = useState<number | null>(null)
   const [nuevaFormula, setNuevaFormula] = useState('')
+
+  // Sistema de Carrito para Ventas
+  const [carrito, setCarrito] = useState<Array<{
+    producto: string
+    cantidad: number
+    precioUnitario: number
+    subtotal: number
+    categoria: string
+  }>>([])
 
   // Estado para creación de empleado
   const [nuevoEmpleado, setNuevoEmpleado] = useState({
@@ -35,38 +61,47 @@ function GestionOrganizacionalPage() {
 
   const [nuevoStock, setNuevoStock] = useState({
     sucursal: '',
-    categoria: 'Electrónica',
+    categoria: 'ELECTRONICA',
     producto: '',
     cantidad: 0,
+    precioUnitario: 0,
   })
   const [mensajeStock, setMensajeStock] = useState('')
 
-  useEffect(() => {
-    async function cargarSucursales() {
-      setMensaje('')
-      try {
-        const [listaVentas, listaKpis] = await Promise.all([fetchVentas(), fetchKpis()])
-        setVentas(listaVentas)
-        setKpis(listaKpis)
-      } catch {
-        setMensaje('No se pudo obtener información desde ms-datos.')
-      }
+  const [nuevaSucursal, setNuevaSucursal] = useState({
+    nombre: '',
+    ubicacion: '',
+    metaVenta: 0
+  })
+  const [mensajeSucursal, setMensajeSucursal] = useState('')
+
+  const cargarTodo = async () => {
+    setMensaje('')
+    try {
+      const [listaVentas, listaKpis, listaSucursales, listaStock] = await Promise.all([
+        obtenerVentas(),
+        obtenerKpis(),
+        obtenerSucursalesMaster(),
+        obtenerStock()
+      ])
+      setVentas(listaVentas)
+      setKpis(listaKpis)
+      setInventarioFull(listaStock)
+
+      setSucursales(
+        listaSucursales.map((s: any) => ({
+          nombre: s.nombre,
+          metaVenta: s.metaVenta || 0,
+        }))
+      )
+    } catch {
+      setMensaje('No se pudo obtener la informacion desde el servidor.')
     }
-
-    cargarSucursales()
-  }, [])
+  }
 
   useEffect(() => {
-    if (!ventas.length) return
-
-    const unicas = Array.from(new Set(ventas.map((item) => item.sucursal))).sort()
-    setSucursales(
-      unicas.map((nombre) => ({
-        nombre,
-        metaVenta: 1000000,
-      })),
-    )
-  }, [ventas])
+    cargarTodo()
+  }, [])
 
   const resumenVentas = useMemo(() => {
     const mapa = new Map<string, number>()
@@ -84,15 +119,15 @@ function GestionOrganizacionalPage() {
       actual.map((item, idx) =>
         idx === indice
           ? {
-              ...item,
-              metaVenta: Number.isNaN(meta) ? 0 : meta,
-            }
+            ...item,
+            metaVenta: Number.isNaN(meta) ? 0 : meta,
+          }
           : item,
       ),
     )
   }
 
-  function guardarCambios() {
+  async function guardarCambios() {
     const existeMetaInvalida = sucursales.some(
       (item) => !item.nombre.trim() || item.metaVenta <= 0,
     )
@@ -102,31 +137,122 @@ function GestionOrganizacionalPage() {
       return
     }
 
-    setMensaje('Cambios validados. (Demo académica sin endpoint PUT de sucursal)')
+    try {
+      // Usar el nuevo endpoint de metas en ms-datos
+      await Promise.all(
+        sucursales.map((item) =>
+          registrarSucursal({ nombre: item.nombre, metaVenta: item.metaVenta })
+        )
+      )
+      setMensaje('Cambios guardados exitosamente.')
+    } catch {
+      setMensaje('Error al guardar las metas.')
+    }
   }
 
-  async function crearVenta() {
-    setMensajeVenta('')
-
-    if (!nuevaVenta.sucursal.trim() || nuevaVenta.montoTotal <= 0) {
-      setMensajeVenta('Debe indicar sucursal y un monto mayor a cero.')
+  async function crearSucursal() {
+    setMensajeSucursal('')
+    if (!nuevaSucursal.nombre.trim()) {
+      setMensajeSucursal('El nombre de la sucursal es obligatorio.')
       return
     }
 
     try {
-      await registrarVenta({
-        fechaVenta: new Date().toISOString(),
-        montoTotal: nuevaVenta.montoTotal,
-        sistemaOrigen: nuevaVenta.sistemaOrigen.trim() || 'POS',
-        sucursal: nuevaVenta.sucursal.trim(),
-      })
-
-      const listaActualizada = await fetchVentas()
-      setVentas(listaActualizada)
-      setNuevaVenta({ montoTotal: 0, sistemaOrigen: 'POS', sucursal: '' })
-      setMensajeVenta('Venta registrada correctamente en ms-datos.')
+      await registrarSucursal(nuevaSucursal)
+      setNuevaSucursal({ nombre: '', ubicacion: '', metaVenta: 0 })
+      setMensajeSucursal('Sucursal registrada correctamente.')
+      // Recargar lista
+      const lista = await obtenerSucursalesMaster()
+      setSucursales(lista.map((s: any) => ({ nombre: s.nombre, metaVenta: s.metaVenta || 0 })))
     } catch {
-      setMensajeVenta('No fue posible registrar la venta en ms-datos.')
+      setMensajeSucursal('Error al registrar la sucursal.')
+    }
+  }
+
+  function agregarAlCarrito() {
+    if (!nuevaVenta.producto || nuevaVenta.cantidad <= 0) {
+      setMensajeVenta('Seleccione producto y cantidad válida.')
+      return
+    }
+
+    // Validación de stock disponible
+    const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const sucursalActual = normalizar(nuevaVenta.sucursal);
+    const itemStock = inventarioFull.find(i => 
+      normalizar(i.sucursal) === sucursalActual && 
+      normalizar(i.producto) === normalizar(nuevaVenta.producto)
+    );
+
+    const stockDisponible = itemStock?.cantidad || 0;
+    
+    if (nuevaVenta.cantidad > stockDisponible) {
+      setMensajeVenta(`Solamente queda ${stockDisponible} stock de este producto.`);
+      return;
+    }
+    
+    setCarrito(actual => [
+      ...actual,
+      {
+        producto: nuevaVenta.producto,
+        cantidad: nuevaVenta.cantidad,
+        precioUnitario: nuevaVenta.precioUnitario,
+        subtotal: nuevaVenta.montoTotal,
+        categoria: nuevaVenta.categoria
+      }
+    ])
+    
+    // Limpiar campos de producto para el siguiente
+    setNuevaVenta(actual => ({
+      ...actual,
+      producto: '',
+      precioUnitario: 0,
+      montoTotal: 0,
+      cantidad: 1
+    }))
+    setMensajeVenta('')
+  }
+
+  async function procesarVentaCompleta() {
+    if (carrito.length === 0) {
+      setMensajeVenta('El carrito está vacío.')
+      return
+    }
+
+    try {
+      // Registrar cada item del carrito como una venta
+      await Promise.all(carrito.map(item => 
+        registrarVenta({
+          fechaVenta: new Date().toISOString(),
+          montoTotal: item.subtotal,
+          sistemaOrigen: nuevaVenta.sistemaOrigen.trim() || 'POS',
+          sucursal: nuevaVenta.sucursal.trim(),
+          vendedor: nombreUsuario,
+          categoria: item.categoria,
+          producto: item.producto,
+          cantidad: item.cantidad,
+          precioUnitario: item.precioUnitario,
+        })
+      ))
+
+      const [listaVentas, listaStock] = await Promise.all([obtenerVentas(), obtenerStock()])
+      setVentas(listaVentas)
+      setInventarioFull(listaStock)
+      
+      setCarrito([])
+      setNuevaVenta({ 
+        montoTotal: 0, 
+        sistemaOrigen: 'POS', 
+        sucursal: '', 
+        categoria: 'TODOS', 
+        producto: '', 
+        cantidad: 1, 
+        precioUnitario: 0 
+      })
+      setMensajeVenta('Venta registrada con éxito. Stock actualizado.')
+
+      await cargarTodo()
+    } catch {
+      setMensajeVenta('Error al procesar uno o más productos de la venta.')
     }
   }
 
@@ -140,7 +266,7 @@ function GestionOrganizacionalPage() {
 
     try {
       await actualizarFormulaKpi(kpiSeleccionadoId, nuevaFormula.trim())
-      const lista = await fetchKpis()
+      const lista = await obtenerKpis()
       setKpis(lista)
       setNuevaFormula('')
       setMensajeKpi('Fórmula de KPI actualizada correctamente.')
@@ -166,14 +292,14 @@ function GestionOrganizacionalPage() {
         rol: 'EMPLEADO_TIENDA',
         sucursal: sucursalAsignada.trim()
       })
-      
+
       setNuevoEmpleado({
         username: '',
         email: '',
         password: '',
         sucursalAsignada: '',
       })
-      
+
       setMensajeEmpleado(`Empleado ${username} creado exitosamente en la base de datos (ms-auth).`)
     } catch {
       setMensajeEmpleado('Hubo un error al guardar el empleado en ms-auth.')
@@ -194,16 +320,21 @@ function GestionOrganizacionalPage() {
         categoria: nuevoStock.categoria,
         producto: nuevoStock.producto.trim(),
         cantidad: nuevoStock.cantidad,
+        precioUnitario: nuevoStock.precioUnitario,
+        vendedor: 'ADMIN',
       })
 
+      const listaStock = await obtenerStock()
+      setInventarioFull(listaStock)
       setNuevoStock({
         sucursal: '',
-        categoria: 'Electrónica',
+        categoria: 'ELECTRONICA',
         producto: '',
         cantidad: 0,
+        precioUnitario: 0,
       })
 
-      setMensajeStock('Stock guardado correctamente en ms-datos.')
+      setMensajeStock('Stock guardado correctamente.')
     } catch {
       setMensajeStock('No fue posible guardar el stock en ms-datos.')
     }
@@ -213,243 +344,61 @@ function GestionOrganizacionalPage() {
     <section className="pagina-contenido">
       <div className="encabezado-pagina">
         <h2>Gestión Organizacional</h2>
-        <p>Mantenimiento básico de sucursales y metas</p>
+        <p>Mantenimiento de sucursales, metas y parámetros del sistema</p>
       </div>
 
-      <section className="tarjeta-panel">
-        <h3>CRUD de Sucursales (metas)</h3>
-        <div className="tabla-simple">
-          <div className="fila fila-encabezado">
-            <span>Sucursal</span>
-            <span>Ventas acumuladas</span>
-            <span>Meta de venta</span>
-          </div>
+      <FormularioNuevaSucursal 
+        nuevaSucursal={nuevaSucursal}
+        setNuevaSucursal={setNuevaSucursal}
+        crearSucursal={crearSucursal}
+        mensajeSucursal={mensajeSucursal}
+      />
 
-          {sucursales.map((sucursal, indice) => (
-            <div key={sucursal.nombre} className="fila">
-              <span>{sucursal.nombre}</span>
-              <span>{resumenVentas.get(sucursal.nombre) ?? 0}</span>
-              <span>
-                <input
-                  type="number"
-                  min={1}
-                  value={sucursal.metaVenta}
-                  onChange={(evento) => actualizarMeta(indice, evento.target.value)}
-                />
-              </span>
-            </div>
-          ))}
-        </div>
+      <TablaMetasSucursalAdmin 
+        sucursales={sucursales}
+        resumenVentas={resumenVentas}
+        actualizarMeta={actualizarMeta}
+        guardarCambios={guardarCambios}
+        mensaje={mensaje}
+      />
 
-        <button type="button" onClick={guardarCambios}>
-          Guardar cambios
-        </button>
-        {mensaje && <p>{mensaje}</p>}
-      </section>
+      <AdminFormularioVenta 
+        nuevaVenta={nuevaVenta}
+        setNuevaVenta={setNuevaVenta}
+        sucursales={sucursales}
+        inventarioFull={inventarioFull}
+        carrito={carrito}
+        setCarrito={setCarrito}
+        agregarAlCarrito={agregarAlCarrito}
+        procesarVentaCompleta={procesarVentaCompleta}
+        mensajeVenta={mensajeVenta}
+      />
 
-      <section className="tarjeta-panel">
-        <h3>Registrar venta (POST ms-datos)</h3>
-        <div className="formulario-simple">
-          <label>
-            Sucursal
-            <input
-              type="text"
-              value={nuevaVenta.sucursal}
-              onChange={(evento) =>
-                setNuevaVenta((actual) => ({ ...actual, sucursal: evento.target.value }))
-              }
-            />
-          </label>
+      <GestorFormulasKpiAdmin 
+        kpiSeleccionadoId={kpiSeleccionadoId}
+        setKpiSeleccionadoId={setKpiSeleccionadoId}
+        kpis={kpis}
+        nuevaFormula={nuevaFormula}
+        setNuevaFormula={setNuevaFormula}
+        guardarFormulaKpi={guardarFormulaKpi}
+        mensajeKpi={mensajeKpi}
+      />
 
-          <label>
-            Sistema origen
-            <input
-              type="text"
-              value={nuevaVenta.sistemaOrigen}
-              onChange={(evento) =>
-                setNuevaVenta((actual) => ({ ...actual, sistemaOrigen: evento.target.value }))
-              }
-            />
-          </label>
+      <FormularioNuevoEmpleado 
+        nuevoEmpleado={nuevoEmpleado}
+        setNuevoEmpleado={setNuevoEmpleado}
+        sucursales={sucursales}
+        crearEmpleado={crearEmpleado}
+        mensajeEmpleado={mensajeEmpleado}
+      />
 
-          <label>
-            Monto total
-            <input
-              type="number"
-              min={1}
-              value={nuevaVenta.montoTotal}
-              onChange={(evento) =>
-                setNuevaVenta((actual) => ({
-                  ...actual,
-                  montoTotal: Number(evento.target.value),
-                }))
-              }
-            />
-          </label>
-
-          <button type="button" onClick={crearVenta}>
-            Registrar venta
-          </button>
-        </div>
-        {mensajeVenta && <p>{mensajeVenta}</p>}
-      </section>
-
-      <section className="tarjeta-panel">
-        <h3>Actualizar KPI (PUT ms-kpis)</h3>
-        <div className="formulario-simple">
-          <label>
-            KPI
-            <select
-              value={kpiSeleccionadoId ?? ''}
-              onChange={(evento) => setKpiSeleccionadoId(Number(evento.target.value))}
-            >
-              <option value="">Seleccione un KPI</option>
-              {kpis.map((kpi) => (
-                <option key={kpi.id} value={kpi.id}>
-                  {kpi.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Nueva fórmula
-            <input
-              type="text"
-              value={nuevaFormula}
-              onChange={(evento) => setNuevaFormula(evento.target.value)}
-            />
-          </label>
-
-          <button type="button" onClick={guardarFormulaKpi}>
-            Guardar fórmula
-          </button>
-        </div>
-
-        {mensajeKpi && <p>{mensajeKpi}</p>}
-      </section>
-
-      <section className="tarjeta-panel">
-        <h3>Crear Empleado (ms-auth)</h3>
-        <p className="mensaje-demo">
-          Crea credenciales para que un empleado inicie sesión y visualice solamente su sucursal.
-        </p>
-        <div className="formulario-simple">
-          <label>
-            Usuario
-            <input
-              type="text"
-              placeholder="Ej: empleado.valpo"
-              value={nuevoEmpleado.username}
-              onChange={(e) =>
-                setNuevoEmpleado((actual) => ({ ...actual, username: e.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Correo Electrónico
-            <input
-              type="email"
-              placeholder="Ej: empleado@tienda.cl"
-              value={nuevoEmpleado.email}
-              onChange={(e) =>
-                setNuevoEmpleado((actual) => ({ ...actual, email: e.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Contraseña
-            <input
-              type="password"
-              value={nuevoEmpleado.password}
-              onChange={(e) =>
-                setNuevoEmpleado((actual) => ({ ...actual, password: e.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Sucursal asignada
-            <input
-              type="text"
-              placeholder="Ej: Santiago"
-              value={nuevoEmpleado.sucursalAsignada}
-              onChange={(e) =>
-                setNuevoEmpleado((actual) => ({ ...actual, sucursalAsignada: e.target.value }))
-              }
-            />
-          </label>
-
-          <button type="button" onClick={crearEmpleado}>
-            Registrar Empleado
-          </button>
-        </div>
-        {mensajeEmpleado && <p className="mensaje-demo" style={{ marginTop: 12 }}>{mensajeEmpleado}</p>}
-      </section>
-
-      <section className="tarjeta-panel">
-        <h3>Registrar stock por sucursal (ms-datos)</h3>
-        <p className="mensaje-demo">
-          Guarda stock real para cada sucursal y categoría (Electrónica/Hogar).
-        </p>
-        <div className="formulario-simple">
-          <label>
-            Sucursal
-            <input
-              type="text"
-              placeholder="Ej: Santiago"
-              value={nuevoStock.sucursal}
-              onChange={(e) =>
-                setNuevoStock((actual) => ({ ...actual, sucursal: e.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Categoría
-            <select
-              value={nuevoStock.categoria}
-              onChange={(e) =>
-                setNuevoStock((actual) => ({ ...actual, categoria: e.target.value }))
-              }
-            >
-              <option value="Electrónica">Electrónica</option>
-              <option value="Hogar">Hogar</option>
-            </select>
-          </label>
-
-          <label>
-            Producto
-            <input
-              type="text"
-              placeholder="Ej: Audífonos"
-              value={nuevoStock.producto}
-              onChange={(e) =>
-                setNuevoStock((actual) => ({ ...actual, producto: e.target.value }))
-              }
-            />
-          </label>
-
-          <label>
-            Cantidad
-            <input
-              type="number"
-              min={0}
-              value={nuevoStock.cantidad}
-              onChange={(e) =>
-                setNuevoStock((actual) => ({ ...actual, cantidad: Number(e.target.value) }))
-              }
-            />
-          </label>
-
-          <button type="button" onClick={guardarStock}>
-            Guardar Stock
-          </button>
-        </div>
-        {mensajeStock && <p className="mensaje-demo" style={{ marginTop: 12 }}>{mensajeStock}</p>}
-      </section>
+      <GestorInventarioAdmin 
+        nuevoStock={nuevoStock}
+        setNuevoStock={setNuevoStock}
+        sucursales={sucursales}
+        guardarStock={guardarStock}
+        mensajeStock={mensajeStock}
+      />
     </section>
   )
 }

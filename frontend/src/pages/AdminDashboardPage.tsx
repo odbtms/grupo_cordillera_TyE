@@ -1,175 +1,90 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getDashboardPayload } from '../features/kpis'
-import type { BranchCatalogItem, Kpi, Venta } from '../types'
+import { obtenerKpis, obtenerVentas, obtenerStock } from '../api'
+import type { ItemCatalogoSucursal, Kpi, Venta, StockItem } from '../types'
+import { monthLabelFormatter } from '../utils/formatters'
+import { BRANCH_ZONE_MAP } from '../constants/dashboardConfig'
+import { 
+  DashboardGeneralAdmin, 
+  FiltrosDashboardAdmin, 
+  ResumenVentasDashboardAdmin, 
+  InventarioDashboardAdmin 
+} from '../components'
 
-const FALLBACK_VENTAS: Venta[] = [
-  {
-    id: 1,
-    fechaVenta: '2026-04-18T10:30:00',
-    montoTotal: 1480000,
-    sistemaOrigen: 'POS',
-    sucursal: 'Santiago Centro',
-  },
-  {
-    id: 2,
-    fechaVenta: '2026-04-18T16:10:00',
-    montoTotal: 1220000,
-    sistemaOrigen: 'Ecommerce',
-    sucursal: 'Providencia',
-  },
-  {
-    id: 3,
-    fechaVenta: '2026-04-10T09:15:00',
-    montoTotal: 860000,
-    sistemaOrigen: 'POS',
-    sucursal: 'Viña del Mar',
-  },
-  {
-    id: 4,
-    fechaVenta: '2026-03-18T14:40:00',
-    montoTotal: 1110000,
-    sistemaOrigen: 'POS',
-    sucursal: 'Santiago Centro',
-  },
-  {
-    id: 5,
-    fechaVenta: '2026-03-11T11:25:00',
-    montoTotal: 970000,
-    sistemaOrigen: 'Ecommerce',
-    sucursal: 'Providencia',
-  },
-  {
-    id: 6,
-    fechaVenta: '2026-03-04T12:50:00',
-    montoTotal: 790000,
-    sistemaOrigen: 'POS',
-    sucursal: 'Viña del Mar',
-  },
-  {
-    id: 7,
-    fechaVenta: '2026-04-19T13:30:00',
-    montoTotal: 640000,
-    sistemaOrigen: 'POS',
-    sucursal: 'Concepción',
-  },
-  {
-    id: 8,
-    fechaVenta: '2026-03-20T09:40:00',
-    montoTotal: 420000,
-    sistemaOrigen: 'Ecommerce',
-    sucursal: 'Concepción',
-  },
-]
-
-const FALLBACK_KPIS: Kpi[] = [
-  {
-    id: 1,
-    nombre: 'Margen Operacional',
-    formula: '(Ingresos-Costos)/Ingresos',
-    valorCalculado: 31.5,
-    fechaActualizacion: '2026-04-20T10:15:00',
-  },
-  {
-    id: 2,
-    nombre: 'Crecimiento Mensual',
-    formula: '(Mes actual-Mes previo)/Mes previo',
-    valorCalculado: 14.2,
-    fechaActualizacion: '2026-04-20T10:15:00',
-  },
-]
-
-const moneyFormatter = new Intl.NumberFormat('es-CL', {
-  style: 'currency',
-  currency: 'CLP',
-  maximumFractionDigits: 0,
-})
-
-const monthLabelFormatter = new Intl.DateTimeFormat('es-CL', {
-  month: 'long',
-  year: 'numeric',
-})
-
-const BRANCH_ZONE_MAP: Record<string, string> = {
-  'Santiago Centro': 'Metropolitana',
-  Providencia: 'Metropolitana',
-  'Viña del Mar': 'Costa',
-  Concepción: 'Sur',
+function claveMes(textoFecha: string): string {
+  const fecha = new Date(textoFecha)
+  if (Number.isNaN(fecha.getTime())) return 'invalido'
+  const mes = `${fecha.getMonth() + 1}`.padStart(2, '0')
+  return `${fecha.getFullYear()}-${mes}`
 }
 
-function monthKey(dateText: string): string {
-  const date = new Date(dateText)
-  if (Number.isNaN(date.getTime())) return 'invalido'
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  return `${date.getFullYear()}-${month}`
+function zonaPorSucursal(sucursal: string): string {
+  return BRANCH_ZONE_MAP[sucursal] ?? 'Sin zona'
 }
 
-function zoneByBranch(branch: string): string {
-  return BRANCH_ZONE_MAP[branch] ?? 'Sin zona'
-}
-
-function formatMonthLabel(key: string): string {
-  const [yearText, monthText] = key.split('-')
-  const year = Number(yearText)
-  const month = Number(monthText)
-  if (Number.isNaN(year) || Number.isNaN(month)) return key
-  const date = new Date(year, month - 1, 1)
-  return monthLabelFormatter.format(date)
+function formatearEtiquetaMes(clave: string): string {
+  const [textoAnio, textoMes] = clave.split('-')
+  const anio = Number(textoAnio)
+  const mes = Number(textoMes)
+  if (Number.isNaN(anio) || Number.isNaN(mes)) return clave
+  const fecha = new Date(anio, mes - 1, 1)
+  return monthLabelFormatter.format(fecha)
 }
 
 function AdminDashboardPage() {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [kpis, setKpis] = useState<Kpi[]>([])
-  const [loading, setLoading] = useState(true)
-  const [dataSource, setDataSource] = useState<'api' | 'local'>('local')
-  const [fromDate, setFromDate] = useState('')
-  const [toDate, setToDate] = useState('')
-  const [zoneFilter, setZoneFilter] = useState('Todas')
-  const [originFilter, setOriginFilter] = useState('Todos')
+  const [stock, setStock] = useState<StockItem[]>([])
+  const [cargando, setCargando] = useState(true)
+  const [fechaDesde, setFechaDesde] = useState('')
+  const [fechaHasta, setFechaHasta] = useState('')
+  const [filtroZona, setFiltroZona] = useState('Todas')
+  const [filtroOrigen, setFiltroOrigen] = useState('Todos')
+  const [filtroSucursal, setFiltroSucursal] = useState('Todas')
 
   useEffect(() => {
-    async function loadDashboardData() {
-      setLoading(true)
+    async function cargarDatosDashboard() {
+      setCargando(true)
 
       try {
-        const payload = await getDashboardPayload()
-        setVentas(payload.ventas)
-        setKpis(payload.kpis)
-        setDataSource('api')
+        const [ventasData, kpisData, stockData] = await Promise.all([obtenerVentas(), obtenerKpis(), obtenerStock()])
+        setVentas(ventasData)
+        setKpis(kpisData)
+        setStock(stockData)
       } catch {
-        setVentas(FALLBACK_VENTAS)
-        setKpis(FALLBACK_KPIS)
-        setDataSource('local')
+        setVentas([])
+        setKpis([])
+        setStock([])
       } finally {
-        setLoading(false)
+        setCargando(false)
       }
     }
 
-    loadDashboardData()
+    cargarDatosDashboard()
   }, [])
 
-  const totalSales = useMemo(
+  const ventasTotales = useMemo(
     () => ventas.reduce((total, venta) => total + (venta.montoTotal || 0), 0),
     [ventas],
   )
 
-  const averageTicket = useMemo(() => {
+  const ticketPromedio = useMemo(() => {
     if (!ventas.length) return 0
-    return totalSales / ventas.length
-  }, [totalSales, ventas.length])
+    return ventasTotales / ventas.length
+  }, [ventasTotales, ventas.length])
 
-  const branchData = useMemo(() => {
-    const map = new Map<string, number>()
+  const datosSucursales = useMemo(() => {
+    const mapa = new Map<string, number>()
     for (const venta of ventas) {
-      const key = venta.sucursal || 'Sucursal sin nombre'
-      map.set(key, (map.get(key) ?? 0) + (venta.montoTotal || 0))
+      const clave = venta.sucursal || 'Sucursal sin nombre'
+      mapa.set(clave, (mapa.get(clave) ?? 0) + (venta.montoTotal || 0))
     }
 
-    return Array.from(map.entries())
+    return Array.from(mapa.entries())
       .map(([sucursal, total]) => ({ sucursal, total }))
       .sort((a, b) => b.total - a.total)
   }, [ventas])
 
-  const sucursalLider = branchData[0]
+  const sucursalLider = datosSucursales[0]
 
   const alertas = useMemo(() => {
     const mensajes: string[] = []
@@ -179,8 +94,8 @@ function AdminDashboardPage() {
       return mensajes
     }
 
-    if (sucursalLider && totalSales > 0) {
-      const participacion = (sucursalLider.total / totalSales) * 100
+    if (sucursalLider && ventasTotales > 0) {
+      const participacion = (sucursalLider.total / ventasTotales) * 100
       if (participacion >= 50) {
         mensajes.push(
           `${sucursalLider.sucursal} concentra gran parte de los ingresos (${participacion.toFixed(1)}%).`,
@@ -188,7 +103,7 @@ function AdminDashboardPage() {
       }
     }
 
-    const sucursalDebil = branchData.find((item) => item.total < averageTicket)
+    const sucursalDebil = datosSucursales.find((item) => item.total < ticketPromedio)
     if (sucursalDebil) {
       mensajes.push(
         `${sucursalDebil.sucursal} esta por debajo del promedio general de ingresos.`,
@@ -200,110 +115,105 @@ function AdminDashboardPage() {
     }
 
     return mensajes
-  }, [averageTicket, branchData, sucursalLider, totalSales, ventas.length])
+  }, [ticketPromedio, datosSucursales, sucursalLider, ventasTotales, ventas.length])
 
-  const branchCatalog = useMemo<BranchCatalogItem[]>(() => {
-    const map = new Map<string, number>()
+  const catalogoSucursales = useMemo<ItemCatalogoSucursal[]>(() => {
+    const mapa = new Map<string, number>()
 
     for (const venta of ventas) {
-      const branch = venta.sucursal || 'Sucursal sin nombre'
-      map.set(branch, (map.get(branch) ?? 0) + (venta.montoTotal || 0))
+      const sucursal = venta.sucursal || 'Sucursal sin nombre'
+      mapa.set(sucursal, (mapa.get(sucursal) ?? 0) + (venta.montoTotal || 0))
     }
 
-    return Array.from(map.entries())
+    return Array.from(mapa.entries())
       .map(([sucursal, total]) => ({
         sucursal,
-        zona: zoneByBranch(sucursal),
+        zona: zonaPorSucursal(sucursal),
         total,
       }))
       .sort((a, b) => a.sucursal.localeCompare(b.sucursal, 'es'))
   }, [ventas])
 
-  const zoneOptions = useMemo(
-    () => ['Todas', ...new Set(branchCatalog.map((item) => item.zona))],
-    [branchCatalog],
+  const opcionesZona = useMemo(
+    () => ['Todas', ...new Set(catalogoSucursales.map((item) => item.zona))],
+    [catalogoSucursales],
   )
 
-  const originOptions = useMemo(
-    () => ['Todos', ...new Set(ventas.map((venta) => venta.sistemaOrigen))],
-    [ventas],
-  )
-
-  const filteredVentas = useMemo(() => {
+  const ventasFiltradas = useMemo(() => {
     return ventas.filter((venta) => {
-      const ventaDate = new Date(venta.fechaVenta)
-      const branchZone = zoneByBranch(venta.sucursal || 'Sucursal sin nombre')
+      const fechaVentaDate = new Date(venta.fechaVenta)
+      const zonaSucursal = zonaPorSucursal(venta.sucursal || 'Sucursal sin nombre')
 
-      if (fromDate) {
-        const startDate = new Date(`${fromDate}T00:00:00`)
-        if (ventaDate < startDate) return false
+      if (fechaDesde) {
+        const fechaInicio = new Date(`${fechaDesde}T00:00:00`)
+        if (fechaVentaDate < fechaInicio) return false
       }
 
-      if (toDate) {
-        const endDate = new Date(`${toDate}T23:59:59`)
-        if (ventaDate > endDate) return false
+      if (fechaHasta) {
+        const fechaFin = new Date(`${fechaHasta}T23:59:59`)
+        if (fechaVentaDate > fechaFin) return false
       }
 
-      if (zoneFilter !== 'Todas' && branchZone !== zoneFilter) {
+      if (filtroZona !== 'Todas' && zonaSucursal !== filtroZona) {
         return false
       }
 
-      if (originFilter !== 'Todos' && venta.sistemaOrigen !== originFilter) {
+      if (filtroOrigen !== 'Todos' && venta.sistemaOrigen !== filtroOrigen) {
         return false
       }
 
       return true
     })
-  }, [fromDate, originFilter, toDate, ventas, zoneFilter])
+  }, [fechaDesde, filtroOrigen, fechaHasta, ventas, filtroZona])
 
-  const filteredBranchData = useMemo(() => {
-    const map = new Map<string, number>()
+  const datosSucursalesFiltrados = useMemo(() => {
+    const mapa = new Map<string, number>()
 
-    for (const venta of filteredVentas) {
-      const branch = venta.sucursal || 'Sucursal sin nombre'
-      map.set(branch, (map.get(branch) ?? 0) + venta.montoTotal)
+    for (const venta of ventasFiltradas) {
+      const sucursal = venta.sucursal || 'Sucursal sin nombre'
+      mapa.set(sucursal, (mapa.get(sucursal) ?? 0) + venta.montoTotal)
     }
 
-    return Array.from(map.entries())
+    return Array.from(mapa.entries())
       .map(([sucursal, total]) => ({ sucursal, total }))
       .sort((a, b) => b.total - a.total)
-  }, [filteredVentas])
+  }, [ventasFiltradas])
 
-  const filteredBranchMax = filteredBranchData[0]?.total ?? 1
+  const maxVentaSucursalFiltrada = datosSucursalesFiltrados[0]?.total ?? 1
 
-  const periodDetails = useMemo(() => {
-    const map = new Map<string, { total: number; operaciones: number }>()
+  const detallesPeriodo = useMemo(() => {
+    const mapa = new Map<string, { total: number; operaciones: number }>()
 
-    for (const venta of filteredVentas) {
-      const key = monthKey(venta.fechaVenta)
-      const current = map.get(key) ?? { total: 0, operaciones: 0 }
-      map.set(key, {
-        total: current.total + venta.montoTotal,
-        operaciones: current.operaciones + 1,
+    for (const venta of ventasFiltradas) {
+      const clave = claveMes(venta.fechaVenta)
+      const actual = mapa.get(clave) ?? { total: 0, operaciones: 0 }
+      mapa.set(clave, {
+        total: actual.total + venta.montoTotal,
+        operaciones: actual.operaciones + 1,
       })
     }
 
-    return Array.from(map.entries())
-      .map(([periodo, values]) => ({
+    return Array.from(mapa.entries())
+      .map(([periodo, valores]) => ({
         periodo,
-        label: formatMonthLabel(periodo),
-        total: values.total,
-        operaciones: values.operaciones,
+        etiqueta: formatearEtiquetaMes(periodo),
+        total: valores.total,
+        operaciones: valores.operaciones,
       }))
       .sort((a, b) => (a.periodo > b.periodo ? 1 : -1))
-  }, [filteredVentas])
+  }, [ventasFiltradas])
 
-  const filteredTotal = useMemo(
-    () => filteredVentas.reduce((sum, venta) => sum + venta.montoTotal, 0),
-    [filteredVentas],
+  const totalFiltrado = useMemo(
+    () => ventasFiltradas.reduce((suma, venta) => suma + venta.montoTotal, 0),
+    [ventasFiltradas],
   )
 
-  const filteredCatalog = useMemo(() => {
-    const active = new Set(filteredBranchData.map((branch) => branch.sucursal))
-    return branchCatalog
-      .filter((item) => active.has(item.sucursal))
+  const catalogoFiltrado = useMemo(() => {
+    const activas = new Set(datosSucursalesFiltrados.map((sucursal) => sucursal.sucursal))
+    return catalogoSucursales
+      .filter((item) => activas.has(item.sucursal))
       .sort((a, b) => b.total - a.total)
-  }, [branchCatalog, filteredBranchData])
+  }, [catalogoSucursales, datosSucursalesFiltrados])
 
   return (
     <main className="dashboard-page">
@@ -311,62 +221,19 @@ function AdminDashboardPage() {
         <h1>Panel de Administracion</h1>
         <p>Grupo Cordillera - Vista para gerencia</p>
         <p>
-          Estado: {loading ? 'Cargando datos...' : 'Datos cargados'} | Fuente:{' '}
-          {dataSource === 'api' ? 'API' : 'respaldo local'}
+          Estado: {cargando ? 'Cargando datos...' : 'Datos actualizados'}
         </p>
       </header>
 
-      <section className="bloque" aria-label="Resumen de ventas totales">
-        <h2>1. Dashboard general</h2>
-        <div className="resumen-grid">
-          <div className="tarjeta-resumen">
-            <h3>Resumen de ventas totales</h3>
-            <p className="valor-principal">{moneyFormatter.format(totalSales)}</p>
-            <p>
-              Registros: {ventas.length} | Sucursales con ventas:{' '}
-              {branchData.length}
-            </p>
-          </div>
-          <div className="tarjeta-resumen">
-            <h3>Comparacion entre sucursales</h3>
-            <ul className="lista-simple">
-              {branchData.map((branch) => (
-                <li key={branch.sucursal}>
-                  <span>{branch.sucursal}</span>
-                  <strong>{moneyFormatter.format(branch.total)}</strong>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="tarjeta-resumen">
-            <h3>KPIs clave</h3>
-            <ul className="lista-simple">
-              <li>
-                <span>Ticket promedio</span>
-                <strong>{moneyFormatter.format(averageTicket)}</strong>
-              </li>
-              <li>
-                <span>Sucursal lider</span>
-                <strong>{sucursalLider?.sucursal ?? 'Sin datos'}</strong>
-              </li>
-              {kpis.slice(0, 2).map((kpi) => (
-                <li key={kpi.id}>
-                  <span>{kpi.nombre}</span>
-                  <strong>{kpi.valorCalculado}</strong>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="tarjeta-resumen">
-            <h3>Alertas o variaciones importantes</h3>
-            <ul className="lista-alertas">
-              {alertas.map((mensaje) => (
-                <li key={mensaje}>{mensaje}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+      <DashboardGeneralAdmin
+        ventasTotales={ventasTotales}
+        ventasCount={ventas.length}
+        datosSucursales={datosSucursales}
+        ticketPromedio={ticketPromedio}
+        sucursalLider={sucursalLider}
+        kpis={kpis}
+        alertas={alertas}
+      />
 
       <section className="bloque" aria-label="Sucursales y ventas">
         <div className="section-title-row">
@@ -374,160 +241,36 @@ function AdminDashboardPage() {
           <p>Analisis basico por sucursal con filtros.</p>
         </div>
 
-        <div className="filtros-simples">
-          <div className="filters-grid">
-            <label>
-              Fecha desde
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(event) => setFromDate(event.target.value)}
-              />
-            </label>
+        <FiltrosDashboardAdmin
+          fechaDesde={fechaDesde}
+          setFechaDesde={setFechaDesde}
+          fechaHasta={fechaHasta}
+          setFechaHasta={setFechaHasta}
+          filtroZona={filtroZona}
+          setFiltroZona={setFiltroZona}
+          opcionesZona={opcionesZona}
+          filtroOrigen={filtroOrigen}
+          setFiltroOrigen={setFiltroOrigen}
+          filtroSucursal={filtroSucursal}
+          setFiltroSucursal={setFiltroSucursal}
+          stock={stock}
+          ventasFiltradasCount={ventasFiltradas.length}
+          totalFiltrado={totalFiltrado}
+        />
 
-            <label>
-              Fecha hasta
-              <input
-                type="date"
-                value={toDate}
-                onChange={(event) => setToDate(event.target.value)}
-              />
-            </label>
-
-            <label>
-              Zona
-              <select
-                value={zoneFilter}
-                onChange={(event) => setZoneFilter(event.target.value)}
-              >
-                {zoneOptions.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Sistema origen
-              <select
-                value={originFilter}
-                onChange={(event) => setOriginFilter(event.target.value)}
-              >
-                {originOptions.map((origin) => (
-                  <option key={origin} value={origin}>
-                    {origin}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="filters-summary">
-            <span>{filteredVentas.length} ventas filtradas</span>
-            <strong>{moneyFormatter.format(filteredTotal)}</strong>
-            <button
-              type="button"
-              onClick={() => {
-                setFromDate('')
-                setToDate('')
-                setZoneFilter('Todas')
-                setOriginFilter('Todos')
-              }}
-            >
-              Limpiar filtros
-            </button>
-          </div>
-        </div>
-
-        <div className="resumen-grid">
-          <article className="tarjeta-resumen" aria-label="Lista de sucursales">
-            <div className="panel-head">
-              <h2>Lista de Sucursales</h2>
-              <span>{filteredCatalog.length} activas</span>
-            </div>
-
-            <div className="branch-table">
-              <div className="branch-table-head">
-                <span>Sucursal</span>
-                <span>Zona</span>
-                <span>Total</span>
-              </div>
-              {filteredCatalog.map((item) => (
-                <div key={item.sucursal} className="branch-table-row">
-                  <span>{item.sucursal}</span>
-                  <span>{item.zona}</span>
-                  <strong>{moneyFormatter.format(item.total)}</strong>
-                </div>
-              ))}
-              {!filteredCatalog.length && (
-                <p className="empty-state">No hay sucursales para el filtro actual.</p>
-              )}
-            </div>
-          </article>
-
-          <article className="tarjeta-resumen" aria-label="Ventas por sucursal">
-            <div className="panel-head">
-              <h2>Ventas por Sucursal</h2>
-              <span>Total filtrado</span>
-            </div>
-
-            <div className="branch-list">
-              {filteredBranchData.map((branch) => {
-                const width =
-                  filteredBranchMax > 0
-                    ? (branch.total / filteredBranchMax) * 100
-                    : 0
-                return (
-                  <div key={branch.sucursal} className="branch-item">
-                    <div className="branch-top">
-                      <span>{branch.sucursal}</span>
-                      <strong>{moneyFormatter.format(branch.total)}</strong>
-                    </div>
-                    <div className="branch-bar-bg">
-                      <div
-                        className="branch-bar-fill"
-                        style={{ width: `${width}%` }}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
-              {!filteredBranchData.length && (
-                <p className="empty-state">Sin ventas para los filtros seleccionados.</p>
-              )}
-            </div>
-          </article>
-
-          <article
-            className="tarjeta-resumen tarjeta-ancha"
-            aria-label="Detalle por periodo"
-          >
-            <div className="panel-head">
-              <h2>Detalle de Ingresos por Periodo</h2>
-              <span>Mensual</span>
-            </div>
-
-            <div className="period-table">
-              <div className="period-table-head">
-                <span>Periodo</span>
-                <span>Operaciones</span>
-                <span>Ingresos</span>
-              </div>
-              {periodDetails.map((period) => (
-                <div key={period.periodo} className="period-table-row">
-                  <span>{period.label}</span>
-                  <span>{period.operaciones}</span>
-                  <strong>{moneyFormatter.format(period.total)}</strong>
-                </div>
-              ))}
-              {!periodDetails.length && (
-                <p className="empty-state">No existen ingresos en el periodo filtrado.</p>
-              )}
-            </div>
-          </article>
-        </div>
+        <ResumenVentasDashboardAdmin
+          catalogoFiltrado={catalogoFiltrado}
+          datosSucursalesFiltrados={datosSucursalesFiltrados}
+          maxVentaSucursalFiltrada={maxVentaSucursalFiltrada}
+          detallesPeriodo={detallesPeriodo}
+          setFiltroSucursal={setFiltroSucursal}
+        />
       </section>
+
+      <InventarioDashboardAdmin
+        stock={stock}
+        filtroSucursal={filtroSucursal}
+      />
     </main>
   )
 }

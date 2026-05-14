@@ -2,6 +2,7 @@ package com.grupocordillera.reportes.controller;
 
 import com.grupocordillera.reportes.model.PlantillaReporte;
 import com.grupocordillera.reportes.repository.PlantillaReporteRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -9,7 +10,6 @@ import java.util.List;
  * Controlador REST para la gestión de plantillas de reportes.
  */
 @RestController
-@CrossOrigin(origins = "*")
 @RequestMapping("/api/reportes/plantillas")
 public class ReporteController {
 
@@ -25,7 +25,10 @@ public class ReporteController {
      */
     @GetMapping
     public List<PlantillaReporte> listarPlantillas() {
-        return repository.findAll();
+        return repository.findAll().stream()
+                .filter(p -> !"Inactivo".equalsIgnoreCase(p.getEstado()))
+                .filter(p -> p.getTitulo() == null || !p.getTitulo().toLowerCase().contains("healthcheck"))
+                .toList();
     }
     
     /**
@@ -35,6 +38,9 @@ public class ReporteController {
      */
     @PostMapping
     public PlantillaReporte crearPlantilla(@RequestBody PlantillaReporte plantilla) {
+        if (plantilla.getEstado() == null || plantilla.getEstado().isBlank()) {
+            plantilla.setEstado("Activo");
+        }
         return repository.save(plantilla);
     }
 
@@ -43,11 +49,11 @@ public class ReporteController {
      * @param id Identificador de la plantilla a eliminar lógicamente.
      */
     @DeleteMapping("/{id}")
-    public void eliminarReporte(@PathVariable Long id) {
-        // En tu informe sugerías borrado lógico, así que actualizamos el estado
-        repository.findById(id).ifPresent(plantilla -> {
-            plantilla.setEstado("Inactivo"); // Marcar como inactivo en vez de borrar de BD
-            repository.save(plantilla);
-        });
+    public ResponseEntity<Void> eliminarReporte(@PathVariable Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }

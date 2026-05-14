@@ -49,6 +49,19 @@ services:
       - SPRING_DATASOURCE_USERNAME=admin3
       - SPRING_DATASOURCE_PASSWORD=cordillera
 
+  ms-bff:
+    build:
+      context: ./ms-bff
+      dockerfile: Dockerfile
+    container_name: ms-bff
+    ports:
+      - "8080:8080"
+    depends_on:
+      - ms-datos
+      - ms-kpis
+      - ms-reportes
+      - ms-auth
+
   frontend:
     build:
       context: ../frontend

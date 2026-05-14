@@ -1,4 +1,8 @@
-C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\Application.java
-C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\controller\KpiController.java
-C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\model\Kpi.java
-C:\Users\co-alumno\Desktop\trabajo full3\trabajo full3\grupo_cordillera_TyE-main\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\repository\KpiRepository.java
+C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\Application.java
+C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\config\KpiDataInitializer.java
+C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\controller\KpiController.java
+C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\controller\MetaSucursalController.java
+C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\model\Kpi.java
+C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\model\MetaSucursal.java
+C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\repository\KpiRepository.java
+C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-kpis\src\main\java\com\grupocordillera\kpis\repository\MetaSucursalRepository.java

@@ -5,7 +5,7 @@ type CredencialesLogin = {
   password: string
 }
 
-export type LoginResponse = {
+export type RespuestaLogin = {
   token: string
   usuario: string
   rol: string
@@ -14,8 +14,8 @@ export type LoginResponse = {
 
 export async function iniciarSesion(
   credenciales: CredencialesLogin,
-): Promise<LoginResponse> {
-  const { data } = await authHttp.post<LoginResponse>('/login', credenciales)
+): Promise<RespuestaLogin> {
+  const { data } = await authHttp.post<RespuestaLogin>('/login', credenciales)
   return data
 }
 
@@ -27,14 +27,14 @@ export type RegistroInput = {
   sucursal?: string
 }
 
-export async function registrarUsuario(payload: RegistroInput): Promise<LoginResponse> {
-  const { data } = await authHttp.post<LoginResponse>('/register', payload)
+export async function registrarUsuario(payload: RegistroInput): Promise<RespuestaLogin> {
+  const { data } = await authHttp.post<RespuestaLogin>('/register', payload)
   return data
 }
 
-export async function validateToken(token: string): Promise<string> {
+export async function validarToken(token: string): Promise<RespuestaLogin> {
   const bearerToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`
-  const { data } = await authHttp.get<string>('/validar', {
+  const { data } = await authHttp.get<RespuestaLogin>('/validar', {
     headers: {
       Authorization: bearerToken,
     },
@@ -54,4 +54,17 @@ export async function actualizarRolUsuarioPorUsername(username: string, rol: str
     rol,
   })
   return data
+}
+
+export type Usuario = {
+  id: number
+  username: string
+  email: string
+  rol: string
+  sucursal: string | null
+}
+
+export async function obtenerUsuarios(): Promise<Usuario[]> {
+  const { data } = await authHttp.get<Usuario[]>('/usuarios')
+  return Array.isArray(data) ? data : []
 }

@@ -22,7 +22,5 @@ public class PlantillaReporte {
     
     private String titulo; // Título visible del reporte
     
-    private String configuracionVisual; // Objeto JSON o String con la configuración de gráficos
-    
     private String estado; // Estado de la plantilla (ej. Activo, Inactivo)
 }

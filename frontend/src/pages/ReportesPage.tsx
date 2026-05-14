@@ -1,72 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import {
-  createPlantillaReporte,
+  crearPlantillaReporte,
+  obtenerPlantillasReporte,
   eliminarPlantillaReporte,
-  fetchPlantillasReporte,
-  fetchStock,
-  fetchVentas,
-  fetchVentasPorSucursal,
+  obtenerStock,
+  obtenerVentas,
   type PlantillaReporte,
 } from '../api'
 import type { StockItem, Venta } from '../types'
-
-const TAMANO_PAGINA = 5
-
-const FORMATO_MONEDA = new Intl.NumberFormat('es-CL', {
-  style: 'currency',
-  currency: 'CLP',
-  maximumFractionDigits: 0,
-})
-
-const FORMATO_COMPACTO = new Intl.NumberFormat('es-CL', {
-  notation: 'compact',
-  maximumFractionDigits: 1,
-})
-
-type RegistroAnalitico = {
-  fecha: string
-  sucursal: string
-  categoria: string
-  ventas: number
-  inventario: number
-  stockCritico: number
-  margen: number
-}
-
-const STOCK_CRITICO_UMBRAL = 10
-
-function fechaTexto(fecha: Date) {
-  return fecha.toISOString().slice(0, 10)
-}
-
-function normalizarTexto(texto: string) {
-  return texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-}
-
-
-function descargarComoTexto(nombreArchivo: string, contenido: string) {
-  const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' })
-  const enlace = document.createElement('a')
-  enlace.href = URL.createObjectURL(blob)
-  enlace.download = nombreArchivo
-  enlace.click()
-  URL.revokeObjectURL(enlace.href)
-}
+import { FORMATO_MONEDA } from '../utils/formatters'
+import GrillaKpiAdmin from '../components/admin/GrillaKpiAdmin'
+import ListaRankingSucursales from '../components/admin/ListaRankingSucursales'
+import GraficosAdmin from '../components/admin/GraficosAdmin'
+import FilaAuditoriaReporte from '../components/admin/FilaAuditoriaReporte'
 
 type ReportesPageProps = {
   rol?: string
@@ -74,574 +20,332 @@ type ReportesPageProps = {
 }
 
 function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
-  const [titulo, setTitulo] = useState('')
-  const [configuracionVisual, setConfiguracionVisual] = useState('')
   const [plantillas, setPlantillas] = useState<PlantillaReporte[]>([])
-  const [paginaActual, setPaginaActual] = useState(1)
-  const [mensajePlantilla, setMensajePlantilla] = useState('')
-
+  const [idPlantillaExpandida, setIdPlantillaExpandida] = useState<number | null>(null)
   const [ventas, setVentas] = useState<Venta[]>([])
   const [stock, setStock] = useState<StockItem[]>([])
-  const [mensajeDatos, setMensajeDatos] = useState('')
+  const [modalConfig, setModalConfig] = useState<{ visible: boolean, tipo: 'info' | 'confirm' | 'error', mensaje: string, onConfirm?: () => void }>({ visible: false, tipo: 'info', mensaje: '' })
 
-  const [sucursalFiltro, setSucursalFiltro] = useState('Todas')
-  const [fechaDesde, setFechaDesde] = useState(() => {
-    const inicio = new Date()
-    inicio.setDate(inicio.getDate() - 29)
-    return fechaTexto(inicio)
-  })
-  const [fechaHasta, setFechaHasta] = useState(() => fechaTexto(new Date()))
-  const [categoriaFiltro, setCategoriaFiltro] = useState('Todas')
+  const mostrarMensaje = (mensaje: string, tipo: 'info' | 'error' = 'info') => {
+    setModalConfig({ visible: true, tipo, mensaje })
+  }
+
+  const mostrarConfirmacion = (mensaje: string, onConfirm: () => void) => {
+    setModalConfig({ visible: true, tipo: 'confirm', mensaje, onConfirm })
+  }
+
+  const cerrarModal = () => {
+    setModalConfig({ ...modalConfig, visible: false })
+  }
+
+  const esAdmin = (rol ?? '').toUpperCase() === 'ADMIN'
 
   useEffect(() => {
-    async function cargarPlantillas() {
+    async function cargarTodo() {
       try {
-        const lista = await fetchPlantillasReporte()
-        setPlantillas(lista)
+        const [listaPlantillas, listaVentas, listaStock] = await Promise.all([
+          obtenerPlantillasReporte(),
+          obtenerVentas(),
+          obtenerStock(),
+        ])
+        setPlantillas(listaPlantillas.sort((a, b) => (b.id || 0) - (a.id || 0)))
+        setVentas(listaVentas)
+        setStock(listaStock)
       } catch {
-        setMensajePlantilla('No se pudo cargar el listado desde ms-reportes.')
+        console.error('Error al cargar datos')
       }
     }
-
-    cargarPlantillas()
+    cargarTodo()
   }, [])
 
-  useEffect(() => {
-    async function cargarDatos() {
-      setMensajeDatos('')
-      const esEmpleadoTienda = (rol ?? '').toUpperCase() === 'EMPLEADO_TIENDA'
-      const sucursal = sucursalAsignada ?? ''
+  // --- LOGICA DE ANALITICA (SOLO ADMIN) ---
+  const analiticaSucursales = useMemo(() => {
+    const mapa = new Map<string, number>()
+    ventas.forEach(v => {
+      const actual = mapa.get(v.sucursal) ?? 0
+      mapa.set(v.sucursal, actual + (v.montoTotal || 0))
+    })
+    return Array.from(mapa.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+  }, [ventas])
 
-      try {
-        if (esEmpleadoTienda && sucursal) {
-          const [ventasSucursal, stockSucursal] = await Promise.all([
-            fetchVentasPorSucursal(sucursal),
-            fetchStock(sucursal),
-          ])
-          setVentas(ventasSucursal)
-          setStock(stockSucursal)
-        } else {
-          const [ventasFull, stockFull] = await Promise.all([
-            fetchVentas(),
-            fetchStock(),
-          ])
-          setVentas(ventasFull)
-          setStock(stockFull)
-        }
-      } catch {
-        setVentas([])
-        setStock([])
-        setMensajeDatos('No se pudo cargar datos reales desde ms-datos.')
+  const ventaTotalGlobal = useMemo(() => analiticaSucursales.reduce((acc, i) => acc + i.value, 0), [analiticaSucursales])
+
+  const analiticaCategorias = useMemo(() => {
+    const mapa = new Map<string, number>()
+    ventas.forEach(v => {
+      const cat = (v.categoria || '').toUpperCase()
+      if (cat === 'HOGAR' || cat === 'ELECTRONICA' || cat === 'ELECTRÓNICA') {
+        const nombreLimpio = cat === 'ELECTRÓNICA' ? 'ELECTRONICA' : cat
+        const actual = mapa.get(nombreLimpio) ?? 0
+        mapa.set(nombreLimpio, actual + (v.montoTotal || 0))
       }
-    }
+    })
+    return Array.from(mapa.entries()).map(([name, value]) => ({ name, value }))
+  }, [ventas])
 
-    cargarDatos()
-  }, [rol, sucursalAsignada])
-
-  const esEmpleadoTienda = (rol ?? '').toUpperCase() === 'EMPLEADO_TIENDA'
-  const sucursalBloqueada = esEmpleadoTienda && Boolean(sucursalAsignada)
-
-  const sucursalesOpciones = useMemo(() => {
-    const setSucursales = new Set<string>()
-    ventas.forEach((venta) => venta.sucursal && setSucursales.add(venta.sucursal))
-    stock.forEach((item) => item.sucursal && setSucursales.add(item.sucursal))
-    return ['Todas', ...Array.from(setSucursales).sort((a, b) => a.localeCompare(b, 'es'))]
-  }, [ventas, stock])
-
-  const categoriasOpciones = useMemo(() => {
-    const setCategorias = new Set<string>()
-    stock.forEach((item) => item.categoria && setCategorias.add(item.categoria))
-    return ['Todas', ...Array.from(setCategorias).sort((a, b) => a.localeCompare(b, 'es'))]
+  const analiticaStockSucursales = useMemo(() => {
+    const mapa = new Map<string, number>()
+    stock.forEach(s => {
+      const actual = mapa.get(s.sucursal) ?? 0
+      mapa.set(s.sucursal, actual + (s.cantidad || 0))
+    })
+    return Array.from(mapa.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
   }, [stock])
 
-  const categoriasAnalitica = useMemo(
-    () => categoriasOpciones.filter((categoria) => categoria !== 'Todas'),
-    [categoriasOpciones],
-  )
+  const sucursalTop = useMemo(() => analiticaSucursales[0] || { name: '-', value: 0 }, [analiticaSucursales])
 
-  const registrosAnaliticos = useMemo(() => {
-    if (!ventas.length) return []
-
-    const stockPorSucursal = new Map<string, Map<string, { cantidad: number; criticos: number }>>()
-
-    for (const item of stock) {
-      const sucursal = item.sucursal
-      const categoria = item.categoria || 'General'
-      const mapCategorias = stockPorSucursal.get(sucursal) ?? new Map()
-      const actual = mapCategorias.get(categoria) ?? { cantidad: 0, criticos: 0 }
-      mapCategorias.set(categoria, {
-        cantidad: actual.cantidad + item.cantidad,
-        criticos: actual.criticos + (item.cantidad < STOCK_CRITICO_UMBRAL ? 1 : 0),
-      })
-      stockPorSucursal.set(sucursal, mapCategorias)
+  // --- FUNCIONES AUXILIARES PARA METADATA ---
+  const parseMetadata = (estado: string) => {
+    try {
+      return JSON.parse(estado);
+    } catch {
+      return null; // Reportes antiguos no usarán esta lógica
     }
+  };
 
-    const mapa = new Map<string, RegistroAnalitico>()
+  const ultimoReporte = useMemo(() => {
+    return plantillas
+      .filter(p => p.titulo === `Reporte Sucursal ${sucursalAsignada}` && p.estado.includes('{'))
+      .sort((a, b) => (b.id || 0) - (a.id || 0))[0]
+  }, [plantillas, sucursalAsignada])
 
-    for (const venta of ventas) {
-      const fecha = venta.fechaVenta ? fechaTexto(new Date(venta.fechaVenta)) : ''
-      if (!fecha) continue
-
-      const sucursal = venta.sucursal
-      const categorias = stockPorSucursal.get(sucursal) ?? new Map([['General', { cantidad: 0, criticos: 0 }]])
-      const totalStock = Array.from(categorias.values()).reduce((acc, item) => acc + item.cantidad, 0)
-
-      categorias.forEach((info, categoria) => {
-        const proporcion = totalStock > 0 ? info.cantidad / totalStock : 1
-        const ventasCategoria = (venta.montoTotal ?? 0) * proporcion
-        const key = `${fecha}|${sucursal}|${categoria}`
-
-        const existente = mapa.get(key)
-        if (existente) {
-          mapa.set(key, {
-            ...existente,
-            ventas: existente.ventas + ventasCategoria,
-          })
-        } else {
-          mapa.set(key, {
-            fecha,
-            sucursal,
-            categoria,
-            ventas: ventasCategoria,
-            inventario: info.cantidad,
-            stockCritico: info.criticos,
-            margen: 0,
-          })
-        }
+  // --- FUNCION DE ENVIO ---
+  async function enviarReporteDiario() {
+    try {
+      const ventasSucursal = ventas.filter(v => v.sucursal === sucursalAsignada);
+      const stockSucursal = stock.filter(s => s.sucursal === sucursalAsignada);
+      
+      const maxVentaId = ventasSucursal.length > 0 ? Math.max(...ventasSucursal.map(v => v.id)) : 0;
+      const maxStockId = stockSucursal.length > 0 ? Math.max(...stockSucursal.map(s => s.id)) : 0;
+      
+      const isoEstado = new Date().toISOString()
+      const estadoData = JSON.stringify({
+        maxVentaId,
+        maxStockId,
+        fechaISO: isoEstado
+      });
+      
+      await crearPlantillaReporte({
+        titulo: `Reporte Sucursal ${sucursalAsignada}`,
+        estado: estadoData
       })
+      
+      mostrarMensaje(`Reporte de ${sucursalAsignada} enviado con éxito al administrador.`)
+      
+      const lista = await obtenerPlantillasReporte()
+      setPlantillas(lista.sort((a, b) => (b.id || 0) - (a.id || 0)))
+    } catch {
+      mostrarMensaje('Error al enviar el reporte. Intente nuevamente.', 'error')
     }
+  }
 
-    return Array.from(mapa.values())
-  }, [ventas, stock])
+  // --- FILTROS PARA EL EMPLEADO ---
+  const ventasEmpleado = useMemo(() => {
+    return ventas.filter(v => {
+      if (v.sucursal !== sucursalAsignada) return false;
+      if (!ultimoReporte) return true;
+      const meta = parseMetadata(ultimoReporte.estado);
+      if (!meta) return true;
+      return v.id > meta.maxVentaId;
+    });
+  }, [ventas, sucursalAsignada, ultimoReporte])
 
-  const registrosFiltrados = useMemo(() => {
-    const asignadaNorm = sucursalAsignada ? normalizarTexto(sucursalAsignada) : null
-    const filtroNorm = normalizarTexto(sucursalFiltro)
+  const stockEmpleado = useMemo(() => {
+    return stock.filter(s => {
+      if (s.sucursal !== sucursalAsignada) return false;
+      if (!ultimoReporte) return true;
+      const meta = parseMetadata(ultimoReporte.estado);
+      if (!meta) return true;
+      return s.id > meta.maxStockId;
+    });
+  }, [stock, sucursalAsignada, ultimoReporte])
 
-    return registrosAnaliticos.filter((item) => {
-      const sucursalItemNorm = normalizarTexto(item.sucursal)
+  // --- FUNCION DE ELIMINACION (ADMIN) ---
+  async function manejarEliminarReporte(id: number | undefined) {
+    if (!id) return;
+    mostrarConfirmacion('¿Está seguro de que desea eliminar este reporte de forma permanente?', async () => {
+      try {
+        await eliminarPlantillaReporte(id);
+        const lista = await obtenerPlantillasReporte();
+        setPlantillas(lista.sort((a, b) => (b.id || 0) - (a.id || 0)));
+        if (idPlantillaExpandida === id) setIdPlantillaExpandida(null);
+        cerrarModal();
+      } catch (error) {
+        mostrarMensaje('Error al eliminar el reporte.', 'error');
+      }
+    });
+  }
 
-      if (sucursalBloqueada && asignadaNorm && sucursalItemNorm !== asignadaNorm) return false
-      if (!sucursalBloqueada && sucursalFiltro !== 'Todas' && sucursalItemNorm !== filtroNorm) return false
-      if (categoriaFiltro !== 'Todas' && item.categoria !== categoriaFiltro) return false
-      if (fechaDesde && item.fecha < fechaDesde) return false
-      if (fechaHasta && item.fecha > fechaHasta) return false
-      return true
-    })
-  }, [categoriaFiltro, fechaDesde, fechaHasta, sucursalFiltro, sucursalBloqueada, sucursalAsignada, registrosAnaliticos])
-
-  const stockFiltrado = useMemo(() => {
-    const asignadaNorm = sucursalAsignada ? normalizarTexto(sucursalAsignada) : null
-    const filtroNorm = normalizarTexto(sucursalFiltro)
-
-    return stock.filter((item) => {
-      const sucursalItemNorm = normalizarTexto(item.sucursal)
-
-      if (sucursalBloqueada && asignadaNorm && sucursalItemNorm !== asignadaNorm) return false
-      if (!sucursalBloqueada && sucursalFiltro !== 'Todas' && sucursalItemNorm !== filtroNorm) return false
-      if (categoriaFiltro !== 'Todas' && item.categoria !== categoriaFiltro) return false
-      return true
-    })
-  }, [categoriaFiltro, sucursalFiltro, sucursalBloqueada, sucursalAsignada, stock])
-
-  const ventaTotalConsolidada = useMemo(
-    () => registrosFiltrados.reduce((acum, item) => acum + item.ventas, 0),
-    [registrosFiltrados],
-  )
-
-  const sucursalMayorRendimiento = useMemo(() => {
-    if (!registrosFiltrados.length) return 'Sin datos'
-
-    const fechaMaxima = registrosFiltrados.reduce(
-      (max, item) => (item.fecha > max ? item.fecha : max),
-      registrosFiltrados[0].fecha,
-    )
-
-    const mapa = new Map<string, number>()
-    registrosFiltrados
-      .filter((item) => item.fecha === fechaMaxima)
-      .forEach((item) => {
-        mapa.set(item.sucursal, (mapa.get(item.sucursal) ?? 0) + item.ventas)
-      })
-
-    const lider = Array.from(mapa.entries()).sort((a, b) => b[1] - a[1])[0]
-    return lider ? `${lider[0]} (${FORMATO_MONEDA.format(lider[1])})` : 'Sin datos'
-  }, [registrosFiltrados])
-
-  const alertasStock = useMemo(
-    () => stockFiltrado.reduce((acum, item) => acum + (item.cantidad < STOCK_CRITICO_UMBRAL ? 1 : 0), 0),
-    [stockFiltrado],
-  )
-
-  const margenGananciaPromedio = useMemo(() => {
-    if (!registrosFiltrados.length) return 0
+  const RenderModal = () => {
+    if (!modalConfig.visible) return null;
     return (
-      registrosFiltrados.reduce((acum, item) => acum + item.margen, 0) /
-      registrosFiltrados.length
-    )
-  }, [registrosFiltrados])
-
-  const lineasVentasSemana = useMemo(() => {
-    const mapa = new Map<string, number>()
-
-    registrosFiltrados.forEach((item) => {
-      mapa.set(item.fecha, (mapa.get(item.fecha) ?? 0) + item.ventas)
-    })
-
-    return Array.from(mapa.entries())
-      .map(([fecha, ventas]) => ({ fecha, ventas }))
-      .sort((a, b) => (a.fecha > b.fecha ? 1 : -1))
-      .slice(-7)
-  }, [registrosFiltrados])
-
-  const barrasInventarioSucursal = useMemo(() => {
-    const mapa = new Map<string, number>()
-
-    stockFiltrado.forEach((item) => {
-      mapa.set(item.sucursal, (mapa.get(item.sucursal) ?? 0) + item.cantidad)
-    })
-
-    return Array.from(mapa.entries())
-      .map(([sucursal, inventario]) => ({ sucursal, inventario }))
-      .sort((a, b) => b.inventario - a.inventario)
-      .slice(0, 8)
-  }, [stockFiltrado])
-
-  const heatmapChile = useMemo(() => {
-    const mapa = new Map<string, Map<string, number>>()
-
-    registrosFiltrados.forEach((item) => {
-      const categoriaMap = mapa.get(item.sucursal) ?? new Map<string, number>()
-      categoriaMap.set(item.categoria, (categoriaMap.get(item.categoria) ?? 0) + item.ventas)
-      mapa.set(item.sucursal, categoriaMap)
-    })
-
-    const filas = Array.from(mapa.entries())
-      .map(([sucursal, categorias]) => ({
-        sucursal,
-        valores: categoriasAnalitica.map((categoria) => ({
-          categoria,
-          valor: categorias.get(categoria) ?? 0,
-        })),
-      }))
-      .sort((a, b) => a.sucursal.localeCompare(b.sucursal, 'es'))
-
-    const maximo = filas.reduce((max, fila) => {
-      const local = fila.valores.reduce((m, item) => (item.valor > m ? item.valor : m), 0)
-      return local > max ? local : max
-    }, 0)
-
-    return { filas, maximo }
-  }, [registrosFiltrados, categoriasAnalitica])
-
-  const plantillasVisibles = useMemo(() => {
-    if (!sucursalBloqueada || !sucursalAsignada) return plantillas
-    return plantillas.filter((p) => p.titulo?.includes(`[${sucursalAsignada}]`))
-  }, [plantillas, sucursalBloqueada, sucursalAsignada])
-
-  const totalPaginas = Math.max(1, Math.ceil(plantillasVisibles.length / TAMANO_PAGINA))
-
-  const plantillasPaginadas = useMemo(() => {
-    const inicio = (paginaActual - 1) * TAMANO_PAGINA
-    return plantillasVisibles.slice(inicio, inicio + TAMANO_PAGINA)
-  }, [paginaActual, plantillasVisibles])
-
-  async function crearPlantilla() {
-    setMensajePlantilla('')
-
-    if (!titulo.trim() || !configuracionVisual.trim()) {
-      setMensajePlantilla('Debe completar título y configuración visual.')
-      return
-    }
-
-    const tituloFinal = sucursalBloqueada && sucursalAsignada
-      ? `[${sucursalAsignada}] ${titulo.trim()}`
-      : titulo.trim()
-
-    try {
-      const creada = await createPlantillaReporte({
-        titulo: tituloFinal,
-        configuracionVisual: configuracionVisual.trim(),
-        estado: 'Activo',
-      })
-
-      setPlantillas((actual) => [creada, ...actual])
-      setTitulo('')
-      setConfiguracionVisual('')
-      setPaginaActual(1)
-      setMensajePlantilla('Plantilla creada correctamente.')
-    } catch {
-      setMensajePlantilla('No fue posible crear la plantilla en ms-reportes.')
-    }
-  }
-
-  async function eliminarPlantilla(id: number) {
-    try {
-      await eliminarPlantillaReporte(id)
-    } catch {
-    }
-
-    setPlantillas((actual) => actual.filter((item) => item.id !== id))
-  }
-
-  function exportarPDF() {
-    const contenido = JSON.stringify(plantillas, null, 2)
-    descargarComoTexto('reportes.pdf', contenido)
-  }
-
-  function exportarExcel() {
-    const cabecera = 'id,titulo,configuracionVisual,estado\n'
-    const filas = plantillas
-      .map(
-        (item) =>
-          `${item.id},"${item.titulo}","${item.configuracionVisual}",${item.estado}`,
-      )
-      .join('\n')
-
-    descargarComoTexto('reportes.csv', cabecera + filas)
-  }
-
-  return (
-    <section className="pagina-contenido">
-      <div className="encabezado-pagina">
-        <h2>Módulo de Reportes</h2>
-        <p>Panel ejecutivo, filtros avanzados y visualización analítica</p>
-      </div>
-
-      <section className="reportes-kpi-grid">
-        {mensajeDatos && <p className="mensaje-error">{mensajeDatos}</p>}
-        <article className="reportes-kpi-card">
-          <h3>Venta Total Consolidada</h3>
-          <p>{FORMATO_MONEDA.format(ventaTotalConsolidada)}</p>
-        </article>
-
-        <article className="reportes-kpi-card">
-          <h3>Sucursal con Mayor Rendimiento</h3>
-          <p>{sucursalMayorRendimiento}</p>
-        </article>
-
-        <article className="reportes-kpi-card">
-          <h3>Alertas de Stock</h3>
-          <p>{alertasStock}</p>
-        </article>
-
-        <article className="reportes-kpi-card">
-          <h3>Margen de Ganancia</h3>
-          <p>{margenGananciaPromedio.toFixed(1)}%</p>
-        </article>
-      </section>
-
-      <section className="tarjeta-panel">
-        <h3>Barra de Filtros Inteligente</h3>
-        <div className="reportes-filtros-grid">
-          {!sucursalBloqueada && (
-            <label>
-              Selector de Sucursal
-              <select
-                value={sucursalFiltro}
-                onChange={(evento) => setSucursalFiltro(evento.target.value)}
-              >
-                {sucursalesOpciones.map((sucursal) => (
-                  <option key={sucursal} value={sucursal}>
-                    {sucursal}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          <label>
-            Rango - Desde
-            <input
-              type="date"
-              value={fechaDesde}
-              onChange={(evento) => setFechaDesde(evento.target.value)}
-            />
-          </label>
-
-          <label>
-            Rango - Hasta
-            <input
-              type="date"
-              value={fechaHasta}
-              onChange={(evento) => setFechaHasta(evento.target.value)}
-            />
-          </label>
-
-          <label>
-            Categoría de Producto
-            <select
-              value={categoriaFiltro}
-              onChange={(evento) => setCategoriaFiltro(evento.target.value)}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+        <div style={{ background: 'white', padding: '30px', borderRadius: '12px', minWidth: '300px', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
+          <h3 style={{ marginBottom: '15px', color: modalConfig.tipo === 'error' ? '#ef4444' : '#0f766e' }}>
+            {modalConfig.tipo === 'confirm' ? 'Confirmación' : modalConfig.tipo === 'error' ? 'Error' : 'Notificación'}
+          </h3>
+          <p style={{ marginBottom: '25px', color: '#334155' }}>{modalConfig.mensaje}</p>
+          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+            {modalConfig.tipo === 'confirm' && (
+              <button onClick={cerrarModal} style={{ padding: '8px 16px', background: '#94a3b8', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                Cancelar
+              </button>
+            )}
+            <button 
+              onClick={() => {
+                if (modalConfig.tipo === 'confirm' && modalConfig.onConfirm) {
+                  modalConfig.onConfirm();
+                } else {
+                  cerrarModal();
+                }
+              }} 
+              style={{ padding: '8px 16px', background: modalConfig.tipo === 'error' ? '#ef4444' : '#0f766e', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
             >
-              {categoriasOpciones.map((categoria) => (
-                <option key={categoria} value={categoria}>
-                  {categoria}
-                </option>
-              ))}
-            </select>
-          </label>
+              Aceptar
+            </button>
+          </div>
         </div>
-      </section>
+      </div>
+    );
+  };
 
-      <section className="reportes-graficos-grid">
-        <article className="tarjeta-panel">
-          <h3>Gráfico de Líneas: evolución de ventas de la semana</h3>
-          <div className="contenedor-grafico">
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={lineasVentasSemana}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="fecha" />
-                <YAxis tickFormatter={(valor) => FORMATO_COMPACTO.format(Number(valor))} />
-                <Tooltip formatter={(valor) => FORMATO_MONEDA.format(Number(valor))} />
-                <Line
-                  type="monotone"
-                  dataKey="ventas"
-                  stroke="#0f766e"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </article>
+  // --- COLORES PARA GRAFICOS ---
+  const COLORES = ['#0f766e', '#2563eb', '#7c3aed', '#db2777', '#ea580c']
 
-        <article className="tarjeta-panel">
-          <h3>Gráfico de Barras: inventario por sucursal</h3>
-          <div className="contenedor-grafico">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={barrasInventarioSucursal}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="sucursal" interval={0} angle={-18} textAnchor="end" height={58} />
-                <YAxis tickFormatter={(valor) => FORMATO_COMPACTO.format(Number(valor))} />
-                <Tooltip />
-                <Bar dataKey="inventario" fill="#2563eb" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </article>
-      </section>
+  // VISTA PARA EL ADMINISTRADOR
+  if (esAdmin) {
+    return (
+      <section className="pagina-contenido">
+        <div className="encabezado-pagina">
+          <h2>Análisis de Rendimiento y Reportes</h2>
+          <p>Visión global del desempeño de sucursales y auditoría de envíos</p>
+        </div>
 
-      {!sucursalBloqueada && categoriasAnalitica.length > 0 && (
+        {/* Componente extraído de KPIs Rápidos */}
+        <GrillaKpiAdmin ventaTotalGlobal={ventaTotalGlobal} sucursalTop={sucursalTop} />
+
+        {/* --- SECCION DE GRAFICOS Y DESEMPEÑO --- */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '20px', marginBottom: '30px' }}>
+          
+          {/* Componente extraído de Ranking de Sucursales */}
+          <ListaRankingSucursales 
+            analiticaSucursales={analiticaSucursales} 
+            sucursalTop={sucursalTop} 
+            colores={COLORES} 
+          />
+
+          <GraficosAdmin 
+            analiticaStockSucursales={analiticaStockSucursales}
+            analiticaCategorias={analiticaCategorias}
+            colores={COLORES}
+          />
+        </div>
+
+        {/* --- LISTADO DE REPORTES RECIBIDOS (ACORDEONES) --- */}
         <section className="tarjeta-panel">
-          <h3>Mapa de Calor: concentración de ventas en Chile</h3>
-          <div className="reportes-heatmap-cabecera">
-            <span>Sucursal</span>
-            {categoriasAnalitica.map((categoria) => (
-              <span key={categoria}>{categoria}</span>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h3>Listado de Reportes Recibidos</h3>
+            <span className="badge-info">{plantillas.length} reportes</span>
           </div>
+          
+          <div className="tabla-simple">
+            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', background: '#f1f5f9' }}>
+              <span>Sucursal</span>
+              <span>Fecha Envío</span>
+              <span style={{ textAlign: 'center' }}>Acción</span>
+            </div>
 
-          <div className="reportes-heatmap-grid">
-            {heatmapChile.filas.map((fila) => (
-              <div className="reportes-heatmap-row" key={fila.sucursal}>
-                <span className="reportes-heatmap-sucursal">{fila.sucursal}</span>
-                {fila.valores.map((item) => {
-                  const intensidad = heatmapChile.maximo
-                    ? item.valor / heatmapChile.maximo
-                    : 0
-
-                  return (
-                    <span
-                      key={`${fila.sucursal}-${item.categoria}`}
-                      className="reportes-heatmap-celda"
-                      style={{
-                        backgroundColor: `rgba(15, 118, 110, ${0.1 + intensidad * 0.85})`,
-                      }}
-                      title={`${fila.sucursal} - ${item.categoria}: ${FORMATO_MONEDA.format(item.valor)}`}
-                    >
-                      {FORMATO_COMPACTO.format(item.valor)}
-                    </span>
-                  )
-                })}
-              </div>
+            {plantillas.map((p) => (
+              <FilaAuditoriaReporte
+                key={p.id}
+                reporte={p}
+                isExpandido={idPlantillaExpandida === p.id}
+                onToggle={() => setIdPlantillaExpandida(idPlantillaExpandida === p.id ? null : (p.id || null))}
+                onEliminar={manejarEliminarReporte}
+                ventas={ventas}
+                stock={stock}
+                plantillas={plantillas}
+              />
             ))}
           </div>
         </section>
-      )}
-
-      <section className="tarjeta-panel">
-        <h3>Nueva plantilla</h3>
-        <div className="formulario-simple">
-          <label>
-            Título
-            <input
-              type="text"
-              value={titulo}
-              onChange={(evento) => setTitulo(evento.target.value)}
-            />
-          </label>
-
-          <label>
-            Configuración visual
-            <input
-              type="text"
-              value={configuracionVisual}
-              onChange={(evento) => setConfiguracionVisual(evento.target.value)}
-            />
-          </label>
-
-          <button type="button" onClick={crearPlantilla}>
-            Crear plantilla
-          </button>
-        </div>
-
-        {mensajePlantilla && <p>{mensajePlantilla}</p>}
+        {RenderModal()}
       </section>
+    )
+  }
 
-      <section className="tarjeta-panel">
-        <div className="fila-acciones">
-          <h3>Listado de reportes</h3>
-          <div>
-            <button type="button" onClick={exportarPDF}>
-              Descargar PDF
-            </button>
-            <button type="button" onClick={exportarExcel}>
-              Descargar Excel
-            </button>
-          </div>
+  // VISTA PARA EL EMPLEADO (AUDITORÍA LOCAL + BOTÓN ENVIAR)
+  return (
+    <section className="pagina-contenido">
+      <div className="encabezado-pagina" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2>Auditoría de Sucursal - {sucursalAsignada}</h2>
+          <p>Monitoreo de movimientos diarios y envío de reportes</p>
         </div>
+        <button 
+          onClick={enviarReporteDiario}
+          style={{ background: '#0f766e', padding: '12px 24px', fontSize: '1.1rem', fontWeight: 'bold' }}
+        >
+          ENVIAR REPORTE AL ADMIN
+        </button>
+      </div>
 
-        <div className="tabla-simple">
-          <div className="fila fila-encabezado">
-            <span>Título</span>
-            <span>Estado</span>
-            <span>Acciones</span>
-          </div>
-          {plantillasPaginadas.map((plantilla) => (
-            <div className="fila" key={plantilla.id}>
-              <span>{plantilla.titulo}</span>
-              <span>{plantilla.estado}</span>
-              <span>
-                <button type="button" onClick={() => eliminarPlantilla(plantilla.id)}>
-                  Eliminar
-                </button>
-              </span>
+      <div style={{ display: 'grid', gap: '30px', marginTop: '30px' }}>
+        <section className="tarjeta-panel">
+          <h3 style={{ color: '#2563eb', marginBottom: '15px' }}>Auditoría de Ventas Detallada</h3>
+          <div className="tabla-simple">
+            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
+              <span>Empleado</span>
+              <span>Categoría</span>
+              <span>Producto</span>
+              <span>Cant.</span>
+              <span>Precio Unitario</span>
+              <span>Venta Total</span>
             </div>
-          ))}
-          {plantillasPaginadas.length === 0 && <p>No hay plantillas creadas aún.</p>}
-        </div>
+            {ventasEmpleado
+              .sort((a, b) => b.id - a.id)
+              .map((v, i) => (
+                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr 1fr' }}>
+                  <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{v.vendedor || 'Admin'}</span>
+                  <span>{v.categoria || 'VARIOS'}</span>
+                  <span>{v.producto}</span>
+                  <strong>{v.cantidad}</strong>
+                  <span>{FORMATO_MONEDA.format(v.precioUnitario || 0)}</span>
+                  <span style={{ fontWeight: 'bold', color: '#0f766e' }}>{FORMATO_MONEDA.format((v.precioUnitario || 0) * (v.cantidad || 0))}</span>
+                </div>
+              ))}
+          </div>
+        </section>
 
-        <div className="paginacion">
-          <button
-            type="button"
-            disabled={paginaActual === 1}
-            onClick={() => setPaginaActual((valor) => Math.max(1, valor - 1))}
-          >
-            Anterior
-          </button>
-          <span>
-            Página {paginaActual} de {totalPaginas}
-          </span>
-          <button
-            type="button"
-            disabled={paginaActual === totalPaginas}
-            onClick={() => setPaginaActual((valor) => Math.min(totalPaginas, valor + 1))}
-          >
-            Siguiente
-          </button>
-        </div>
-      </section>
+        <section className="tarjeta-panel">
+          <h3 style={{ color: '#0f766e', marginBottom: '15px' }}>Auditoría de Stock (Ingresos)</h3>
+          <div className="tabla-simple">
+            <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
+              <span>Empleado</span>
+              <span>Categoría</span>
+              <span>Producto</span>
+              <span>Stock</span>
+              <span>Precio Unitario</span>
+            </div>
+            {stockEmpleado
+              .sort((a, b) => b.id - a.id)
+              .map((s, i) => (
+                <div key={i} className="fila" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.5fr 0.8fr 1fr' }}>
+                  <span style={{ color: '#0f766e', fontWeight: 'bold' }}>{s.vendedor || 'Sistema'}</span>
+                  <span>{s.categoria}</span>
+                  <span>{s.producto}</span>
+                  <strong>{s.cantidad}</strong>
+                  <span>{FORMATO_MONEDA.format(s.precioUnitario || 0)}</span>
+                </div>
+              ))}
+          </div>
+        </section>
+      </div>
+      {RenderModal()}
     </section>
   )
 }

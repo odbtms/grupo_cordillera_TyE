@@ -98,36 +98,40 @@ function App() {
 
   const opcionesMenu: Array<{ clave: PaginaSistema; texto: string }> = esEmpleadoTienda
     ? [
-        { clave: 'dashboard', texto: 'Dashboard principal' },
-        { clave: 'reportes', texto: 'Módulo de reportes' },
-      ]
+      { clave: 'dashboard', texto: 'Dashboard principal' },
+      { clave: 'reportes', texto: 'Módulo de reportes' },
+    ]
     : [
-        { clave: 'dashboard', texto: 'Dashboard principal' },
-        { clave: 'reportes', texto: 'Módulo de reportes' },
-        ...(esAdmin
-          ? ([
-              {
-                clave: 'gestion-organizacional',
-                texto: 'Gestión organizacional',
-              },
-            ] as Array<{ clave: PaginaSistema; texto: string }>)
-          : []),
-        {
-          clave: 'configuracion-auditoria',
-          texto: 'Configuración y auditoría',
-        },
-      ]
+      { clave: 'dashboard', texto: 'Dashboard principal' },
+      { clave: 'reportes', texto: 'Módulo de reportes' },
+      ...(esAdmin
+        ? ([
+          {
+            clave: 'gestion-organizacional',
+            texto: 'Gestión organizacional',
+          },
+        ] as Array<{ clave: PaginaSistema; texto: string }>)
+        : []),
+      {
+        clave: 'configuracion-auditoria',
+        texto: 'Configuración y auditoría',
+      },
+    ]
 
-  let contenidoPagina = esEmpleadoTienda && sucursal
-    ? <EmpleadoDashboardPage sucursalAsignada={sucursal} />
-    : <DashboardPrincipalPage />
+  let contenidoPagina = <DashboardPrincipalPage />
+
+  if (esEmpleadoTienda) {
+    contenidoPagina = sucursal
+      ? <EmpleadoDashboardPage sucursalAsignada={sucursal} nombreUsuario={usuario} />
+      : <div className="cargando-pantalla">Cargando sucursal asignada...</div>
+  }
 
   if (paginaActual === 'reportes') {
     contenidoPagina = <ReportesPage rol={rol} sucursalAsignada={sucursal} />
   }
 
   if (paginaActual === 'gestion-organizacional' && esAdmin && !esEmpleadoTienda) {
-    contenidoPagina = <GestionOrganizacionalPage />
+    contenidoPagina = <GestionOrganizacionalPage nombreUsuario={usuario} />
   }
 
   if (paginaActual === 'configuracion-auditoria' && !esEmpleadoTienda) {
@@ -145,7 +149,7 @@ function App() {
     <AdminLayout>
       <main className="aplicacion-contenedor">
         <aside className="menu-lateral">
-          <h2>Panel Admin</h2>
+          <h2>Panel Empleado</h2>
           <p>{usuario}</p>
           {esEmpleadoTienda && sucursal && <p>Sucursal: {sucursal}</p>}
 

@@ -2,23 +2,21 @@ import { reportesHttp } from './http'
 
 export type PlantillaReporteInput = {
   titulo: string
-  configuracionVisual: string
   estado: string
 }
 
 export type PlantillaReporte = {
   id: number
   titulo: string
-  configuracionVisual: string
   estado: string
 }
 
-export async function fetchPlantillasReporte(): Promise<PlantillaReporte[]> {
+export async function obtenerPlantillasReporte(): Promise<PlantillaReporte[]> {
   const { data } = await reportesHttp.get<PlantillaReporte[]>('/plantillas')
   return Array.isArray(data) ? data : []
 }
 
-export async function createPlantillaReporte(
+export async function crearPlantillaReporte(
   payload: PlantillaReporteInput,
 ): Promise<PlantillaReporte> {
   const { data } = await reportesHttp.post<PlantillaReporte>(

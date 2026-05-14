@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchStock, fetchVentasPorSucursal } from '../api'
+import { obtenerStock, obtenerVentasPorSucursal, registrarVenta, upsertStock } from '../api'
 import type { StockItem, Venta } from '../types'
 import {
   Area,
@@ -10,32 +10,20 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { FORMATO_MONEDA, FORMATO_COMPACTO, normalizarTexto } from '../utils/formatters'
 
-const FORMATO_MONEDA = new Intl.NumberFormat('es-CL', {
-  style: 'currency',
-  currency: 'CLP',
-  maximumFractionDigits: 0,
-})
-
-const FORMATO_COMPACTO = new Intl.NumberFormat('es-CL', {
-  notation: 'compact',
-  maximumFractionDigits: 1,
-})
-
-function normalizarTexto(texto: string) {
-  return texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-}
+import FormularioVenta from '../components/empleado/FormularioVenta'
+import FormularioStock from '../components/empleado/FormularioStock'
+import TablaStock from '../components/empleado/TablaStock'
 
 type EmpleadoDashboardPageProps = {
   sucursalAsignada: string
+  nombreUsuario: string
 }
 
 function EmpleadoDashboardPage({
   sucursalAsignada,
+  nombreUsuario,
 }: EmpleadoDashboardPageProps) {
   const [ventas, setVentas] = useState<Venta[]>([])
   const [stock, setStock] = useState<StockItem[]>([])
@@ -44,32 +32,153 @@ function EmpleadoDashboardPage({
   const [mensajeError, setMensajeError] = useState('')
   const [periodoAnalisis, setPeriodoAnalisis] = useState('GENERAL')
 
+  // Estado para registro de ventas (Empleado)
+  const [nuevaVenta, setNuevaVenta] = useState({
+    montoTotal: 0,
+    sistemaOrigen: 'POS',
+    categoria: 'TODOS',
+    producto: '',
+    cantidad: 1,
+    precioUnitario: 0,
+  })
+
+  const [carrito, setCarrito] = useState<Array<{
+    producto: string
+    cantidad: number
+    precioUnitario: number
+    subtotal: number
+    categoria: string
+  }>>([])
+
+  const [mensajeVenta, setMensajeVenta] = useState('')
+
+  const [nuevoStock, setNuevoStock] = useState({
+    categoria: 'HOGAR',
+    producto: '',
+    cantidad: 0,
+    precioUnitario: 0,
+  })
+  const [mensajeStock, setMensajeStock] = useState('')
+
+  async function cargarDatos() {
+    setCargando(true)
+    setMensajeError('')
+
+    try {
+      const [ventasSucursal, stockSucursal] = await Promise.all([
+        obtenerVentasPorSucursal(sucursalAsignada),
+        obtenerStock(sucursalAsignada),
+      ])
+
+      setVentas(ventasSucursal)
+      setStock(stockSucursal)
+      setAlertas([])
+    } catch {
+      setVentas([])
+      setStock([])
+      setAlertas([])
+      setMensajeError('No se pudo conectar con backend o cargar los datos.')
+    } finally {
+      setCargando(false)
+    }
+  }
+
   useEffect(() => {
-    async function cargarDatos() {
-      setCargando(true)
-      setMensajeError('')
+    cargarDatos()
+  }, [sucursalAsignada])
 
-      try {
-        const [ventasSucursal, stockSucursal] = await Promise.all([
-          fetchVentasPorSucursal(sucursalAsignada),
-          fetchStock(sucursalAsignada),
-        ])
-
-        setVentas(ventasSucursal)
-        setStock(stockSucursal)
-        setAlertas(ventasSucursal.length ? ['Sin alertas críticas detectadas.'] : ['Sin ventas registradas.'])
-      } catch {
-        setVentas([])
-        setStock([])
-        setAlertas([])
-        setMensajeError('No se pudo conectar con backend o cargar los datos.')
-      } finally {
-        setCargando(false)
-      }
+  function agregarAlVenta() {
+    if (!nuevaVenta.producto || nuevaVenta.cantidad <= 0) {
+      setMensajeVenta('Seleccione producto y cantidad válida.')
+      return
     }
 
-    cargarDatos()
-  }, [])
+    // Validación de stock disponible localmente
+    const normalizar = (t: string) => t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const itemStock = stock.find(i => normalizar(i.producto) === normalizar(nuevaVenta.producto));
+    const stockDisponible = itemStock?.cantidad || 0;
+
+    if (nuevaVenta.cantidad > stockDisponible) {
+      setMensajeVenta(`Solamente queda ${stockDisponible} stock de este producto.`);
+      return;
+    }
+
+    setCarrito(actual => [
+      ...actual,
+      {
+        producto: nuevaVenta.producto,
+        cantidad: nuevaVenta.cantidad,
+        precioUnitario: nuevaVenta.precioUnitario,
+        subtotal: nuevaVenta.montoTotal,
+        categoria: nuevaVenta.categoria
+      }
+    ])
+
+    setNuevaVenta(actual => ({
+      ...actual,
+      producto: '',
+      precioUnitario: 0,
+      montoTotal: 0,
+      cantidad: 1
+    }))
+    setMensajeVenta('')
+  }
+
+  async function procesarVentaCompleta() {
+    if (carrito.length === 0) return
+
+    try {
+      await Promise.all(carrito.map(item => 
+        registrarVenta({
+          montoTotal: item.subtotal,
+          sistemaOrigen: nuevaVenta.sistemaOrigen,
+          sucursal: sucursalAsignada,
+          vendedor: nombreUsuario,
+          categoria: item.categoria,
+          producto: item.producto,
+          cantidad: item.cantidad,
+          precioUnitario: item.precioUnitario,
+        })
+      ))
+
+      setCarrito([])
+      setMensajeVenta('Venta registrada con éxito. Stock actualizado.')
+      
+      await cargarDatos(); // Recargar stock y ventas
+    } catch {
+      setMensajeVenta('Error al procesar la venta.')
+    }
+  }
+
+  async function manejarRegistroStock() {
+    setMensajeStock('')
+    if (!nuevoStock.producto.trim() || nuevoStock.cantidad <= 0) {
+      setMensajeStock('Complete producto y cantidad correctamente.')
+      return
+    }
+
+    try {
+      await upsertStock({
+        sucursal: sucursalAsignada,
+        categoria: nuevoStock.categoria,
+        producto: nuevoStock.producto,
+        cantidad: nuevoStock.cantidad,
+        precioUnitario: nuevoStock.precioUnitario,
+        vendedor: nombreUsuario,
+        fechaRegistro: new Date().toISOString(),
+      })
+      setMensajeStock('Stock registrado con éxito.')
+      setNuevoStock({
+        categoria: 'HOGAR',
+        producto: '',
+        cantidad: 0,
+        precioUnitario: 0,
+      })
+      await cargarDatos() // Actualiza el dashboard
+    } catch {
+      setMensajeStock('Error al registrar el stock.')
+    }
+  }
 
   const serieSucursalActiva = useMemo(() => {
     const sucursalObjetivo = normalizarTexto(sucursalAsignada)
@@ -119,13 +228,6 @@ function EmpleadoDashboardPage({
     return datoMes?.total ?? 0
   }, [periodoAnalisis, resumenSucursalActiva, serieSucursalActiva])
 
-  const stockPorCategoria = useMemo(() => {
-    const mapa = new Map<string, number>()
-    for (const item of stock) {
-      mapa.set(item.categoria, (mapa.get(item.categoria) ?? 0) + item.cantidad)
-    }
-    return Array.from(mapa.entries()).map(([categoria, total]) => ({ categoria, total }))
-  }, [stock])
 
 
 
@@ -138,14 +240,14 @@ function EmpleadoDashboardPage({
 
       {cargando && <p>Cargando información...</p>}
       {mensajeError && <p className="mensaje-error">{mensajeError}</p>}
-      {!mensajeError && alertas.length > 0 && <p className="mensaje-demo">{alertas[0]}</p>}
+      {!mensajeError && alertas.length > 0 && <p className="mensaje">{alertas[0]}</p>}
 
       <section className="tarjeta-panel">
         <div className="encabezado-mini-sucursales">
           <h3>Rendimiento (últimos 6 meses)</h3>
         </div>
 
-        <p className="mensaje-demo">
+        <p className="mensaje">
           Puedes revisar el rendimiento general de {sucursalAsignada} o seleccionar un mes puntual haciendo click en el gráfico.
         </p>
 
@@ -220,25 +322,30 @@ function EmpleadoDashboardPage({
 
       </section>
 
-      <section className="tarjeta-panel">
-        <h3>Stock disponible por categoría</h3>
-        {stock.length === 0 ? (
-          <p className="mensaje-demo">No hay stock registrado para esta sucursal.</p>
-        ) : (
-          <div className="tabla-simple">
-            <div className="fila fila-encabezado">
-              <span>Categoría</span>
-              <span>Total unidades</span>
-            </div>
-            {stockPorCategoria.map((item) => (
-              <div key={item.categoria} className="fila">
-                <span>{item.categoria}</span>
-                <span>{item.total}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      {/* Formulario para que el empleado agregue una venta al carrito */}
+      <FormularioVenta 
+        sucursalAsignada={sucursalAsignada}
+        nuevaVenta={nuevaVenta}
+        setNuevaVenta={setNuevaVenta}
+        stock={stock}
+        carrito={carrito}
+        setCarrito={setCarrito}
+        mensajeVenta={mensajeVenta}
+        agregarAlVenta={agregarAlVenta}
+        procesarVentaCompleta={procesarVentaCompleta}
+      />
+
+      {/* Formulario para ingresar nuevo inventario a la sucursal actual */}
+      <FormularioStock 
+        nuevoStock={nuevoStock}
+        setNuevoStock={setNuevoStock}
+        manejarRegistroStock={manejarRegistroStock}
+        mensajeStock={mensajeStock}
+      />
+
+      {/* Tabla que despliega todo el stock filtrado de la sucursal */}
+      <TablaStock stock={stock} />
+
     </section>
   )
 }

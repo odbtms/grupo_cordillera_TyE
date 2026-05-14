@@ -1,0 +1,4 @@
+com\grupocordillera\reportes\controller\ReporteController.class
+com\grupocordillera\reportes\repository\PlantillaReporteRepository.class
+com\grupocordillera\reportes\model\PlantillaReporte.class
+com\grupocordillera\reportes\Application.class

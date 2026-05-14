@@ -17,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * y actualizar los roles de los usuarios.
  */
 @RestController
-@CrossOrigin(origins = "*")
 @RequestMapping("/api/auth")
 public class AuthController {
 
@@ -89,12 +88,16 @@ public class AuthController {
         usuario.setUsername(request.username().trim());
         usuario.setEmail(request.email().trim());
         usuario.setPassword(passwordEncoder.encode(request.password())); // Encripta la contraseña
-        // Asigna un rol por defecto si no se proporciona uno
-        usuario.setRol(request.rol() == null || request.rol().isBlank()
-                ? "EJECUTIVO"
-                : request.rol().trim().toUpperCase());
-        usuario.setSucursal(request.sucursal() == null || request.sucursal().isBlank()
-                ? null
+        
+        // Asigna un rol por defecto si no se proporciona uno y lo valida
+        String rolAsignado = request.rol() != null ? request.rol().trim().toUpperCase() : "";
+        if (!rolAsignado.equals("ADMIN") && !rolAsignado.equals("EMPLEADO_TIENDA")) {
+            return ResponseEntity.badRequest().build();
+        }
+        usuario.setRol(rolAsignado);
+
+        usuario.setSucursal(request.sucursal() == null || request.sucursal().isBlank() 
+                ? null 
                 : request.sucursal().trim());
 
         // Guarda el usuario en la base de datos
@@ -115,46 +118,67 @@ public class AuthController {
      * válido.
      */
     @GetMapping("/validar")
-    public ResponseEntity<String> validarSesion(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<LoginResponse> validarSesion(@RequestHeader("Authorization") String token) {
         // Remueve el prefijo 'Bearer ' si está presente
         String rawToken = token != null && token.startsWith("Bearer ")
                 ? token.substring(7)
                 : token;
         try {
             // Intenta parsear el token; si tiene éxito, es válido
-            String subject = jwtService.parseToken(rawToken).getBody().getSubject();
-            return ResponseEntity.ok("Token valido: " + subject);
+            String username = jwtService.parseToken(rawToken).getBody().getSubject();
+            return repository.findByUsername(username)
+                    .map(u -> {
+                        LoginResponse response = new LoginResponse(
+                                rawToken,
+                                u.getUsername(),
+                                u.getRol(),
+                                u.getSucursal());
+                        return ResponseEntity.ok(response);
+                    })
+                    .orElse(ResponseEntity.status(401).build());
         } catch (JwtException | IllegalArgumentException ex) {
             // Si hay excepción (expirado, modificado, etc.), retorna 401
-            return ResponseEntity.status(401).body("Token invalido");
+            return ResponseEntity.status(401).build();
         }
     }
+
+    public record RolRequest(String rol) {}
 
     /**
      * Endpoint para actualizar el rol de un usuario buscando por su ID.
      */
     @PutMapping("/usuarios/{id}/rol")
-    public Usuario actualizarRol(@PathVariable Long id, @RequestBody Usuario request) {
-        // Busca al usuario, actualiza el rol y lo guarda, o lanza excepción si no lo
-        // encuentra
+    public ResponseEntity<Usuario> actualizarRol(@PathVariable Long id, @RequestBody RolRequest request) {
+        // Busca al usuario, actualiza el rol y lo guarda, o lanza excepción si no lo encuentra
+        if (request.rol() == null || (!request.rol().trim().toUpperCase().equals("ADMIN") && !request.rol().trim().toUpperCase().equals("EMPLEADO_TIENDA"))) {
+            return ResponseEntity.badRequest().build();
+        }
         return repository.findById(id).map(u -> {
-            u.setRol(request.getRol());
-            return repository.save(u);
-        }).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            u.setRol(request.rol().trim().toUpperCase());
+            return ResponseEntity.ok(repository.save(u));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     /**
      * Endpoint para actualizar el rol de un usuario buscando por su username.
      */
     @PutMapping("/usuarios/username/{username}/rol")
-    public Usuario actualizarRolPorUsername(
+    public ResponseEntity<Usuario> actualizarRolPorUsername(
             @PathVariable String username,
-            @RequestBody Usuario request) {
+            @RequestBody RolRequest request) {
         // Busca al usuario por username, actualiza el rol y lo guarda
+        if (request.rol() == null || (!request.rol().trim().toUpperCase().equals("ADMIN") && !request.rol().trim().toUpperCase().equals("EMPLEADO_TIENDA"))) {
+            return ResponseEntity.badRequest().build();
+        }
         return repository.findByUsername(username).map(u -> {
-            u.setRol(request.getRol());
-            return repository.save(u);
-        }).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            u.setRol(request.rol().trim().toUpperCase());
+            return ResponseEntity.ok(repository.save(u));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/usuarios")
+    public ResponseEntity<java.util.List<Usuario>> listarUsuarios() {
+        return ResponseEntity.ok(repository.findAll());
     }
 
 }

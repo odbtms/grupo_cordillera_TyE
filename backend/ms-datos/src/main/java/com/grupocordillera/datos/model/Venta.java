@@ -30,8 +30,18 @@ public class Venta {
 
     private Double montoTotal; // Monto total recaudado en la venta
 
+    private Integer cantidad;
+
+    private Double precioUnitario;
+
+    private String producto;
+
     // Ej: "Punto de Venta 1", "Ecommerce"
     private String sistemaOrigen; // Origen desde donde se registró la transacción
 
     private String sucursal; // Sucursal donde se efectuó la venta
+
+    private String vendedor;
+
+    private String categoria;
 }

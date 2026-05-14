@@ -25,6 +25,8 @@ public class Kpi {
     
     private String formula; // Fórmula matemática o lógica de negocio para su cálculo
     
+    private Double meta;
+
     private Double valorCalculado; // Último valor numérico resultante del cálculo
     
     private LocalDateTime fechaActualizacion; // Fecha en la que se actualizó el valor o la fórmula
