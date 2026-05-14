@@ -1,9 +1,9 @@
-C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\Application.java
-C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\config\SecurityConfig.java
-C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\controller\AuthController.java
-C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\dto\LoginRequest.java
-C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\dto\LoginResponse.java
-C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\dto\RegisterRequest.java
-C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\model\Usuario.java
-C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\repository\UsuarioRepository.java
-C:\Users\luisy\Desktop\arreglar codigo\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\service\JwtService.java
+C:\Users\tomas\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\Application.java
+C:\Users\tomas\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\config\SecurityConfig.java
+C:\Users\tomas\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\controller\AuthController.java
+C:\Users\tomas\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\dto\LoginRequest.java
+C:\Users\tomas\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\dto\LoginResponse.java
+C:\Users\tomas\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\dto\RegisterRequest.java
+C:\Users\tomas\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\model\Usuario.java
+C:\Users\tomas\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\repository\UsuarioRepository.java
+C:\Users\tomas\grupo_cordillera_TyE\backend\ms-auth\src\main\java\com\grupocordillera\auth\service\JwtService.java
