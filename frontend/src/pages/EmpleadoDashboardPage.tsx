@@ -344,7 +344,21 @@ function EmpleadoDashboardPage({
       />
 
       {/* Tabla que despliega todo el stock filtrado de la sucursal */}
-      <TablaStock stock={stock} />
+      <TablaStock
+        stock={stock}
+        onEditar={async (item, cambios) => {
+          await upsertStock({
+            sucursal: sucursalAsignada,
+            categoria: item.categoria,
+            producto: cambios.producto,
+            cantidad: cambios.cantidad,
+            precioUnitario: cambios.precioUnitario,
+            vendedor: nombreUsuario,
+            fechaRegistro: new Date().toISOString(),
+          })
+          await cargarDatos()
+        }}
+      />
 
     </section>
   )
