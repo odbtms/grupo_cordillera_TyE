@@ -28,10 +28,6 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
   const [stock, setStock] = useState<StockItem[]>([])
   const [modalConfig, setModalConfig] = useState<{ visible: boolean, tipo: 'info' | 'confirm' | 'error', mensaje: string, onConfirm?: () => void }>({ visible: false, tipo: 'info', mensaje: '' })
 
-  const mostrarMensaje = (mensaje: string, tipo: 'info' | 'error' = 'info') => {
-    setModalConfig({ visible: true, tipo, mensaje })
-  }
-
   const mostrarConfirmacion = (mensaje: string, onConfirm: () => void) => {
     setModalConfig({ visible: true, tipo: 'confirm', mensaje, onConfirm })
   }
