@@ -175,7 +175,7 @@ function AdminDashboardPage() {
     const mensajes: string[] = []
 
     if (!ventas.length) {
-      mensajes.push('No hay ventas registradas para analizar.')
+      mensajes.push('No hay ventas registradas para analizar')
       return mensajes
     }
 
