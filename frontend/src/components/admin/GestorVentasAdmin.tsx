@@ -32,6 +32,7 @@ export default function GestorVentasAdmin({ ventas, sucursales, onEditar, onElim
 
   const ventasFiltradas = ventas
     .filter(v => (v.montoTotal ?? 0) > 0)
+    .filter(v => v.sucursal?.trim() && v.vendedor?.trim())
     .filter(v => !filtroSucursal || v.sucursal === filtroSucursal)
     .filter(v => {
       if (!v.fechaVenta) return false
