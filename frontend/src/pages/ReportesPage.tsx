@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
+import { Send } from 'lucide-react'
 import {
   crearPlantillaReporte,
   obtenerPlantillasReporte,
@@ -133,13 +135,16 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
         titulo: `Reporte Sucursal ${sucursalAsignada}`,
         estado: estadoData
       })
-      
-      mostrarMensaje(`Reporte de ${sucursalAsignada} enviado con éxito al administrador.`)
-      
+
+      toast.success(`Reporte enviado al administrador.`, {
+        description: `Sucursal ${sucursalAsignada} — ${new Date().toLocaleString('es-CL')}`,
+        duration: 5000,
+      })
+
       const lista = await obtenerPlantillasReporte()
       setPlantillas(lista.sort((a, b) => (b.id || 0) - (a.id || 0)))
     } catch {
-      mostrarMensaje('Error al enviar el reporte. Intente nuevamente.', 'error')
+      toast.error('Error al enviar el reporte. Intente nuevamente.')
     }
   }
 
@@ -174,8 +179,10 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
         setPlantillas(lista.sort((a, b) => (b.id || 0) - (a.id || 0)));
         if (idPlantillaExpandida === id) setIdPlantillaExpandida(null);
         cerrarModal();
-      } catch (error) {
-        mostrarMensaje('Error al eliminar el reporte.', 'error');
+        toast.success('Reporte eliminado correctamente.')
+      } catch {
+        toast.error('Error al eliminar el reporte.')
+        cerrarModal()
       }
     });
   }
@@ -286,11 +293,12 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
           <h2>Auditoría de Sucursal - {sucursalAsignada}</h2>
           <p>Monitoreo de movimientos diarios y envío de reportes</p>
         </div>
-        <button 
+        <button
           onClick={enviarReporteDiario}
-          style={{ background: '#0f766e', padding: '12px 24px', fontSize: '1.1rem', fontWeight: 'bold' }}
+          style={{ background: 'linear-gradient(135deg,#0f766e,#115e59)', padding: '10px 20px', fontSize: '0.92rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 10, border: '1px solid #0f766e', color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(15,118,110,0.28)' }}
         >
-          ENVIAR REPORTE AL ADMIN
+          <Send size={15} />
+          Enviar reporte al Admin
         </button>
       </div>
 

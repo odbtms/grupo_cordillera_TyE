@@ -1,5 +1,7 @@
 import './App.css'
 import { useEffect, useMemo, useState } from 'react'
+import { Toaster } from 'sonner'
+import { LayoutDashboard, FileBarChart2, Building2, Settings, LogOut, User, Store } from 'lucide-react'
 import { AdminLayout } from './layouts'
 import ConfiguracionAuditoriaPage from './pages/ConfiguracionAuditoriaPage'
 import DashboardPrincipalPage from './pages/DashboardPrincipalPage'
@@ -13,6 +15,13 @@ type PaginaSistema =
   | 'reportes'
   | 'gestion-organizacional'
   | 'configuracion-auditoria'
+
+const ICONOS_MENU: Record<PaginaSistema, React.ReactNode> = {
+  dashboard: <LayoutDashboard size={16} />,
+  reportes: <FileBarChart2 size={16} />,
+  'gestion-organizacional': <Building2 size={16} />,
+  'configuracion-auditoria': <Settings size={16} />,
+}
 
 function obtenerSesionInicial() {
   const token = sessionStorage.getItem('token') ?? ''
@@ -91,6 +100,7 @@ function App() {
   if (!token) {
     return (
       <AdminLayout>
+        <Toaster position="top-right" richColors />
         <LoginPage onLoginExitoso={manejarLoginExitoso} />
       </AdminLayout>
     )
@@ -98,12 +108,12 @@ function App() {
 
   const opcionesMenu: Array<{ clave: PaginaSistema; texto: string }> = esEmpleadoTienda
     ? [
-      { clave: 'dashboard', texto: 'Dashboard principal' },
-      { clave: 'reportes', texto: 'Módulo de reportes' },
+      { clave: 'dashboard', texto: 'Dashboard' },
+      { clave: 'reportes', texto: 'Reportes' },
     ]
     : [
-      { clave: 'dashboard', texto: 'Dashboard principal' },
-      { clave: 'reportes', texto: 'Módulo de reportes' },
+      { clave: 'dashboard', texto: 'Dashboard' },
+      { clave: 'reportes', texto: 'Reportes' },
       ...(esAdmin
         ? ([
           {
@@ -114,7 +124,7 @@ function App() {
         : []),
       {
         clave: 'configuracion-auditoria',
-        texto: 'Configuración y auditoría',
+        texto: 'Configuración',
       },
     ]
 
@@ -147,26 +157,47 @@ function App() {
 
   return (
     <AdminLayout>
+      <Toaster position="top-right" richColors />
       <main className="aplicacion-contenedor">
         <aside className="menu-lateral">
-          <h2>Panel Empleado</h2>
-          <p>{usuario}</p>
-          {esEmpleadoTienda && sucursal && <p>Sucursal: {sucursal}</p>}
+          <div className="menu-lateral-header">
+            <div className="menu-lateral-logo">
+              <Building2 size={20} color="#0f766e" />
+              <h2>Grupo Cordillera</h2>
+            </div>
+            <div className="menu-lateral-usuario">
+              <div className="menu-lateral-avatar">
+                <User size={14} />
+              </div>
+              <div>
+                <p className="menu-lateral-nombre">{usuario}</p>
+                <p className="menu-lateral-rol">{esAdmin ? 'Administrador' : 'Empleado'}</p>
+                {esEmpleadoTienda && sucursal && (
+                  <p className="menu-lateral-sucursal">
+                    <Store size={11} style={{ display: 'inline', marginRight: 4 }} />
+                    {sucursal}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
 
           <nav>
             {opcionesMenu.map((opcion) => (
               <button
                 key={opcion.clave}
                 type="button"
-                className={paginaActual === opcion.clave ? 'activo' : ''}
+                className={`menu-lateral-btn${paginaActual === opcion.clave ? ' activo' : ''}`}
                 onClick={() => navegarA(opcion.clave)}
               >
+                <span className="menu-lateral-icon">{ICONOS_MENU[opcion.clave]}</span>
                 {opcion.texto}
               </button>
             ))}
           </nav>
 
           <button type="button" onClick={cerrarSesion} className="boton-cerrar-sesion">
+            <LogOut size={15} />
             Cerrar sesión
           </button>
         </aside>

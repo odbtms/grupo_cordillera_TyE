@@ -68,3 +68,7 @@ export async function obtenerUsuarios(): Promise<Usuario[]> {
   const { data } = await authHttp.get<Usuario[]>('/usuarios')
   return Array.isArray(data) ? data : []
 }
+
+export async function eliminarUsuario(id: number): Promise<void> {
+  await authHttp.delete(`/usuarios/${id}`)
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import {
   actualizarRolUsuarioPorUsername,
   actualizarRolUsuario,
@@ -7,6 +8,7 @@ import {
   obtenerKpis,
   obtenerVentas,
   validarToken,
+  eliminarUsuario,
 } from '../api'
 import type { Usuario } from '../api'
 import { AdministradorPerfilUsuario, ListaRolesUsuario, EstadoServicios } from '../components'
@@ -83,11 +85,13 @@ function ConfiguracionAuditoriaPage({
     setMensajeRol('')
     try {
       await actualizarRolUsuarioPorUsername(usuario, rolObjetivo)
-      setMensajeRol(`Rol actualizado para ti (${usuario}).`)
+      setMensajeRol(`Rol actualizado a ${rolObjetivo}.`)
+      toast.success(`Tu rol fue actualizado a ${rolObjetivo}.`)
       const lista = await obtenerUsuarios()
       setUsuariosDb(lista)
     } catch {
       setMensajeRol('Error al actualizar tu propio rol.')
+      toast.error('No se pudo actualizar el rol.')
     }
   }
 
@@ -96,9 +100,19 @@ function ConfiguracionAuditoriaPage({
       await actualizarRolUsuario(id, nuevoRol)
       const lista = await obtenerUsuarios()
       setUsuariosDb(lista)
-      alert('Rol de usuario actualizado correctamente.')
+      toast.success('Rol actualizado correctamente.')
     } catch {
-      alert('No se pudo cambiar el rol del usuario.')
+      toast.error('No se pudo cambiar el rol del usuario.')
+    }
+  }
+
+  async function manejarEliminarUsuario(id: number, username: string) {
+    try {
+      await eliminarUsuario(id)
+      setUsuariosDb((prev) => prev.filter((u) => u.id !== id))
+      toast.success(`Usuario "${username}" eliminado.`)
+    } catch {
+      toast.error(`No se pudo eliminar al usuario "${username}".`)
     }
   }
 
@@ -123,6 +137,7 @@ function ConfiguracionAuditoriaPage({
       <ListaRolesUsuario
         usuariosDb={usuariosDb}
         cambiarRolUsuarioExterno={cambiarRolUsuarioExterno}
+        eliminarUsuarioExterno={manejarEliminarUsuario}
       />
 
       <EstadoServicios
