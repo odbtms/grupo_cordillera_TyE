@@ -382,12 +382,12 @@
 
 .fila {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-columns: 1fr 2fr 0.8fr 1.2fr 0.8fr;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   border: 1px solid #d6e4ed;
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 10px;
   background: #fdfefe;
 }
 
