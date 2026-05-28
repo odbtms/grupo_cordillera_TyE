@@ -1,7 +1,7 @@
 import './App.css'
 import { useEffect, useMemo, useState } from 'react'
 import { Toaster } from 'sonner'
-import { LayoutDashboard, FileBarChart2, Building2, Settings, LogOut, User, Store } from 'lucide-react'
+import { LayoutDashboard, FileBarChart2, Building2, Settings, LogOut, User, Store, Menu, X } from 'lucide-react'
 import { AdminLayout } from './layouts'
 import ConfiguracionAuditoriaPage from './pages/ConfiguracionAuditoriaPage'
 import DashboardPrincipalPage from './pages/DashboardPrincipalPage'
@@ -94,6 +94,8 @@ function App() {
     navegarA('dashboard')
   }
 
+  const [menuAbierto, setMenuAbierto] = useState(false)
+
   const esAdmin = rol.toUpperCase() === 'ADMIN'
   const esEmpleadoTienda = rol.toUpperCase() === 'EMPLEADO_TIENDA'
 
@@ -155,15 +157,41 @@ function App() {
     )
   }
 
+  function navegarYCerrar(pagina: PaginaSistema) {
+    navegarA(pagina)
+    setMenuAbierto(false)
+  }
+
   return (
     <AdminLayout>
       <Toaster position="top-right" richColors />
       <main className="aplicacion-contenedor">
-        <aside className="menu-lateral">
+        {/* Botón hamburguesa — solo visible en móvil */}
+        <button
+          className="menu-hamburguesa"
+          onClick={() => setMenuAbierto(true)}
+          aria-label="Abrir menú"
+        >
+          <Menu size={22} />
+        </button>
+
+        {/* Overlay oscuro al abrir menú en móvil */}
+        {menuAbierto && (
+          <div className="menu-overlay" onClick={() => setMenuAbierto(false)} />
+        )}
+
+        <aside className={`menu-lateral${menuAbierto ? ' menu-lateral--abierto' : ''}`}>
           <div className="menu-lateral-header">
             <div className="menu-lateral-logo">
               <Building2 size={20} color="#0f766e" />
               <h2>Grupo Cordillera</h2>
+              <button
+                className="menu-lateral-cerrar"
+                onClick={() => setMenuAbierto(false)}
+                aria-label="Cerrar menú"
+              >
+                <X size={18} />
+              </button>
             </div>
             <div className="menu-lateral-usuario">
               <div className="menu-lateral-avatar">
@@ -188,7 +216,7 @@ function App() {
                 key={opcion.clave}
                 type="button"
                 className={`menu-lateral-btn${paginaActual === opcion.clave ? ' activo' : ''}`}
-                onClick={() => navegarA(opcion.clave)}
+                onClick={() => navegarYCerrar(opcion.clave)}
               >
                 <span className="menu-lateral-icon">{ICONOS_MENU[opcion.clave]}</span>
                 {opcion.texto}
