@@ -42,6 +42,10 @@ export async function validarToken(token: string): Promise<RespuestaLogin> {
   return data
 }
 
+export async function healthCheckAuth(): Promise<void> {
+  await authHttp.get('/health')
+}
+
 export async function actualizarRolUsuario(id: number, rol: string) {
   const { data } = await authHttp.put(`/usuarios/${id}/rol`, {
     rol,

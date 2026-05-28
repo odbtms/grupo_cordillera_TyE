@@ -7,7 +7,7 @@ import {
   obtenerPlantillasReporte,
   obtenerKpis,
   obtenerVentas,
-  validarToken,
+  healthCheckAuth,
   eliminarUsuario,
 } from '../api'
 import type { Usuario } from '../api'
@@ -47,7 +47,7 @@ function ConfiguracionAuditoriaPage({
   useEffect(() => {
     async function validarServicios() {
       const resultados = await Promise.allSettled([
-        validarToken(token),
+        healthCheckAuth(),
         obtenerVentas(),
         obtenerKpis(),
         obtenerPlantillasReporte(),

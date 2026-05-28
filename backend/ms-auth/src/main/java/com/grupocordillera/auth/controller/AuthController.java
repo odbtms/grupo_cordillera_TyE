@@ -142,6 +142,11 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        return ResponseEntity.ok("ok");
+    }
+
     public record RolRequest(String rol) {}
 
     /**
