@@ -13,19 +13,32 @@ type Props = {
   onEliminar: (id: number) => Promise<void>
 }
 
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+
 export default function GestorVentasAdmin({ ventas, sucursales, onEditar, onEliminar }: Props) {
+  const hoy = new Date()
   const [filtroSucursal, setFiltroSucursal] = useState('')
+  const [filtroMes, setFiltroMes] = useState(hoy.getMonth())
+  const [filtroAnio, setFiltroAnio] = useState(hoy.getFullYear())
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [form, setForm] = useState<Partial<Venta>>({})
   const [confirmandoId, setConfirmandoId] = useState<number | null>(null)
   const [cargando, setCargando] = useState(false)
   const [mensaje, setMensaje] = useState('')
 
+  const aniosDisponibles = Array.from(
+    new Set(ventas.map(v => v.fechaVenta ? new Date(v.fechaVenta).getFullYear() : hoy.getFullYear()))
+  ).sort((a, b) => b - a)
+
   const ventasFiltradas = ventas
     .filter(v => (v.montoTotal ?? 0) > 0)
     .filter(v => !filtroSucursal || v.sucursal === filtroSucursal)
+    .filter(v => {
+      if (!v.fechaVenta) return false
+      const fecha = new Date(v.fechaVenta)
+      return fecha.getMonth() === filtroMes && fecha.getFullYear() === filtroAnio
+    })
     .sort((a, b) => b.id - a.id)
-    .slice(0, 100)
 
   function iniciarEdicion(v: Venta) {
     setEditandoId(v.id)
@@ -76,16 +89,35 @@ export default function GestorVentasAdmin({ ventas, sucursales, onEditar, onElim
 
   return (
     <section className="tarjeta-panel">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-        <h3>Gestión de Ventas</h3>
-        <select
-          value={filtroSucursal}
-          onChange={e => setFiltroSucursal(e.target.value)}
-          style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
-        >
-          <option value=''>Todas las sucursales</option>
-          {sucursales.map(s => <option key={s.id} value={s.nombre}>{s.nombre}</option>)}
-        </select>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
+        <h3 style={{ margin: 0 }}>Gestión de Ventas</h3>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <select
+            value={filtroMes}
+            onChange={e => setFiltroMes(Number(e.target.value))}
+            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+          >
+            {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
+          </select>
+          <select
+            value={filtroAnio}
+            onChange={e => setFiltroAnio(Number(e.target.value))}
+            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+          >
+            {aniosDisponibles.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+          <select
+            value={filtroSucursal}
+            onChange={e => setFiltroSucursal(e.target.value)}
+            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+          >
+            <option value=''>Todas las sucursales</option>
+            {sucursales.map(s => <option key={s.id} value={s.nombre}>{s.nombre}</option>)}
+          </select>
+          <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+            {ventasFiltradas.length} venta{ventasFiltradas.length !== 1 ? 's' : ''}
+          </span>
+        </div>
       </div>
 
       {mensaje && (
