@@ -2,14 +2,14 @@ package com.grupocordillera.datos.repository;
 
 import com.grupocordillera.datos.model.StockItem;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repositorio de acceso a datos para la entidad StockItem.
- */
 @Repository
 public interface StockRepository extends JpaRepository<StockItem, Long> {
     
@@ -28,4 +28,8 @@ public interface StockRepository extends JpaRepository<StockItem, Long> {
             String sucursal,
             String categoria,
             String producto);
+
+    @Modifying
+    @Query("UPDATE StockItem s SET s.sucursal = :nuevo WHERE LOWER(s.sucursal) = LOWER(:antiguo)")
+    void renombrarSucursal(@Param("antiguo") String antiguo, @Param("nuevo") String nuevo);
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster, obtenerStock } from '../api'
+import { actualizarFormulaKpi, obtenerKpis, obtenerVentas, registrarVenta, registrarUsuario, upsertStock, registrarSucursal, obtenerSucursalesMaster, obtenerStock, editarVenta, eliminarVenta, renombrarSucursal, eliminarSucursal } from '../api'
 import type { Kpi, Venta, StockItem } from '../types'
 import {
   AdminFormularioVenta,
@@ -7,10 +7,12 @@ import {
   FormularioNuevaSucursal,
   TablaMetasSucursalAdmin,
   GestorInventarioAdmin,
-  GestorFormulasKpiAdmin
+  GestorFormulasKpiAdmin,
+  GestorVentasAdmin
 } from '../components'
 
 type Sucursal = {
+  id: number
   nombre: string
   metaVenta: number
 }
@@ -90,6 +92,7 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
 
       setSucursales(
         listaSucursales.map((s: any) => ({
+          id: s.id,
           nombre: s.nombre,
           metaVenta: s.metaVenta || 0,
         }))
@@ -163,7 +166,7 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
       setMensajeSucursal('Sucursal registrada correctamente.')
       // Recargar lista
       const lista = await obtenerSucursalesMaster()
-      setSucursales(lista.map((s: any) => ({ nombre: s.nombre, metaVenta: s.metaVenta || 0 })))
+      setSucursales(lista.map((s: any) => ({ id: s.id, nombre: s.nombre, metaVenta: s.metaVenta || 0 })))
     } catch {
       setMensajeSucursal('Error al registrar la sucursal.')
     }
@@ -306,6 +309,30 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
     }
   }
 
+  async function manejarEditarVenta(id: number, payload: Partial<Venta>) {
+    await editarVenta(id, payload)
+    const [listaVentas, listaStock] = await Promise.all([obtenerVentas(), obtenerStock()])
+    setVentas(listaVentas)
+    setInventarioFull(listaStock)
+  }
+
+  async function manejarEliminarVenta(id: number) {
+    await eliminarVenta(id)
+    const [listaVentas, listaStock] = await Promise.all([obtenerVentas(), obtenerStock()])
+    setVentas(listaVentas)
+    setInventarioFull(listaStock)
+  }
+
+  async function manejarRenombrarSucursal(id: number, nuevoNombre: string) {
+    await renombrarSucursal(id, nuevoNombre)
+    await cargarTodo()
+  }
+
+  async function manejarEliminarSucursal(id: number) {
+    await eliminarSucursal(id)
+    await cargarTodo()
+  }
+
   async function guardarStock() {
     setMensajeStock('')
 
@@ -354,12 +381,14 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
         mensajeSucursal={mensajeSucursal}
       />
 
-      <TablaMetasSucursalAdmin 
+      <TablaMetasSucursalAdmin
         sucursales={sucursales}
         resumenVentas={resumenVentas}
         actualizarMeta={actualizarMeta}
         guardarCambios={guardarCambios}
         mensaje={mensaje}
+        onRenombrar={manejarRenombrarSucursal}
+        onEliminar={manejarEliminarSucursal}
       />
 
       <AdminFormularioVenta 
@@ -392,12 +421,20 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
         mensajeEmpleado={mensajeEmpleado}
       />
 
-      <GestorInventarioAdmin 
+      <GestorInventarioAdmin
         nuevoStock={nuevoStock}
         setNuevoStock={setNuevoStock}
         sucursales={sucursales}
         guardarStock={guardarStock}
         mensajeStock={mensajeStock}
+      />
+
+      <GestorVentasAdmin
+        ventas={ventas}
+        sucursales={sucursales}
+        inventarioFull={inventarioFull}
+        onEditar={manejarEditarVenta}
+        onEliminar={manejarEliminarVenta}
       />
     </section>
   )

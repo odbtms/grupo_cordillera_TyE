@@ -47,7 +47,7 @@ function ReportesPage({ rol, sucursalAsignada }: ReportesPageProps) {
           obtenerStock(),
         ])
         setPlantillas(listaPlantillas.sort((a, b) => (b.id || 0) - (a.id || 0)))
-        setVentas(listaVentas)
+        setVentas(listaVentas.filter(v => (v.montoTotal ?? 0) > 0))
         setStock(listaStock)
       } catch {
         console.error('Error al cargar datos')

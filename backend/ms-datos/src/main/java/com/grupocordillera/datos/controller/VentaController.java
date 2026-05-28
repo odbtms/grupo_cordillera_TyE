@@ -82,14 +82,55 @@ public class VentaController {
         return repository.findAll();
     }
 
-    /**
-     * Obtiene el listado de ventas filtrado por una sucursal específica.
-     * 
-     * @param sucursal El nombre de la sucursal a consultar.
-     * @return Lista de ventas correspondientes a la sucursal indicada.
-     */
     @GetMapping("/sucursal/{sucursal}")
     public List<Venta> listarVentasPorSucursal(@PathVariable String sucursal) {
         return repository.findBySucursalIgnoreCase(sucursal);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Venta> editarVenta(@PathVariable Long id, @RequestBody Venta datos) {
+        return repository.findById(id).map(venta -> {
+            // Restaurar stock del producto original
+            if (venta.getProducto() != null && venta.getCantidad() != null && venta.getSucursal() != null) {
+                stockRepository.findBySucursalIgnoreCaseAndProductoIgnoreCase(venta.getSucursal(), venta.getProducto())
+                    .ifPresent(stock -> {
+                        stock.setCantidad(stock.getCantidad() + venta.getCantidad());
+                        stockRepository.save(stock);
+                    });
+            }
+            if (datos.getFechaVenta() != null) venta.setFechaVenta(datos.getFechaVenta());
+            if (datos.getMontoTotal() != null) venta.setMontoTotal(datos.getMontoTotal());
+            if (datos.getSucursal() != null) venta.setSucursal(datos.getSucursal());
+            if (datos.getVendedor() != null) venta.setVendedor(datos.getVendedor());
+            if (datos.getCategoria() != null) venta.setCategoria(datos.getCategoria());
+            if (datos.getProducto() != null) venta.setProducto(datos.getProducto());
+            if (datos.getCantidad() != null) venta.setCantidad(datos.getCantidad());
+            if (datos.getPrecioUnitario() != null) venta.setPrecioUnitario(datos.getPrecioUnitario());
+            // Descontar stock con los nuevos valores
+            if (venta.getProducto() != null && venta.getCantidad() != null && venta.getSucursal() != null) {
+                stockRepository.findBySucursalIgnoreCaseAndProductoIgnoreCase(venta.getSucursal(), venta.getProducto())
+                    .ifPresent(stock -> {
+                        stock.setCantidad(stock.getCantidad() - venta.getCantidad());
+                        stockRepository.save(stock);
+                    });
+            }
+            return ResponseEntity.ok(repository.save(venta));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarVenta(@PathVariable Long id) {
+        return repository.findById(id).map(venta -> {
+            // Restaurar stock al eliminar
+            if (venta.getProducto() != null && venta.getCantidad() != null && venta.getSucursal() != null) {
+                stockRepository.findBySucursalIgnoreCaseAndProductoIgnoreCase(venta.getSucursal(), venta.getProducto())
+                    .ifPresent(stock -> {
+                        stock.setCantidad(stock.getCantidad() + venta.getCantidad());
+                        stockRepository.save(stock);
+                    });
+            }
+            repository.delete(venta);
+            return ResponseEntity.noContent().<Void>build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 }

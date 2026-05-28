@@ -1,4 +1,5 @@
 export { default as AdminFormularioVenta } from './admin/AdminFormularioVenta'
+export { default as GestorVentasAdmin } from './admin/GestorVentasAdmin'
 export { default as FormularioNuevoEmpleado } from './admin/FormularioNuevoEmpleado'
 export { default as FormularioNuevaSucursal } from './admin/FormularioNuevaSucursal'
 export { default as TablaMetasSucursalAdmin } from './admin/TablaMetasSucursalAdmin'
