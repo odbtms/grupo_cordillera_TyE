@@ -18,8 +18,16 @@ export default function FormularioLogin({ onLoginExitoso, setMensajeError, setMe
     setMensajeError('');
     setMensajeExito('');
 
-    if (!usuario.trim() || !contrasena.trim()) {
-      setMensajeError('Debe ingresar usuario y contraseña.');
+    if (!usuario.trim() && !contrasena.trim()) {
+      setMensajeError('Debe completar todos los campos.');
+      return;
+    }
+    if (!usuario.trim()) {
+      setMensajeError('El nombre de usuario es obligatorio.');
+      return;
+    }
+    if (!contrasena.trim()) {
+      setMensajeError('La contraseña es obligatoria.');
       return;
     }
 
@@ -37,12 +45,15 @@ export default function FormularioLogin({ onLoginExitoso, setMensajeError, setMe
         respuesta.usuario,
         respuesta.sucursal,
       );
-    } catch (error) {
-      const mensajeGenerico = 'No se pudo iniciar sesión. Verifique credenciales o la conexión.';
-      if (typeof error === 'object' && error !== null && 'message' in error) {
-        setMensajeError(String(error.message) || mensajeGenerico);
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        setMensajeError('Usuario o contraseña incorrectos.');
+      } else if (error?.response?.status === 404) {
+        setMensajeError('El usuario ingresado no existe.');
+      } else if (!error?.response) {
+        setMensajeError('No se pudo conectar al servidor. Verifique su conexión.');
       } else {
-        setMensajeError(mensajeGenerico);
+        setMensajeError('Error al iniciar sesión. Inténtelo nuevamente.');
       }
     } finally {
       setCargando(false);

@@ -128,9 +128,10 @@ export default function GestorVentasAdmin({ ventas, sucursales, onEditar, onElim
       )}
 
       <div className="tabla-simple">
-        <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '0.6fr 1fr 1.5fr 0.6fr 1fr 1fr 1fr', fontSize: '0.82rem' }}>
+        <div className="fila fila-encabezado" style={{ display: 'grid', gridTemplateColumns: '0.5fr 1fr 1fr 1.5fr 0.5fr 1fr 1fr 0.8fr', fontSize: '0.82rem' }}>
           <span>ID</span>
           <span>Vendedor</span>
+          <span>Sucursal</span>
           <span>Producto</span>
           <span>Cant.</span>
           <span>Precio Unit.</span>
@@ -144,10 +145,11 @@ export default function GestorVentasAdmin({ ventas, sucursales, onEditar, onElim
 
         {ventasFiltradas.map(v => (
           editandoId === v.id ? (
-            <div key={v.id} className="fila" style={{ display: 'grid', gridTemplateColumns: '0.6fr 1fr 1.5fr 0.6fr 1fr 1fr 1fr', alignItems: 'center', gap: '4px' }}>
+            <div key={v.id} className="fila" style={{ display: 'grid', gridTemplateColumns: '0.5fr 1fr 1fr 1.5fr 0.5fr 1fr 1fr 0.8fr', alignItems: 'center', gap: '4px' }}>
               <span style={{ fontSize: '0.78rem', color: '#64748b' }}>#{v.id}</span>
               <input value={form.vendedor ?? ''} onChange={e => setForm(f => ({ ...f, vendedor: e.target.value }))}
                 style={{ padding: '3px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.82rem', width: '100%' }} />
+              <span style={{ fontSize: '0.82rem', color: '#64748b' }}>{v.sucursal}</span>
               <input value={form.producto ?? ''} onChange={e => setForm(f => ({ ...f, producto: e.target.value }))}
                 style={{ padding: '3px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.82rem', width: '100%' }} />
               <input type="number" min={1} value={form.cantidad ?? 1} onChange={e => setForm(f => ({ ...f, cantidad: Number(e.target.value) }))}
@@ -185,9 +187,10 @@ export default function GestorVentasAdmin({ ventas, sucursales, onEditar, onElim
               </div>
             </div>
           ) : (
-            <div key={v.id} className="fila" style={{ display: 'grid', gridTemplateColumns: '0.6fr 1fr 1.5fr 0.6fr 1fr 1fr 1fr', alignItems: 'center' }}>
+            <div key={v.id} className="fila" style={{ display: 'grid', gridTemplateColumns: '0.5fr 1fr 1fr 1.5fr 0.5fr 1fr 1fr 0.8fr', alignItems: 'center' }}>
               <span style={{ fontSize: '0.78rem', color: '#64748b' }}>#{v.id}</span>
               <span style={{ fontSize: '0.84rem' }}>{v.vendedor || '—'}</span>
+              <span style={{ fontSize: '0.84rem', color: '#2563eb' }}>{v.sucursal || '—'}</span>
               <span style={{ fontSize: '0.84rem' }}>{v.producto || '—'}</span>
               <strong style={{ fontSize: '0.84rem' }}>{v.cantidad ?? '—'}</strong>
               <span style={{ fontSize: '0.84rem' }}>{FORMATO_MONEDA.format(v.precioUnitario ?? 0)}</span>
