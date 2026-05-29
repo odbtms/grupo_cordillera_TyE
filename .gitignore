@@ -1,0 +1,28 @@
+# ===== Claves y secretos =====
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+
+# ===== Maven / Java (backend) =====
+target/
+*.class
+*.jar
+!**/src/**/*.jar
+
+# ===== Logs =====
+*.log
+logs/
+
+# ===== Sistema operativo / editores =====
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+
+# ===== Variables de entorno =====
+.env.local
+*.env.local

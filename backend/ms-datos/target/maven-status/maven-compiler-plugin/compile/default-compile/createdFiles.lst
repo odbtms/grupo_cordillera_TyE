@@ -1,7 +1,0 @@
-com\grupocordillera\datos\repository\VentaRepository.class
-com\grupocordillera\datos\controller\VentaController.class
-com\grupocordillera\datos\Application.class
-com\grupocordillera\datos\controller\StockController.class
-com\grupocordillera\datos\model\StockItem.class
-com\grupocordillera\datos\repository\StockRepository.class
-com\grupocordillera\datos\model\Venta.class

@@ -1,8 +1,0 @@
-com\grupocordillera\kpis\config\KpiDataInitializer.class
-com\grupocordillera\kpis\controller\MetaSucursalController.class
-com\grupocordillera\kpis\model\Kpi.class
-com\grupocordillera\kpis\model\MetaSucursal.class
-com\grupocordillera\kpis\repository\KpiRepository.class
-com\grupocordillera\kpis\controller\KpiController.class
-com\grupocordillera\kpis\repository\MetaSucursalRepository.class
-com\grupocordillera\kpis\Application.class
