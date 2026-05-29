@@ -27,7 +27,7 @@ export default function GestorFormulasKpiAdmin({
       <div className="formulario-simple">
         <label>
           Seleccionar KPI
-          <select
+          <select className="input-bonito"
             value={kpiSeleccionadoId ?? ''}
             onChange={(evento) => setKpiSeleccionadoId(Number(evento.target.value))}
           >
@@ -43,6 +43,7 @@ export default function GestorFormulasKpiAdmin({
         <label>
           Nueva fórmula
           <input
+            className="input-bonito"
             type="text"
             placeholder="Ej: (v.montoTotal * 0.95)"
             value={nuevaFormula}

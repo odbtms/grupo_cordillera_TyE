@@ -38,9 +38,10 @@ export default function ListaRolesUsuario({ usuariosDb, cambiarRolUsuarioExterno
               </span>
               <span>
                 <select
+                  className="input-bonito"
                   defaultValue={u.rol}
                   onChange={(e) => cambiarRolUsuarioExterno(u.id, e.target.value)}
-                  style={{ fontSize: '0.82rem', padding: '5px 8px', width: '100%', borderRadius: '6px', border: '1px solid #bdd3e1' }}
+                  style={{ fontSize: '0.82rem', width: '100%' }}
                 >
                   <option value="ADMIN">ADMIN</option>
                   <option value="EMPLEADO_TIENDA">EMPLEADO_TIENDA</option>

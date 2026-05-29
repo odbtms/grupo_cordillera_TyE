@@ -21,9 +21,10 @@ export default function FormularioNuevaSucursal({
     <section className="tarjeta-panel" style={{ marginTop: '20px' }}>
       <h3>Añadir sucursal</h3>
       <div className="formulario-simple" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '15px' }}>
-        <input 
-          type="text" 
-          placeholder="Nombre Sucursal (Ej: Santiago)" 
+        <input
+          className="input-bonito"
+          type="text"
+          placeholder="Nombre Sucursal (Ej: Santiago)"
           value={nuevaSucursal.nombre}
           onChange={(e) => setNuevaSucursal({...nuevaSucursal, nombre: e.target.value})}
         />

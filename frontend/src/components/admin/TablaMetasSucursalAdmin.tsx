@@ -96,10 +96,11 @@ export default function TablaMetasSucursalAdmin({
               {editandoId === sucursal.id ? (
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                   <input
+                    className="input-bonito"
                     value={nuevoNombre}
                     onChange={e => setNuevoNombre(e.target.value)}
                     autoFocus
-                    style={{ padding: '3px 6px', borderRadius: '4px', border: '1px solid #0f766e', fontSize: '0.85rem', flex: 1 }}
+                    style={{ padding: '3px 6px', fontSize: '0.85rem', flex: 1 }}
                   />
                   <button onClick={() => guardarNombre(sucursal.id)} disabled={cargando}
                     style={{ background: '#0f766e', color: '#fff', border: 'none', borderRadius: '4px', padding: '3px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
@@ -116,6 +117,7 @@ export default function TablaMetasSucursalAdmin({
               <span>${ventasActuales.toLocaleString()}</span>
               <span>
                 <input
+                  className="input-bonito"
                   type="number"
                   min={1}
                   style={{ width: '100%', padding: '4px' }}

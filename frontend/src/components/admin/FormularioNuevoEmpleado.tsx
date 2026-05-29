@@ -26,25 +26,29 @@ export default function FormularioNuevoEmpleado({
       <p className="mensaje">Crea credenciales de acceso para personal de tienda.</p>
       
       <div className="formulario-simple" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-        <input 
-          type="text" 
-          placeholder="Nombre de usuario (Login)" 
+        <input
+          className="input-bonito"
+          type="text"
+          placeholder="Nombre de usuario (Login)"
           value={nuevoEmpleado.username}
           onChange={(e) => setNuevoEmpleado(a => ({...a, username: e.target.value}))}
         />
-        <input 
-          type="email" 
-          placeholder="Correo electrónico" 
+        <input
+          className="input-bonito"
+          type="email"
+          placeholder="Correo electrónico"
           value={nuevoEmpleado.email}
           onChange={(e) => setNuevoEmpleado(a => ({...a, email: e.target.value}))}
         />
-        <input 
-          type="password" 
-          placeholder="Contraseña" 
+        <input
+          className="input-bonito"
+          type="password"
+          placeholder="Contraseña"
           value={nuevoEmpleado.password}
           onChange={(e) => setNuevoEmpleado(a => ({...a, password: e.target.value}))}
         />
-        <select 
+        <select
+          className="input-bonito"
           value={nuevoEmpleado.sucursalAsignada}
           onChange={(e) => setNuevoEmpleado(a => ({...a, sucursalAsignada: e.target.value}))}
         >

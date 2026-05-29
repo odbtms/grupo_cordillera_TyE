@@ -52,7 +52,7 @@ export default function FormularioVenta({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
           <label>
             Sistema origen
-            <select className="select-custom"
+            <select className="input-bonito"
               value={nuevaVenta.sistemaOrigen}
               onChange={(e) => setNuevaVenta(a => ({ ...a, sistemaOrigen: e.target.value }))}
             >
@@ -64,7 +64,7 @@ export default function FormularioVenta({
 
           <label>
             Filtrar Categoría
-            <select
+            <select className="input-bonito"
               value={nuevaVenta.categoria}
               onChange={(e) => setNuevaVenta(a => ({ ...a, categoria: e.target.value, producto: '', precioUnitario: 0 }))}
             >
@@ -76,7 +76,7 @@ export default function FormularioVenta({
 
           <label>
             Producto
-            <select
+            <select className="input-bonito"
               value={nuevaVenta.producto}
               onChange={(e) => {
                 const prod = e.target.value;
@@ -100,6 +100,7 @@ export default function FormularioVenta({
           <label>
             Cantidad
             <input
+              className="input-bonito"
               type="number"
               min={1}
               value={nuevaVenta.cantidad}
@@ -111,11 +112,11 @@ export default function FormularioVenta({
           </label>
           <label>
             Precio Unitario
-            <input type="number" value={nuevaVenta.precioUnitario} disabled />
+            <input className="input-bonito" type="number" value={nuevaVenta.precioUnitario} disabled />
           </label>
           <label>
             Subtotal
-            <input type="number" value={nuevaVenta.montoTotal} disabled />
+            <input className="input-bonito" type="number" value={nuevaVenta.montoTotal} disabled />
           </label>
         </div>
 

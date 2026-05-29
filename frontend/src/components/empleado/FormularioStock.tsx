@@ -25,7 +25,7 @@ export default function FormularioStock({
       <div className="formulario-simple" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
         <label>
           Categoría
-          <select
+          <select className="input-bonito"
             value={nuevoStock.categoria}
             onChange={(e) => setNuevoStock({ ...nuevoStock, categoria: e.target.value })}
           >
@@ -36,6 +36,7 @@ export default function FormularioStock({
         <label>
           Producto
           <input
+            className="input-bonito"
             type="text"
             placeholder="Nombre del producto"
             value={nuevoStock.producto}
@@ -45,6 +46,7 @@ export default function FormularioStock({
         <label>
           Cantidad a añadir
           <input
+            className="input-bonito"
             type="number"
             value={nuevoStock.cantidad}
             onChange={(e) => setNuevoStock({ ...nuevoStock, cantidad: Number(e.target.value) })}
@@ -53,6 +55,7 @@ export default function FormularioStock({
         <label>
           Precio Unitario
           <input
+            className="input-bonito"
             type="number"
             value={nuevoStock.precioUnitario}
             onChange={(e) => setNuevoStock({ ...nuevoStock, precioUnitario: Number(e.target.value) })}

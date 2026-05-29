@@ -30,7 +30,7 @@ export default function GestorInventarioAdmin({
       <div className="formulario-simple" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
         <label>
           Sucursal
-          <select
+          <select className="input-bonito"
             value={nuevoStock.sucursal}
             onChange={(e) => setNuevoStock((a: StockInputType) => ({ ...a, sucursal: e.target.value }))}
           >
@@ -43,7 +43,7 @@ export default function GestorInventarioAdmin({
 
         <label>
           Categoría
-          <select
+          <select className="input-bonito"
             value={nuevoStock.categoria}
             onChange={(e) => setNuevoStock((a: StockInputType) => ({ ...a, categoria: e.target.value }))}
           >
@@ -55,6 +55,7 @@ export default function GestorInventarioAdmin({
         <label style={{ gridColumn: 'span 2' }}>
           Nombre del Producto
           <input
+            className="input-bonito"
             type="text"
             placeholder="Ej: Televisor"
             value={nuevoStock.producto}
@@ -65,6 +66,7 @@ export default function GestorInventarioAdmin({
         <label>
           Cantidad
           <input
+            className="input-bonito"
             type="number"
             min={0}
             value={nuevoStock.cantidad}
@@ -75,6 +77,7 @@ export default function GestorInventarioAdmin({
         <label>
           Precio de Venta ($)
           <input
+            className="input-bonito"
             type="number"
             min={0}
             value={nuevoStock.precioUnitario}

@@ -94,23 +94,26 @@ export default function GestorVentasAdmin({ ventas, sucursales, onEditar, onElim
         <h3 style={{ margin: 0 }}>Gestión de Ventas</h3>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <select
+            className="input-bonito"
             value={filtroMes}
             onChange={e => setFiltroMes(Number(e.target.value))}
-            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+            style={{ width: 'auto', fontSize: '0.85rem' }}
           >
             {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
           </select>
           <select
+            className="input-bonito"
             value={filtroAnio}
             onChange={e => setFiltroAnio(Number(e.target.value))}
-            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+            style={{ width: 'auto', fontSize: '0.85rem' }}
           >
             {aniosDisponibles.map(a => <option key={a} value={a}>{a}</option>)}
           </select>
           <select
+            className="input-bonito"
             value={filtroSucursal}
             onChange={e => setFiltroSucursal(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+            style={{ width: 'auto', fontSize: '0.85rem' }}
           >
             <option value=''>Todas las sucursales</option>
             {sucursales.map(s => <option key={s.id} value={s.nombre}>{s.nombre}</option>)}
@@ -147,15 +150,15 @@ export default function GestorVentasAdmin({ ventas, sucursales, onEditar, onElim
           editandoId === v.id ? (
             <div key={v.id} className="fila" style={{ display: 'grid', gridTemplateColumns: '0.5fr 1fr 1fr 1.5fr 0.5fr 1fr 1fr 0.8fr', alignItems: 'center', gap: '4px' }}>
               <span style={{ fontSize: '0.78rem', color: '#64748b' }}>#{v.id}</span>
-              <input value={form.vendedor ?? ''} onChange={e => setForm(f => ({ ...f, vendedor: e.target.value }))}
-                style={{ padding: '3px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.82rem', width: '100%' }} />
+              <input className="input-bonito" value={form.vendedor ?? ''} onChange={e => setForm(f => ({ ...f, vendedor: e.target.value }))}
+                style={{ padding: '3px 6px', fontSize: '0.82rem', width: '100%' }} />
               <span style={{ fontSize: '0.82rem', color: '#64748b' }}>{v.sucursal}</span>
-              <input value={form.producto ?? ''} onChange={e => setForm(f => ({ ...f, producto: e.target.value }))}
-                style={{ padding: '3px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.82rem', width: '100%' }} />
-              <input type="number" min={1} value={form.cantidad ?? 1} onChange={e => setForm(f => ({ ...f, cantidad: Number(e.target.value) }))}
-                style={{ padding: '3px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.82rem', width: '100%' }} />
-              <input type="number" min={0} value={form.precioUnitario ?? 0} onChange={e => setForm(f => ({ ...f, precioUnitario: Number(e.target.value) }))}
-                style={{ padding: '3px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.82rem', width: '100%' }} />
+              <input className="input-bonito" value={form.producto ?? ''} onChange={e => setForm(f => ({ ...f, producto: e.target.value }))}
+                style={{ padding: '3px 6px', fontSize: '0.82rem', width: '100%' }} />
+              <input className="input-bonito" type="number" min={1} value={form.cantidad ?? 1} onChange={e => setForm(f => ({ ...f, cantidad: Number(e.target.value) }))}
+                style={{ padding: '3px 6px', fontSize: '0.82rem', width: '100%' }} />
+              <input className="input-bonito" type="number" min={0} value={form.precioUnitario ?? 0} onChange={e => setForm(f => ({ ...f, precioUnitario: Number(e.target.value) }))}
+                style={{ padding: '3px 6px', fontSize: '0.82rem', width: '100%' }} />
               <span style={{ fontSize: '0.82rem', color: '#0f766e', fontWeight: 600 }}>
                 {FORMATO_MONEDA.format((form.precioUnitario ?? 0) * (form.cantidad ?? 1))}
               </span>

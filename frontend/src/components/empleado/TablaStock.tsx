@@ -45,9 +45,10 @@ export default function TablaStock({ stock, onEditar }: TablaStockProps) {
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
           Categoría:
           <select
+            className="input-bonito"
             value={categoriaFiltro}
             onChange={(e) => setCategoriaFiltro(e.target.value)}
-            style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+            style={{ width: 'auto' }}
           >
             <option value="TODOS">Todos</option>
             <option value="HOGAR">Hogar</option>
@@ -76,24 +77,27 @@ export default function TablaStock({ stock, onEditar }: TablaStockProps) {
                 {enEdicion ? (
                   <>
                     <input
+                      className="input-bonito"
                       type="text"
                       value={camposEdicion.producto}
                       onChange={(e) => setCamposEdicion(c => ({ ...c, producto: e.target.value }))}
-                      style={{ padding: '4px 6px', borderRadius: '4px', border: '1px solid #94a3b8', width: '100%' }}
+                      style={{ padding: '4px 6px', width: '100%' }}
                     />
                     <input
+                      className="input-bonito"
                       type="number"
                       min={0}
                       value={camposEdicion.cantidad}
                       onChange={(e) => setCamposEdicion(c => ({ ...c, cantidad: Number(e.target.value) }))}
-                      style={{ padding: '4px 6px', borderRadius: '4px', border: '1px solid #94a3b8', width: '80px' }}
+                      style={{ padding: '4px 6px', width: '80px' }}
                     />
                     <input
+                      className="input-bonito"
                       type="number"
                       min={0}
                       value={camposEdicion.precioUnitario}
                       onChange={(e) => setCamposEdicion(c => ({ ...c, precioUnitario: Number(e.target.value) }))}
-                      style={{ padding: '4px 6px', borderRadius: '4px', border: '1px solid #94a3b8', width: '100px' }}
+                      style={{ padding: '4px 6px', width: '100px' }}
                     />
                     <span style={{ display: 'flex', gap: '6px' }}>
                       <button

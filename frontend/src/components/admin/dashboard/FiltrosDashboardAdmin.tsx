@@ -32,6 +32,7 @@ export default function FiltrosDashboardAdmin({
         <label>
           Fecha desde
           <input
+            className="input-bonito"
             type="date"
             value={fechaDesde}
             onChange={(evento) => setFechaDesde(evento.target.value)}
@@ -41,6 +42,7 @@ export default function FiltrosDashboardAdmin({
         <label>
           Fecha hasta
           <input
+            className="input-bonito"
             type="date"
             value={fechaHasta}
             onChange={(evento) => setFechaHasta(evento.target.value)}
@@ -49,7 +51,7 @@ export default function FiltrosDashboardAdmin({
 
         <label>
           Zona
-          <select
+          <select className="input-bonito"
             value={filtroZona}
             onChange={(evento) => setFiltroZona(evento.target.value)}
           >
@@ -63,7 +65,7 @@ export default function FiltrosDashboardAdmin({
 
         <label>
           Sistema Origen
-          <select value={filtroOrigen} onChange={(e) => setFiltroOrigen(e.target.value)}>
+          <select className="input-bonito" value={filtroOrigen} onChange={(e) => setFiltroOrigen(e.target.value)}>
             <option value="Todos">Todos</option>
             <option value="POS">POS</option>
             <option value="WEB">WEB</option>
@@ -73,7 +75,7 @@ export default function FiltrosDashboardAdmin({
 
         <label>
           Sucursal Específica
-          <select value={filtroSucursal} onChange={(e) => setFiltroSucursal(e.target.value)}>
+          <select className="input-bonito" value={filtroSucursal} onChange={(e) => setFiltroSucursal(e.target.value)}>
             <option value="Todas">Todas las sucursales</option>
             {Array.from(new Set(stock.map(s => s.sucursal))).map(nombre => (
               <option key={nombre} value={nombre}>{nombre}</option>

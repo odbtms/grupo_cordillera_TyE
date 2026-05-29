@@ -29,7 +29,7 @@ export default function AdministradorPerfilUsuario({
       <div className="formulario-simple" style={{ marginTop: '15px', display: 'grid', gap: '10px' }}>
         <label>
           Cambiar Mi Rol (Autogestión)
-          <select
+          <select className="input-bonito"
             value={rolObjetivo}
             onChange={(e) => setRolObjetivo(e.target.value as 'ADMIN' | 'EMPLEADO_TIENDA')}
           >
