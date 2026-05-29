@@ -52,7 +52,7 @@ export default function FormularioVenta({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
           <label>
             Sistema origen
-            <select
+            <select className="select-custom"
               value={nuevaVenta.sistemaOrigen}
               onChange={(e) => setNuevaVenta(a => ({ ...a, sistemaOrigen: e.target.value }))}
             >
