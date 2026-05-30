@@ -297,6 +297,7 @@ function EmpleadoDashboardPage({
           <label>
             Periodo de análisis
             <select
+              className="input-bonito"
               value={periodoAnalisis}
               onChange={(evento) => setPeriodoAnalisis(evento.target.value)}
             >
