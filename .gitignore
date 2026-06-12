@@ -26,3 +26,7 @@ Thumbs.db
 # ===== Variables de entorno =====
 .env.local
 *.env.local
+
+# ===== Reportes de cobertura generados =====
+backend/cobertura/
+frontend/coverage/
