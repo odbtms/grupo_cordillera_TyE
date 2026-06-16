@@ -41,25 +41,42 @@ function AdminDashboardPage() {
   const [filtroOrigen, setFiltroOrigen] = useState('Todos')
   const [filtroSucursal, setFiltroSucursal] = useState('Todas')
 
-  useEffect(() => {
-    async function cargarDatosDashboard() {
-      setCargando(true)
-
-      try {
-        const [ventasData, kpisData, stockData] = await Promise.all([obtenerVentas(), obtenerKpis(), obtenerStock()])
-        setVentas(ventasData)
-        setKpis(kpisData)
-        setStock(stockData)
-      } catch {
+  async function cargarDatosDashboard(mostrarCargando = false) {
+    if (mostrarCargando) setCargando(true)
+    try {
+      const [ventasData, kpisData, stockData] = await Promise.all([obtenerVentas(), obtenerKpis(), obtenerStock()])
+      setVentas(ventasData)
+      setKpis(kpisData)
+      setStock(stockData)
+    } catch {
+      // En refresco automático no borramos datos ya cargados
+      if (mostrarCargando) {
         setVentas([])
         setKpis([])
         setStock([])
-      } finally {
-        setCargando(false)
       }
+    } finally {
+      if (mostrarCargando) setCargando(false)
     }
+  }
 
-    cargarDatosDashboard()
+  useEffect(() => {
+    // Carga inicial
+    cargarDatosDashboard(true)
+
+    // Guardar la referencia para poder removerla correctamente al desmontar
+    const alRegistrarVenta = () => cargarDatosDashboard()
+
+    // Refresco cuando el mismo usuario registra una venta (mismo browser)
+    window.addEventListener('venta-registrada', alRegistrarVenta)
+
+    // Refresco automático cada 5 s para detectar ventas de otros usuarios en AWS
+    const intervalo = setInterval(() => cargarDatosDashboard(), 5_000)
+
+    return () => {
+      window.removeEventListener('venta-registrada', alRegistrarVenta)
+      clearInterval(intervalo)
+    }
   }, [])
 
   const ventasTotales = useMemo(

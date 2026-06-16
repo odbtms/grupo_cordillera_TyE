@@ -252,7 +252,7 @@ function GestionOrganizacionalPage({ nombreUsuario = 'ADMIN' }: GestionOrganizac
         precioUnitario: 0 
       })
       setMensajeVenta('Venta registrada con éxito. Stock actualizado.')
-
+      window.dispatchEvent(new CustomEvent('venta-registrada'))
       await cargarTodo()
     } catch {
       setMensajeVenta('Error al procesar uno o más productos de la venta.')
