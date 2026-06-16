@@ -61,17 +61,33 @@ function AdminDashboardPage() {
   }
 
   useEffect(() => {
-    // Carga inicial
-    cargarDatosDashboard(true)
+    // Función para carga inicial (asincrónica para evitar setState sincrónico)
+    const cargarInicial = async () => {
+      setCargando(true)
+      try {
+        const [ventasData, kpisData, stockData] = await Promise.all([obtenerVentas(), obtenerKpis(), obtenerStock()])
+        setVentas(ventasData)
+        setKpis(kpisData)
+        setStock(stockData)
+      } catch {
+        setVentas([])
+        setKpis([])
+        setStock([])
+      } finally {
+        setCargando(false)
+      }
+    }
+
+    cargarInicial()
 
     // Guardar la referencia para poder removerla correctamente al desmontar
     const alRegistrarVenta = () => cargarDatosDashboard()
 
-    // Refresco cuando el mismo usuario registra una venta (mismo browser)
+    // Refresco cuando el mismo usuario registra una venta
     window.addEventListener('venta-registrada', alRegistrarVenta)
 
-    // Refresco automático cada 5 s para detectar ventas de otros usuarios en AWS
-    const intervalo = setInterval(() => cargarDatosDashboard(), 5_000)
+    // Refresco automático cada 20 s para detectar nuevas ventas
+    const intervalo = setInterval(() => cargarDatosDashboard(), 20_000)
 
     return () => {
       window.removeEventListener('venta-registrada', alRegistrarVenta)
