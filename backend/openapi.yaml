@@ -1,0 +1,759 @@
+openapi: 3.0.3
+info:
+  title: Grupo Cordillera - API de Microservicios
+  description: >-
+    Especificación OpenAPI de la plataforma de Business Intelligence de Grupo Cordillera.
+    Todas las rutas se exponen a través del API Gateway (ms-bff) en el puerto 8080,
+    que enruta hacia los microservicios internos: ms-datos (8081), ms-kpis (8082),
+    ms-reportes (8083) y ms-auth (8084).
+  version: 1.0.0
+  contact:
+    name: Grupo Cordillera
+
+servers:
+  - url: http://localhost:8080
+    description: API Gateway (ms-bff) - entrada única local
+  - url: http://13.222.83.213:8080
+    description: API Gateway (ms-bff) - despliegue AWS
+
+tags:
+  - name: Autenticación (ms-auth)
+    description: Login, registro, validación de token JWT y gestión de usuarios.
+  - name: Ventas (ms-datos)
+    description: Ingesta y consulta de ventas.
+  - name: Stock (ms-datos)
+    description: Gestión de inventario por sucursal.
+  - name: Sucursales (ms-datos)
+    description: Maestro de sucursales.
+  - name: KPIs (ms-kpis)
+    description: Indicadores clave y metas por sucursal.
+  - name: Reportes (ms-reportes)
+    description: Plantillas de reporte / dashboards.
+
+paths:
+  # ===================== ms-auth =====================
+  /api/auth/login:
+    post:
+      tags: [Autenticación (ms-auth)]
+      summary: Iniciar sesión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              username: admin
+              password: "1234"
+      responses:
+        '200':
+          description: Credenciales válidas; devuelve token JWT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenciales inválidas.
+
+  /api/auth/register:
+    post:
+      tags: [Autenticación (ms-auth)]
+      summary: Registrar usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              username: jperez
+              email: jperez@cordillera.cl
+              password: secreto123
+              rol: EMPLEADO_TIENDA
+              sucursal: Santiago
+      responses:
+        '200':
+          description: Usuario creado; devuelve token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Datos inválidos o rol no permitido.
+        '409':
+          description: El username o email ya existe.
+
+  /api/auth/validar:
+    get:
+      tags: [Autenticación (ms-auth)]
+      summary: Validar token JWT
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token válido; devuelve los datos del usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Token expirado o inválido.
+
+  /api/auth/health:
+    get:
+      tags: [Autenticación (ms-auth)]
+      summary: Healthcheck
+      responses:
+        '200':
+          description: Servicio operativo.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+
+  /api/auth/usuarios:
+    get:
+      tags: [Autenticación (ms-auth)]
+      summary: Listar usuarios
+      responses:
+        '200':
+          description: Lista de usuarios.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Usuario'
+
+  /api/auth/usuarios/{id}/rol:
+    put:
+      tags: [Autenticación (ms-auth)]
+      summary: Actualizar rol por ID
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RolRequest'
+            example:
+              rol: ADMIN
+      responses:
+        '200':
+          description: Rol actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '400':
+          description: Rol inválido.
+        '404':
+          description: Usuario no encontrado.
+
+  /api/auth/usuarios/username/{username}/rol:
+    put:
+      tags: [Autenticación (ms-auth)]
+      summary: Actualizar rol por username
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RolRequest'
+            example:
+              rol: EMPLEADO_TIENDA
+      responses:
+        '200':
+          description: Rol actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '400':
+          description: Rol inválido.
+        '404':
+          description: Usuario no encontrado.
+
+  /api/auth/usuarios/{id}:
+    delete:
+      tags: [Autenticación (ms-auth)]
+      summary: Eliminar usuario
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        '204':
+          description: Usuario eliminado.
+        '404':
+          description: Usuario no encontrado.
+
+  # ===================== ms-datos: ventas =====================
+  /api/ventas/registrar:
+    post:
+      tags: [Ventas (ms-datos)]
+      summary: Registrar venta
+      description: >-
+        Asigna la fecha actual si falta. Valida fecha (no futura y ≤ 6 meses),
+        monto ≥ 0, sucursal existente y stock suficiente. Descuenta stock.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Venta'
+            example:
+              montoTotal: 25990
+              cantidad: 2
+              precioUnitario: 12995
+              producto: Taladro
+              sucursal: Santiago
+              vendedor: jperez
+              categoria: HOGAR
+      responses:
+        '200':
+          description: Venta registrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Venta'
+        '400':
+          description: Validación fallida (fecha, monto, sucursal o stock).
+
+  /api/ventas:
+    get:
+      tags: [Ventas (ms-datos)]
+      summary: Listar todas las ventas
+      responses:
+        '200':
+          description: Lista de ventas.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Venta'
+
+  /api/ventas/sucursal/{sucursal}:
+    get:
+      tags: [Ventas (ms-datos)]
+      summary: Listar ventas por sucursal
+      parameters:
+        - name: sucursal
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ventas de la sucursal.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Venta'
+
+  /api/ventas/{id}:
+    put:
+      tags: [Ventas (ms-datos)]
+      summary: Editar venta
+      description: Restaura el stock original y descuenta con los nuevos valores.
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Venta'
+      responses:
+        '200':
+          description: Venta actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Venta'
+        '404':
+          description: Venta no encontrada.
+    delete:
+      tags: [Ventas (ms-datos)]
+      summary: Eliminar venta
+      description: Restaura el stock asociado.
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        '204':
+          description: Venta eliminada.
+        '404':
+          description: Venta no encontrada.
+
+  # ===================== ms-datos: stock =====================
+  /api/ventas/stock:
+    get:
+      tags: [Stock (ms-datos)]
+      summary: Listar stock
+      parameters:
+        - name: sucursal
+          in: query
+          required: false
+          description: Filtra por sucursal. Si se omite, devuelve todo el inventario.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Inventario.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockItem'
+    post:
+      tags: [Stock (ms-datos)]
+      summary: Upsert de stock
+      description: >-
+        Inserta o actualiza por (sucursal, categoría, producto). Valida sucursal
+        existente, categoría ∈ {ELECTRONICA, HOGAR} y cantidad ≥ 0.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockItem'
+            example:
+              sucursal: Santiago
+              categoria: HOGAR
+              producto: Taladro
+              cantidad: 50
+              precioUnitario: 12995
+      responses:
+        '200':
+          description: Stock guardado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockItem'
+        '400':
+          description: Validación fallida.
+
+  # ===================== ms-datos: sucursales =====================
+  /api/ventas/sucursales:
+    get:
+      tags: [Sucursales (ms-datos)]
+      summary: Listar sucursales
+      responses:
+        '200':
+          description: Lista de sucursales.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sucursal'
+    post:
+      tags: [Sucursales (ms-datos)]
+      summary: Crear o actualizar sucursal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sucursal'
+            example:
+              nombre: Concepción
+              ubicacion: Región del Biobío
+              metaVenta: 1000000
+      responses:
+        '200':
+          description: Sucursal creada/actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sucursal'
+        '400':
+          description: Nombre vacío.
+
+  /api/ventas/sucursales/{id}/meta:
+    put:
+      tags: [Sucursales (ms-datos)]
+      summary: Actualizar meta de venta
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: number
+              format: double
+            example: 1500000
+      responses:
+        '200':
+          description: Meta actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sucursal'
+        '404':
+          description: Sucursal no encontrada.
+
+  /api/ventas/sucursales/{id}/nombre:
+    put:
+      tags: [Sucursales (ms-datos)]
+      summary: Renombrar sucursal (propaga a ventas y stock)
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+            example:
+              nombre: Santiago Centro
+      responses:
+        '200':
+          description: Sucursal renombrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sucursal'
+        '400':
+          description: Nombre vacío.
+        '404':
+          description: Sucursal no encontrada.
+
+  /api/ventas/sucursales/{id}:
+    delete:
+      tags: [Sucursales (ms-datos)]
+      summary: Eliminar sucursal
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        '204':
+          description: Sucursal eliminada.
+        '404':
+          description: Sucursal no encontrada.
+
+  # ===================== ms-kpis =====================
+  /api/kpis:
+    get:
+      tags: [KPIs (ms-kpis)]
+      summary: Listar KPIs
+      responses:
+        '200':
+          description: Lista de indicadores.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Kpi'
+
+  /api/kpis/{id}/formula:
+    put:
+      tags: [KPIs (ms-kpis)]
+      summary: Actualizar fórmula de un KPI
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Kpi'
+            example:
+              formula: "Ingresos / Total Transacciones"
+              meta: 15000
+      responses:
+        '200':
+          description: KPI actualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Kpi'
+        '400':
+          description: Fórmula vacía.
+        '404':
+          description: KPI no encontrado.
+
+  /api/kpis/metas:
+    get:
+      tags: [KPIs (ms-kpis)]
+      summary: Listar metas por sucursal
+      responses:
+        '200':
+          description: Lista de metas.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetaSucursal'
+    post:
+      tags: [KPIs (ms-kpis)]
+      summary: Upsert de meta por sucursal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetaSucursal'
+            example:
+              nombreSucursal: Santiago
+              metaVenta: 2000000
+      responses:
+        '200':
+          description: Meta guardada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaSucursal'
+        '400':
+          description: Datos inválidos.
+
+  # ===================== ms-reportes =====================
+  /api/reportes/plantillas:
+    get:
+      tags: [Reportes (ms-reportes)]
+      summary: Listar plantillas
+      description: Excluye las de estado "Inactivo" y las que contienen "healthcheck".
+      responses:
+        '200':
+          description: Lista de plantillas.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlantillaReporte'
+    post:
+      tags: [Reportes (ms-reportes)]
+      summary: Crear plantilla
+      description: Si no se envía estado, se asigna "Activo".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlantillaReporte'
+            example:
+              titulo: Dashboard de Ventas
+              estado: Activo
+      responses:
+        '200':
+          description: Plantilla creada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantillaReporte'
+
+  /api/reportes/plantillas/{id}:
+    delete:
+      tags: [Reportes (ms-reportes)]
+      summary: Eliminar plantilla
+      parameters:
+        - $ref: '#/components/parameters/PathId'
+      responses:
+        '200':
+          description: Plantilla eliminada.
+        '404':
+          description: Plantilla no encontrada.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PathId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        rol:
+          type: string
+          enum: [ADMIN, EMPLEADO_TIENDA]
+        sucursal:
+          type: string
+          nullable: true
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        username:
+          type: string
+        rol:
+          type: string
+        sucursal:
+          type: string
+          nullable: true
+
+    RolRequest:
+      type: object
+      properties:
+        rol:
+          type: string
+          enum: [ADMIN, EMPLEADO_TIENDA]
+
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+          description: Hash bcrypt (no se expone en texto plano).
+        rol:
+          type: string
+        sucursal:
+          type: string
+          nullable: true
+
+    Venta:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        fechaVenta:
+          type: string
+          format: date-time
+        montoTotal:
+          type: number
+          format: double
+        cantidad:
+          type: integer
+        precioUnitario:
+          type: number
+          format: double
+        producto:
+          type: string
+        sistemaOrigen:
+          type: string
+        sucursal:
+          type: string
+        vendedor:
+          type: string
+        categoria:
+          type: string
+
+    StockItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        sucursal:
+          type: string
+        categoria:
+          type: string
+          enum: [ELECTRONICA, HOGAR]
+        producto:
+          type: string
+        cantidad:
+          type: integer
+        precioUnitario:
+          type: number
+          format: double
+        vendedor:
+          type: string
+        fechaRegistro:
+          type: string
+
+    Sucursal:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nombre:
+          type: string
+        ubicacion:
+          type: string
+        metaVenta:
+          type: number
+          format: double
+        activa:
+          type: boolean
+
+    Kpi:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nombre:
+          type: string
+        formula:
+          type: string
+        meta:
+          type: number
+          format: double
+        valorCalculado:
+          type: number
+          format: double
+        fechaActualizacion:
+          type: string
+          format: date-time
+
+    MetaSucursal:
+      type: object
+      properties:
+        nombreSucursal:
+          type: string
+        metaVenta:
+          type: number
+          format: double
+
+    PlantillaReporte:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        titulo:
+          type: string
+        estado:
+          type: string
+          example: Activo
