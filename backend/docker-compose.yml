@@ -9,7 +9,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com:5432/bd_datos
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cdxuxzcse3px.us-east-1.rds.amazonaws.com:5432/bd_datos
       - SPRING_DATASOURCE_USERNAME=admin3
       - SPRING_DATASOURCE_PASSWORD=cordillera
 
@@ -21,7 +21,7 @@ services:
     ports:
       - "8082:8082"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com:5432/bd_datos
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cdxuxzcse3px.us-east-1.rds.amazonaws.com:5432/bd_datos
       - SPRING_DATASOURCE_USERNAME=admin3
       - SPRING_DATASOURCE_PASSWORD=cordillera
 
@@ -33,7 +33,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com:5432/bd_reporte
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cdxuxzcse3px.us-east-1.rds.amazonaws.com:5432/bd_reporte
       - SPRING_DATASOURCE_USERNAME=admin3
       - SPRING_DATASOURCE_PASSWORD=cordillera
 
@@ -45,7 +45,7 @@ services:
     ports:
       - "8084:8084"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com:5432/bd_autenticacion
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://bd-grupo-cordillera.cdxuxzcse3px.us-east-1.rds.amazonaws.com:5432/bd_autenticacion
       - SPRING_DATASOURCE_USERNAME=admin3
       - SPRING_DATASOURCE_PASSWORD=cordillera
 

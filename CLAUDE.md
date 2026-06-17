@@ -55,7 +55,7 @@ Three PostgreSQL databases (AWS RDS):
 - **bd_reporte**: Exclusive to ms-reportes
 - **bd_autenticacion**: Exclusive to ms-auth
 
-Endpoint: `bd-grupo-cordillera.cfyh1qtodg3d.us-east-1.rds.amazonaws.com`
+Endpoint: `bd-grupo-cordillera.cdxuxzcse3px.us-east-1.rds.amazonaws.com`
 
 ### Deployment
 - **Containerization**: Docker multi-stage builds
@@ -109,7 +109,7 @@ npm test               # Tests
 npm test -- src/...    # Specific tests
 ```
 
-Frontend uses VITE_API_BASE env var (default in .env: http://34.193.206.58:8080).
+Frontend uses VITE_API_BASE env var (default in .env: http://13.222.83.213:8080).
 
 ## Code Structure
 
@@ -144,7 +144,7 @@ frontend/src/
 
 ### Authentication & Authorization
 - JWT tokens from ms-auth (expiration: 30 minutes default)
-- Secret: `grupocordillera123tokendeseguridadparalaweb`
+- Secret: configurado en `backend/ms-auth/src/main/resources/application.properties` (`jwt.secret`); rotado en la migración a la cuenta AWS nueva
 - Roles: ADMIN, EMPLEADO_TIENDA
 - Frontend validates token via `/api/auth/validar` on app load
 - Passwords hashed with bcrypt
