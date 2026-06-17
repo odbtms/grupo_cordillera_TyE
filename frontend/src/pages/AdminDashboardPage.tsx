@@ -41,10 +41,29 @@ function AdminDashboardPage() {
   const [filtroOrigen, setFiltroOrigen] = useState('Todos')
   const [filtroSucursal, setFiltroSucursal] = useState('Todas')
 
-  useEffect(() => {
-    async function cargarDatosDashboard() {
-      setCargando(true)
+  async function cargarDatosDashboard(mostrarCargando = false) {
+    if (mostrarCargando) setCargando(true)
+    try {
+      const [ventasData, kpisData, stockData] = await Promise.all([obtenerVentas(), obtenerKpis(), obtenerStock()])
+      setVentas(ventasData)
+      setKpis(kpisData)
+      setStock(stockData)
+    } catch {
+      // En refresco automático no borramos datos ya cargados
+      if (mostrarCargando) {
+        setVentas([])
+        setKpis([])
+        setStock([])
+      }
+    } finally {
+      if (mostrarCargando) setCargando(false)
+    }
+  }
 
+  useEffect(() => {
+    // Función para carga inicial (asincrónica para evitar setState sincrónico)
+    const cargarInicial = async () => {
+      setCargando(true)
       try {
         const [ventasData, kpisData, stockData] = await Promise.all([obtenerVentas(), obtenerKpis(), obtenerStock()])
         setVentas(ventasData)
@@ -59,7 +78,21 @@ function AdminDashboardPage() {
       }
     }
 
-    cargarDatosDashboard()
+    cargarInicial()
+
+    // Guardar la referencia para poder removerla correctamente al desmontar
+    const alRegistrarVenta = () => cargarDatosDashboard()
+
+    // Refresco cuando el mismo usuario registra una venta
+    window.addEventListener('venta-registrada', alRegistrarVenta)
+
+    // Refresco automático cada 20 s para detectar nuevas ventas
+    const intervalo = setInterval(() => cargarDatosDashboard(), 20_000)
+
+    return () => {
+      window.removeEventListener('venta-registrada', alRegistrarVenta)
+      clearInterval(intervalo)
+    }
   }, [])
 
   const ventasTotales = useMemo(

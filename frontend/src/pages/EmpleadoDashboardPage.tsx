@@ -143,7 +143,7 @@ function EmpleadoDashboardPage({
 
       setCarrito([])
       setMensajeVenta('Venta registrada con éxito. Stock actualizado.')
-      
+      window.dispatchEvent(new CustomEvent('venta-registrada'))
       await cargarDatos(); // Recargar stock y ventas
     } catch {
       setMensajeVenta('Error al procesar la venta.')
